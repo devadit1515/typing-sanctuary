@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Speed Typing Battle</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .profile-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .profile-header {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 8px 32px rgba(183, 77, 255, 0.4);
+    }
+
+    .profile-details {
+      flex: 1;
+    }
+
+    .profile-username {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .profile-bio {
+      color: rgba(226, 232, 240, 0.7);
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      background: var(--glass-bg-hover);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-value {
+      font-size: 48px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: rgba(226, 232, 240, 0.7);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #e2e8f0;
+    }
+
+    .history-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .history-item {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      gap: 24px;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .history-item:hover {
+      background: var(--glass-bg-hover);
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .history-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      box-shadow: 0 4px 16px rgba(183, 77, 255, 0.3);
+    }
+
+    .history-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-mode {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .history-details {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: rgba(226, 232, 240, 0.6);
+    }
+
+    .history-stats {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .history-stat {
+      text-align: center;
+    }
+
+    .history-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .history-stat-label {
+      font-size: 12px;
+      color: rgba(226, 232, 240, 0.6);
+      text-transform: uppercase;
+    }
+
+    .history-result {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .result-win {
+      background: rgba(0, 255, 136, 0.1);
+      color: var(--color-success);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .result-loss {
+      background: rgba(255, 50, 100, 0.1);
+      color: var(--color-error);
+      border: 1px solid rgba(255, 50, 100, 0.3);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(226, 232, 240, 0.6);
+      font-size: 18px;
+    }
+
+    .no-history {
+      text-align: center;
+      padding: 80px 20px;
+      color: rgba(226, 232, 240, 0.5);
+    }
+
+    .no-history-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--glass-bg);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: #e2e8f0;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-bottom: 24px;
+    }
+
+    .back-button:hover {
+      border-color: var(--color-primary);
+      background: rgba(183, 77, 255, 0.1);
+      transform: translateX(-4px);
+    }
+
+    .btn-reset-stats {
+      padding: 14px 28px;
+      background: rgba(255, 50, 100, 0.1);
+      border: 2px solid var(--color-error);
+      border-radius: 12px;
+      color: var(--color-error);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-reset-stats:hover {
+      background: rgba(255, 50, 100, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255, 50, 100, 0.3);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 500px;
+      box-shadow: var(--shadow-lg);
+      animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .btn-danger {
+      background: var(--color-error);
+      border: 2px solid var(--color-error);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #d63031;
+      border-color: #d63031;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255, 50, 100, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .profile-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .profile-username {
+        font-size: 32px;
+      }
+
+      .history-item {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .history-stats {
+        justify-content: space-around;
+      }
+
+      .modal-content {
+        margin: 20px;
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Particles Background -->
+  <div class="particles" id="particlesContainer"></div>
+
+  <!-- Grid Overlay -->
+  <div class="grid-overlay"></div>
+
+  <!-- Credit Footer -->
+  <div class="credit-footer">Made by Devadit</div>
+
+  <div class="profile-container">
+    <a href="/" class="back-button">
+      ← Back to Game
+    </a>
+
+    <div id="profileContent">
+      <div class="loading">Loading profile...</div>
+    </div>
+
+    <!-- Reset Stats Button -->
+    <div id="resetStatsContainer" class="hidden" style="margin-top: 32px; text-align: center;">
+      <button id="resetStatsBtn" class="btn-reset-stats">
+        Reset Statistics
+      </button>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 style="margin-bottom: 16px; color: #e2e8f0;">⚠️ Reset Statistics?</h2>
+      <p style="margin-bottom: 24px; color: rgba(226, 232, 240, 0.8);">
+        This will permanently delete all your game history and reset your statistics to zero. This action cannot be undone.
+      </p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button id="confirmResetBtn" class="btn btn-danger">Yes, Reset Everything</button>
+        <button id="cancelResetBtn" class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Create particles
+    function createParticles() {
+      const container = document.getElementById('particlesContainer');
+      const particleCount = 60;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        const size = 2 + Math.random() * 2;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        const opacity = 0.1 + Math.random() * 0.2;
+        particle.style.setProperty('--particle-opacity', opacity);
+        const duration = 10 + Math.random() * 15;
+        particle.style.animationDuration = duration + 's';
+        const delay = Math.random() * 5;
+        particle.style.animationDelay = delay + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', createParticles);
+  </script>
+  <script src="profile.js"></script>
+</body>
+</html>

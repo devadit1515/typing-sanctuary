@@ -7,11 +7,23 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["typing", "game", "multiplayer", "websocket"],
+  "keywords": [
+    "typing",
+    "game",
+    "multiplayer",
+    "websocket"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "connect-mongo": "^6.0.0",
+    "dotenv": "^17.2.3",
     "express": "^4.18.2",
-    "socket.io": "^4.6.1"
+    "express-session": "^1.18.2",
+    "mongodb": "^7.0.0",
+    "mongoose": "^9.0.0",
+    "socket.io": "^4.6.1",
+    "validator": "^13.15.23"
   }
 }

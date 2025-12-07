@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Speed Typing Battle</title>
+  <link rel="stylesheet" href="auth-styles.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="auth-header">
+        <h1>⚡ Speed Typing Battle</h1>
+        <p>Create your account to start playing</p>
+      </div>
+
+      <form id="registerForm" class="auth-form">
+        <div class="form-group">
+          <label for="username">Username *</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            autocomplete="username"
+            placeholder="Choose a username (3-20 characters)"
+            minlength="3"
+            maxlength="20"
+            pattern="[a-zA-Z0-9_]+"
+          >
+          <small class="form-hint">Letters, numbers, and underscores only</small>
+          <div id="usernameAvailability" class="availability-message"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email (optional)</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            autocomplete="email"
+            placeholder="your@email.com (optional)"
+          >
+          <small class="form-hint">For password recovery (optional)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="new-password"
+            placeholder="Choose a password (min 6 characters)"
+            minlength="6"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password *</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            required
+            autocomplete="new-password"
+            placeholder="Re-enter your password"
+            minlength="6"
+          >
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <button type="submit" class="btn-primary" id="registerBtn">
+          Create Account
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a href="login.html">Login here</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+</html>

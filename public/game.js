@@ -113,30 +113,6 @@ function createConfetti() {
     }
 }
 
-// Add ripple effect to buttons
-function addRippleEffect(button, event) {
-    const ripple = document.createElement('span');
-    const rect = button.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
-    const x = event.clientX - rect.left - size / 2;
-    const y = event.clientY - rect.top - size / 2;
-
-    ripple.style.cssText = `
-        position: absolute;
-        width: ${size}px;
-        height: ${size}px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.5);
-        transform: scale(0);
-        animation: rippleEffect 0.6s ease-out;
-        left: ${x}px;
-        top: ${y}px;
-        pointer-events: none;
-    `;
-    button.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
-}
-
 // Event listeners - Main Mode Selection
 elements.soloModeBtn.addEventListener('click', () => {
     const name = elements.playerNameInput.value.trim();
@@ -355,6 +331,9 @@ socket.on('playerFinished', ({ playerId, playerName, finishTime, wpm, accuracy }
 socket.on('gameFinished', ({ results }) => {
     displayResults(results);
     showScreen('results');
+
+    // Save game result to database
+    saveGameResult(results);
 });
 
 socket.on('rematchStarted', ({ players }) => {
@@ -468,6 +447,32 @@ function startTimer() {
     }, 100);
 }
 
+// Track the furthest correct position reached
+let furthestCorrectPosition = 0;
+
+// Prevent backspace on correctly typed characters
+elements.typingInput.addEventListener('keydown', (e) => {
+    const typed = elements.typingInput.value;
+
+    // If backspace is pressed
+    if (e.key === 'Backspace') {
+        // Check if all characters up to current position are correct
+        let allCorrect = true;
+        for (let i = 0; i < typed.length; i++) {
+            if (typed[i] !== gameState.passage[i]) {
+                allCorrect = false;
+                break;
+            }
+        }
+
+        // If all typed characters are correct, prevent backspace
+        if (allCorrect && typed.length > 0) {
+            e.preventDefault();
+            return false;
+        }
+    }
+});
+
 // Typing input handler
 elements.typingInput.addEventListener('input', () => {
     const typed = elements.typingInput.value;
@@ -489,7 +494,7 @@ elements.typingInput.addEventListener('input', () => {
     const elapsed = (Date.now() - gameState.startTime) / 1000 / 60; // minutes
     const wordsTyped = typed.length / 5;
     const wpm = Math.round(wordsTyped / elapsed) || 0;
-    const accuracy = Math.round(((typed.length - gameState.errors) / typed.length) * 100) || 100;
+    const accuracy = typed.length > 0 ? Math.round(((typed.length - gameState.errors) / typed.length) * 100) : 100;
 
     // Send progress update
     socket.emit('updateProgress', {
@@ -563,5 +568,61 @@ function displayResults(results) {
 
     if (gameState.isHost) {
         elements.hostRematchControls.classList.remove('hidden');
+    }
+}
+
+// Save game result to database
+async function saveGameResult(results) {
+    try {
+        // Prepare players data
+        const players = results.map((player, index) => ({
+            username: player.name,
+            wpm: player.wpm || 0,
+            accuracy: player.accuracy || 100,
+            progress: player.progress || 100,
+            finishTime: player.finishTime,
+            placement: index + 1,
+            isBot: player.isBot || false
+        }));
+
+        // Determine winner
+        const winner = results[0];
+
+        // Prepare game data
+        const gameData = {
+            roomCode: gameState.roomCode,
+            gameMode: gameState.gameMode,
+            difficulty: gameState.difficulty,
+            passageLength: gameState.passageLength,
+            passage: gameState.passage,
+            startTime: gameState.startTime,
+            endTime: Date.now(),
+            duration: Date.now() - gameState.startTime,
+            players: players,
+            winner: {
+                username: winner.name,
+                isBot: winner.isBot || false
+            }
+        };
+
+        // Send to API
+        const response = await fetch('/api/game/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gameData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('Game result saved successfully');
+        } else {
+            console.error('Failed to save game result:', data.message);
+        }
+    } catch (error) {
+        console.error('Error saving game result:', error);
+        // Don't show error to user, just log it
     }
 }

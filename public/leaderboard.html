@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard - Speed Typing Battle</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="auth-styles.css">
+  <style>
+    .leaderboard-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .leaderboard-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .leaderboard-header h1 {
+      font-size: 48px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .leaderboard-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      color: #e2e8f0;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--color-primary);
+      background: rgba(183, 77, 255, 0.1);
+    }
+
+    .tab-btn.active {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .leaderboard-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .leaderboard-item:hover {
+      background: var(--glass-bg-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .rank {
+      font-size: 32px;
+      font-weight: 700;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .rank.gold { color: #FFD700; }
+    .rank.silver { color: #C0C0C0; }
+    .rank.bronze { color: #CD7F32; }
+
+    .player-info {
+      flex: 1;
+    }
+
+    .player-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 4px;
+    }
+
+    .player-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: rgba(226, 232, 240, 0.7);
+    }
+
+    .stat-badge {
+      padding: 4px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(226, 232, 240, 0.6);
+    }
+
+    .error-message {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--color-error);
+      background: rgba(255, 50, 100, 0.1);
+      border-radius: 16px;
+      margin: 20px 0;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 32px;
+      padding: 12px 24px;
+      background: var(--glass-bg);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: #e2e8f0;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+      border-color: var(--color-primary);
+      background: rgba(183, 77, 255, 0.1);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Particles Background -->
+  <div class="particles" id="particlesContainer"></div>
+
+  <!-- Grid Overlay -->
+  <div class="grid-overlay"></div>
+
+  <!-- Credit Footer -->
+  <div class="credit-footer">Made by Devadit</div>
+
+  <div class="leaderboard-container">
+    <div class="leaderboard-header">
+      <h1>🏆 Leaderboard</h1>
+      <p style="color: rgba(226, 232, 240, 0.7); font-size: 18px;">Top Players Worldwide</p>
+    </div>
+
+    <div class="leaderboard-tabs">
+      <button class="tab-btn active" data-tab="wpm">Average WPM</button>
+      <button class="tab-btn" data-tab="best">Best WPM</button>
+      <button class="tab-btn" data-tab="wins">Total Wins</button>
+    </div>
+
+    <div id="leaderboardContent">
+      <div class="loading">Loading leaderboard...</div>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="/" class="back-link">← Back to Game</a>
+    </div>
+  </div>
+
+  <script>
+    // Create particles
+    function createParticles() {
+      const container = document.getElementById('particlesContainer');
+      const particleCount = 60;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        const size = 2 + Math.random() * 2;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        const opacity = 0.1 + Math.random() * 0.2;
+        particle.style.setProperty('--particle-opacity', opacity);
+        const duration = 10 + Math.random() * 15;
+        particle.style.animationDuration = duration + 's';
+        const delay = Math.random() * 5;
+        particle.style.animationDelay = delay + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', createParticles);
+  </script>
+  <script src="leaderboard.js"></script>
+</body>
+</html>

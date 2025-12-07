@@ -16,6 +16,25 @@
     <!-- Credit Footer -->
     <div class="credit-footer">Made by Devadit</div>
 
+    <!-- User Profile Display -->
+    <div id="userProfile" class="user-profile hidden">
+        <div class="profile-info">
+            <span class="profile-username" id="profileUsername"></span>
+        </div>
+        <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+
+    <!-- Leaderboard Link -->
+    <a href="/leaderboard.html" class="leaderboard-link">
+        🏆 Leaderboard
+    </a>
+
+    <!-- Login/Register Buttons (for non-logged in users) -->
+    <div id="authButtons" class="auth-buttons-corner hidden">
+        <a href="/login.html" class="btn btn-outline btn-small">Login</a>
+        <a href="/register.html" class="btn btn-outline btn-small">Register</a>
+    </div>
+
     <div class="container">
         <!-- Welcome Screen - Premium Landing Page -->
         <div id="welcomeScreen" class="screen active">
@@ -24,8 +43,13 @@
                 <p class="subtitle">Where Speed Meets Precision</p>
             </div>
 
-            <!-- Username Input -->
-            <div class="input-group">
+            <!-- Username Display (for logged in users) -->
+            <div id="loggedInUsername" class="logged-in-username hidden">
+                <p>Welcome back, <strong id="welcomeUsername"></strong>!</p>
+            </div>
+
+            <!-- Username Input (for non-logged in users) -->
+            <div class="input-group" id="usernameInputGroup">
                 <input type="text" id="playerName" placeholder="Enter your username" maxlength="20">
             </div>
 
@@ -34,7 +58,8 @@
                 <button id="soloModeBtn" class="btn btn-secondary btn-large">Play Solo</button>
                 <button id="multiplayerModeBtn" class="btn btn-primary btn-large">Play Multiplayer</button>
             </div>
-        </div>
+
+                </div>
 
         <!-- Solo Setup Screen -->
         <div id="soloSetupScreen" class="screen">
@@ -78,9 +103,9 @@
                 <div class="option-group">
                     <label>Passage Length</label>
                     <select id="multiplayerPassageLengthSelect" class="select-input">
-                        <option value="short">Short (~20 words)</option>
-                        <option value="medium" selected>Medium (~40 words)</option>
-                        <option value="long">Long (~80 words)</option>
+                        <option value="short">Short (~15 words)</option>
+                        <option value="medium" selected>Medium (~30 words)</option>
+                        <option value="long">Long (~60 words)</option>
                     </select>
                 </div>
 
@@ -137,14 +162,9 @@
         <div id="gameScreen" class="screen">
             <div class="game-header">
                 <div class="timer">Time: <span id="timer">0.0</span>s</div>
-                <div class="lives-display">
-                    <span class="lives-label">Lives:</span>
-                    <div id="livesHearts"></div>
-                </div>
             </div>
 
             <div class="passage-container">
-                <div id="competitorIndicator" class="competitor-indicator"></div>
                 <div id="passageDisplay" class="passage"></div>
             </div>
 
@@ -172,6 +192,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="game.js"></script>
+    <script src="session-check.js"></script>
     <script>
         // Create floating particles
         function createParticles() {

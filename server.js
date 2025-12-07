@@ -1,8 +1,55 @@
+// Load environment variables first
+require('dotenv').config();
+
 const express = require('express');
+const session = require('express-session');
+const MongoStore = require('connect-mongo').default;
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
+
+// Import database connection
+const connectDB = require('./config/database');
+
+// Import routes
+const authRoutes = require('./routes/authRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const gameRoutes = require('./routes/gameRoutes');
+const leaderboardRoutes = require('./routes/leaderboardRoutes');
+
+// Connect to database
+connectDB();
+
+// Middleware
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
+// Session configuration with MongoDB store
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    touchAfter: 24 * 3600,
+    crypto: {
+      secret: process.env.SESSION_SECRET || 'your-secret-key-change-this'
+    }
+  }),
+  cookie: {
+    maxAge: parseInt(process.env.SESSION_MAX_AGE) || 86400000, // 24 hours
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    sameSite: 'lax'
+  }
+}));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/game', gameRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 // Serve static files from public directory
 app.use(express.static('public'));
