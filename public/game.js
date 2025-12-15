@@ -271,6 +271,29 @@ elements.backToMenuBtn.addEventListener('click', () => {
     location.reload();
 });
 
+// Leave game during match
+document.getElementById('leaveGameBtn')?.addEventListener('click', () => {
+    // Show confirmation dialog
+    const confirmLeave = confirm('Are you sure you want to leave the game? This will end your current match.');
+
+    if (confirmLeave) {
+        console.log('🚪 Player leaving game');
+
+        // Notify server that player is leaving
+        socket.emit('leaveGame', {
+            roomCode: gameState.roomCode,
+            playerName: gameState.playerName,
+            finished: elements.typingInput.disabled, // true if player completed typing
+            progress: (gameState.currentIndex / gameState.passage.length) * 100
+        });
+
+        // Return to home screen
+        setTimeout(() => {
+            location.reload();
+        }, 300);
+    }
+});
+
 // Keep input focused when clicking on game screen
 screens.game.addEventListener('click', () => {
     if (!elements.typingInput.disabled) {
@@ -381,6 +404,17 @@ socket.on('gameFinished', ({ results }) => {
 
     // Save game result to database
     saveGameResult(results);
+});
+
+socket.on('playerLeft', ({ playerName, totalPlayers, results }) => {
+    console.log(`🚪 ${playerName} left the game. Players remaining: ${totalPlayers}`);
+
+    // If results are provided (1v1 or game ended due to leave), show results screen
+    if (results) {
+        displayResults(results);
+        showScreen('results');
+        saveGameResult(results);
+    }
 });
 
 socket.on('rematchStarted', ({ players }) => {
@@ -639,6 +673,12 @@ function displayResults(results) {
         name.className = 'player-name';
         name.textContent = player.isBot ? `🤖 ${player.name}` : player.name;
 
+        // Show if player left
+        if (player.left) {
+            name.textContent += ' (Left)';
+            name.style.color = '#ff6b6b';
+        }
+
         // Highlight current player
         if (player.id === socket.id) {
             name.textContent += ' (You)';
@@ -650,7 +690,9 @@ function displayResults(results) {
 
         // Display time breakdown
         let timeDisplay = 'DNF';
-        if (player.finishTime) {
+        if (player.left && player.dnf) {
+            timeDisplay = 'Left Game';
+        } else if (player.finishTime) {
             const rawTime = player.rawTime ? (player.rawTime / 1000).toFixed(2) : (player.finishTime / 1000).toFixed(2);
             const penaltyTime = player.penaltyTime ? (player.penaltyTime / 1000).toFixed(1) : '0.0';
             const totalTime = player.totalTime ? (player.totalTime / 1000).toFixed(2) : (player.finishTime / 1000).toFixed(2);

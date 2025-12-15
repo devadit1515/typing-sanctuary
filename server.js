@@ -594,6 +594,211 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Handle player leaving during game
+  socket.on('leaveGame', ({ roomCode, playerName, finished, progress }) => {
+    const room = rooms.get(roomCode);
+
+    if (!room) {
+      return;
+    }
+
+    console.log(`🚪 ${playerName} is leaving game in room ${roomCode}`);
+
+    // Get the leaving player
+    const leavingPlayer = room.players.get(socket.id);
+
+    if (!leavingPlayer) {
+      return;
+    }
+
+    // Mark player as left
+    leavingPlayer.left = true;
+
+    // If they didn't finish, mark them as DNF
+    if (!finished) {
+      leavingPlayer.finished = false;
+      leavingPlayer.finishTime = null;
+      leavingPlayer.dnf = true; // Did Not Finish
+      leavingPlayer.progress = progress || 0;
+    }
+
+    // Remove player from room
+    room.players.delete(socket.id);
+    socket.leave(roomCode);
+
+    const remainingPlayers = Array.from(room.players.values()).filter(p => !p.isBot);
+    const totalPlayers = remainingPlayers.length;
+
+    console.log(`Players remaining in room ${roomCode}: ${totalPlayers}`);
+
+    // CASE 1: No human players left - clean up room
+    if (totalPlayers === 0) {
+      console.log(`Room ${roomCode} is empty, cleaning up...`);
+      // Clear bot intervals
+      if (room.botIntervals) {
+        room.botIntervals.forEach(interval => clearInterval(interval));
+        room.botIntervals.clear();
+      }
+      rooms.delete(roomCode);
+      return;
+    }
+
+    // CASE 2: 1v1 (one human vs one bot or two humans, one left) - End game immediately
+    if (room.gameState === 'playing' && room.players.size === 1) {
+      console.log(`1v1 match - declaring remaining player as winner`);
+
+      // Clear bot intervals
+      if (room.botIntervals) {
+        room.botIntervals.forEach(interval => clearInterval(interval));
+        room.botIntervals.clear();
+      }
+
+      room.gameState = 'finished';
+
+      // Create results with leaving player ranked last
+      const results = [];
+
+      // Add remaining players (they win)
+      Array.from(room.players.values()).forEach(p => {
+        results.push({
+          name: p.name,
+          finishTime: p.finishTime || null,
+          totalTime: p.totalTime || p.finishTime || null,
+          wpm: p.wpm || 0,
+          accuracy: p.accuracy || 100,
+          errors: p.errors || 0,
+          hearts: p.hearts || 3,
+          isBot: p.isBot || false,
+          finished: p.finished || false,
+          winner: true // They win by default
+        });
+      });
+
+      // Add leaving player ranked last
+      results.push({
+        name: leavingPlayer.name,
+        finishTime: leavingPlayer.finishTime,
+        totalTime: leavingPlayer.totalTime || leavingPlayer.finishTime,
+        wpm: leavingPlayer.wpm || 0,
+        accuracy: leavingPlayer.accuracy || 100,
+        errors: leavingPlayer.errors || 0,
+        hearts: leavingPlayer.hearts || 3,
+        isBot: false,
+        finished: leavingPlayer.finished || false,
+        left: true,
+        dnf: leavingPlayer.dnf || false
+      });
+
+      // Notify remaining players
+      io.to(roomCode).emit('playerLeft', {
+        playerName,
+        totalPlayers,
+        results
+      });
+
+      io.to(roomCode).emit('gameFinished', { results });
+      return;
+    }
+
+    // CASE 3: 3+ players - Continue game, leaving player ranked last at end
+    if (room.gameState === 'playing') {
+      console.log(`Multiplayer match - ${playerName} will be ranked last in results`);
+
+      // Notify remaining players
+      io.to(roomCode).emit('playerLeft', {
+        playerName,
+        totalPlayers,
+        results: null // Game continues
+      });
+
+      // Update progress for remaining players
+      io.to(roomCode).emit('progressUpdate', {
+        players: Array.from(room.players.values()).map(p => ({
+          id: p.id,
+          name: p.name,
+          progress: p.progress,
+          wpm: p.wpm,
+          accuracy: p.accuracy,
+          errors: p.errors,
+          hearts: p.hearts,
+          finished: p.finished,
+          isBot: p.isBot
+        }))
+      });
+
+      // Check if all remaining players finished
+      const allFinished = Array.from(room.players.values()).every(p => p.finished);
+
+      if (allFinished) {
+        room.gameState = 'finished';
+
+        // Clear bot intervals
+        if (room.botIntervals) {
+          room.botIntervals.forEach(interval => clearInterval(interval));
+          room.botIntervals.clear();
+        }
+
+        // Create final results
+        const finishedResults = Array.from(room.players.values())
+          .sort((a, b) => {
+            const timeA = a.finishTime;
+            const timeB = b.finishTime;
+
+            if (!timeA && !timeB) return 0;
+            if (!timeA) return 1;
+            if (!timeB) return -1;
+
+            return timeA - timeB; // Lower time wins
+          });
+
+        // Add leaving player at the end if they didn't finish
+        if (leavingPlayer.dnf) {
+          finishedResults.push({
+            name: leavingPlayer.name,
+            finishTime: leavingPlayer.finishTime,
+            totalTime: leavingPlayer.totalTime || leavingPlayer.finishTime,
+            wpm: leavingPlayer.wpm || 0,
+            accuracy: leavingPlayer.accuracy || 100,
+            errors: leavingPlayer.errors || 0,
+            hearts: leavingPlayer.hearts || 3,
+            isBot: false,
+            finished: false,
+            left: true,
+            dnf: true
+          });
+        } else {
+          // They finished before leaving - include in proper ranking
+          finishedResults.push({
+            name: leavingPlayer.name,
+            finishTime: leavingPlayer.finishTime,
+            totalTime: leavingPlayer.totalTime || leavingPlayer.finishTime,
+            wpm: leavingPlayer.wpm || 0,
+            accuracy: leavingPlayer.accuracy || 100,
+            errors: leavingPlayer.errors || 0,
+            hearts: leavingPlayer.hearts || 3,
+            isBot: false,
+            finished: true,
+            left: true
+          });
+
+          // Re-sort to place them in correct position based on time
+          finishedResults.sort((a, b) => {
+            const timeA = a.finishTime;
+            const timeB = b.finishTime;
+
+            if (!timeA && !timeB) return 0;
+            if (!timeA) return 1;
+            if (!timeB) return -1;
+
+            return timeA - timeB;
+          });
+        }
+
+        io.to(roomCode).emit('gameFinished', { results: finishedResults });
+      }
+    }
+  });
+
   // Handle disconnect
   socket.on('disconnect', async () => {
     console.log('User disconnected:', socket.id);
