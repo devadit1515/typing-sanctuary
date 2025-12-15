@@ -54,10 +54,38 @@
       background-clip: text;
     }
 
+    .profile-bio-container {
+      margin-bottom: 16px;
+    }
+
     .profile-bio {
       color: rgba(226, 232, 240, 0.7);
       font-size: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 12px;
+    }
+
+    .profile-bio-edit {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 16px;
+      font-family: inherit;
+      resize: vertical;
+      margin-bottom: 12px;
+    }
+
+    .profile-bio-edit:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .bio-actions {
+      display: flex;
+      gap: 8px;
     }
 
     .stats-grid {
@@ -202,6 +230,180 @@
       background: rgba(255, 50, 100, 0.1);
       color: var(--color-error);
       border: 1px solid rgba(255, 50, 100, 0.3);
+    }
+
+    /* Autocomplete Dropdown */
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 8px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .autocomplete-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .autocomplete-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .autocomplete-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .autocomplete-username {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .autocomplete-displayname {
+      font-size: 13px;
+      color: rgba(226, 232, 240, 0.6);
+    }
+
+    /* Friends Styles */
+    .friend-item, .friend-request-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .friend-item:hover, .friend-request-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(4px);
+    }
+
+    .friend-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .friend-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .friend-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .friend-username {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .friend-status {
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .status-online {
+      background: var(--color-success);
+      box-shadow: 0 0 8px var(--color-success);
+    }
+
+    .status-offline {
+      background: rgba(226, 232, 240, 0.3);
+    }
+
+    .friend-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-accept {
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--color-success);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-accept:hover {
+      background: rgba(0, 255, 136, 0.25);
+    }
+
+    .btn-reject, .btn-remove {
+      background: rgba(255, 50, 100, 0.15);
+      color: var(--color-error);
+      border: 1px solid rgba(255, 50, 100, 0.3);
+    }
+
+    .btn-reject:hover, .btn-remove:hover {
+      background: rgba(255, 50, 100, 0.25);
     }
 
     .loading {
@@ -375,6 +577,17 @@
         <button id="confirmResetBtn" class="btn btn-danger">Yes, Reset Everything</button>
         <button id="cancelResetBtn" class="btn btn-secondary">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Game Players Modal -->
+  <div id="gamePlayersModal" class="modal hidden">
+    <div class="modal-content" style="max-width: 600px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="font-size: 28px; color: #e2e8f0;">Game Players</h2>
+        <button id="closePlayersModal" class="btn btn-secondary btn-small">Close</button>
+      </div>
+      <div id="gamePlayersList"></div>
     </div>
   </div>
 

@@ -6,20 +6,43 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
 const app = express();
 const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+  cors: {
+    origin: process.env.CLIENT_URL || '*',
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000
+});
 const path = require('path');
 
 // Import database connection
 const connectDB = require('./config/database');
 
+// Import models
+const User = require('./models/User');
+const Friend = require('./models/Friend');
+
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const gameRoutes = require('./routes/gameRoutes');
-const leaderboardRoutes = require('./routes/leaderboardRoutes');
+const passwordResetRoutes = require('./routes/passwordResetRoutes');
+const friendsRoutes = require('./routes/friendsRoutes');
 
 // Connect to database
 connectDB();
+
+// CORS Middleware - Must be before other middleware
+const cors = require('cors');
+app.use(cors({
+  origin: process.env.CLIENT_URL || '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware
 app.use(express.json()); // Parse JSON bodies
@@ -45,14 +68,34 @@ app.use(session({
   }
 }));
 
+// Health check endpoint (important for Netlify/deployment monitoring)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    mongodb: require('mongoose').connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/game', gameRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/friends', friendsRoutes);
 
 // Serve static files from public directory
 app.use(express.static('public'));
+
+// Fallback route for SPA
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+    return next();
+  }
+  // Serve index.html for client-side routing
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Game rooms storage
 const rooms = new Map();
@@ -114,6 +157,85 @@ function getRandomPassage(length = 'medium') {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Handle user authentication and online status
+  socket.on('userOnline', async ({ userId }) => {
+    try {
+      const user = await User.findById(userId);
+      if (user) {
+        user.onlineStatus.isOnline = true;
+        user.onlineStatus.socketId = socket.id;
+        user.onlineStatus.lastSeen = Date.now();
+        await user.save();
+
+        // Store userId in socket for later use
+        socket.userId = userId;
+
+        // Notify friends that user is online
+        const friends = await Friend.find({
+          $or: [
+            { requester: userId },
+            { recipient: userId }
+          ],
+          status: 'accepted'
+        }).populate('requester recipient', 'onlineStatus');
+
+        // Emit to each online friend
+        friends.forEach(friend => {
+          const friendUser = friend.requester._id.toString() === userId ? friend.recipient : friend.requester;
+          if (friendUser.onlineStatus.isOnline && friendUser.onlineStatus.socketId) {
+            io.to(friendUser.onlineStatus.socketId).emit('friendOnline', {
+              userId: user._id,
+              username: user.username,
+              displayName: user.profile.displayName
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error setting user online:', error);
+    }
+  });
+
+  // Handle friend game invite
+  socket.on('inviteFriend', async ({ friendId, roomCode }) => {
+    try {
+      const friend = await User.findById(friendId);
+      if (friend && friend.onlineStatus.isOnline && friend.onlineStatus.socketId) {
+        const inviter = await User.findById(socket.userId);
+        io.to(friend.onlineStatus.socketId).emit('gameInvite', {
+          from: {
+            id: inviter._id,
+            username: inviter.username,
+            displayName: inviter.profile.displayName
+          },
+          roomCode
+        });
+      }
+    } catch (error) {
+      console.error('Error inviting friend:', error);
+    }
+  });
+
+  // Notify user when they receive a friend request
+  socket.on('friendRequestSent', async ({ recipientId, requestId }) => {
+    try {
+      const recipient = await User.findById(recipientId);
+      if (recipient && recipient.onlineStatus.isOnline && recipient.onlineStatus.socketId) {
+        const sender = await User.findById(socket.userId);
+        io.to(recipient.onlineStatus.socketId).emit('friendRequestReceived', {
+          requestId: requestId,
+          from: {
+            id: sender._id,
+            username: sender.username,
+            displayName: sender.profile.displayName
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error notifying friend request:', error);
+    }
+  });
+
   // Create a new room
   socket.on('createRoom', ({ playerName, gameMode, difficulty, passageLength }) => {
     const roomCode = generateRoomCode();
@@ -139,6 +261,11 @@ io.on('connection', (socket) => {
       accuracy: 100,
       finished: false,
       finishTime: null,
+      rawTime: null,
+      errors: 0,
+      hearts: 3,
+      penaltyTime: 0,
+      totalTime: null,
       isBot: false
     });
 
@@ -153,6 +280,11 @@ io.on('connection', (socket) => {
         accuracy: 100,
         finished: false,
         finishTime: null,
+        rawTime: null,
+        errors: 0,
+        hearts: 3,
+        penaltyTime: 0,
+        totalTime: null,
         isBot: true
       });
     }
@@ -205,6 +337,11 @@ io.on('connection', (socket) => {
       accuracy: 100,
       finished: false,
       finishTime: null,
+      rawTime: null,
+      errors: 0,
+      hearts: 3,
+      penaltyTime: 0,
+      totalTime: null,
       isBot: false
     });
 
@@ -334,7 +471,7 @@ io.on('connection', (socket) => {
   }
 
   // Update player progress
-  socket.on('updateProgress', ({ progress, wpm, accuracy }) => {
+  socket.on('updateProgress', ({ progress, wpm, accuracy, errors, hearts }) => {
     const roomCode = socket.roomCode;
     const room = rooms.get(roomCode);
 
@@ -347,16 +484,28 @@ io.on('connection', (socket) => {
       player.progress = progress;
       player.wpm = wpm;
       player.accuracy = accuracy;
+      player.errors = errors || 0;
+      player.hearts = hearts !== undefined ? hearts : 3;
 
       // Check if player finished
       if (progress >= 100 && !player.finished) {
         player.finished = true;
-        player.finishTime = Date.now() - room.startTime;
+        player.rawTime = Date.now() - room.startTime;
+
+        // Calculate penalty time: 0.5 seconds per error AFTER hearts run out
+        const errorsAfterHearts = Math.max(0, player.errors - 3);
+        player.penaltyTime = errorsAfterHearts * 500; // 500ms = 0.5 seconds
+        player.totalTime = player.rawTime + player.penaltyTime;
+        player.finishTime = player.totalTime; // For backward compatibility
 
         io.to(roomCode).emit('playerFinished', {
           playerId: socket.id,
           playerName: player.name,
-          finishTime: player.finishTime,
+          rawTime: player.rawTime,
+          penaltyTime: player.penaltyTime,
+          totalTime: player.totalTime,
+          finishTime: player.totalTime,
+          errors: player.errors,
           wpm: player.wpm,
           accuracy: player.accuracy
         });
@@ -367,13 +516,13 @@ io.on('connection', (socket) => {
           room.gameState = 'finished';
           const results = Array.from(room.players.values())
             .sort((a, b) => {
-              // Players who didn't finish (finishTime === null) go to the bottom
-              if (a.finishTime === null && b.finishTime === null) return 0;
-              if (a.finishTime === null) return 1;
-              if (b.finishTime === null) return -1;
+              // Players who didn't finish (totalTime === null) go to the bottom
+              if (a.totalTime === null && b.totalTime === null) return 0;
+              if (a.totalTime === null) return 1;
+              if (b.totalTime === null) return -1;
 
-              // Sort by finish time
-              return a.finishTime - b.finishTime;
+              // Sort by total time (raw time + penalties)
+              return a.totalTime - b.totalTime;
             });
 
           io.to(roomCode).emit('gameFinished', { results });
@@ -412,6 +561,11 @@ io.on('connection', (socket) => {
       player.accuracy = 100;
       player.finished = false;
       player.finishTime = null;
+      player.rawTime = null;
+      player.errors = 0;
+      player.hearts = 3;
+      player.penaltyTime = 0;
+      player.totalTime = null;
     });
 
     io.to(roomCode).emit('rematchStarted', {
@@ -420,8 +574,42 @@ io.on('connection', (socket) => {
   });
 
   // Handle disconnect
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     console.log('User disconnected:', socket.id);
+
+    // Set user offline
+    if (socket.userId) {
+      try {
+        const user = await User.findById(socket.userId);
+        if (user) {
+          user.onlineStatus.isOnline = false;
+          user.onlineStatus.lastSeen = Date.now();
+          user.onlineStatus.socketId = null;
+          await user.save();
+
+          // Notify friends that user is offline
+          const friends = await Friend.find({
+            $or: [
+              { requester: socket.userId },
+              { recipient: socket.userId }
+            ],
+            status: 'accepted'
+          }).populate('requester recipient', 'onlineStatus');
+
+          friends.forEach(friend => {
+            const friendUser = friend.requester._id.toString() === socket.userId ? friend.recipient : friend.requester;
+            if (friendUser.onlineStatus.isOnline && friendUser.onlineStatus.socketId) {
+              io.to(friendUser.onlineStatus.socketId).emit('friendOffline', {
+                userId: user._id,
+                username: user.username
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error setting user offline:', error);
+      }
+    }
 
     const roomCode = socket.roomCode;
     if (roomCode) {

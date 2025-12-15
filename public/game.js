@@ -1,4 +1,38 @@
-const socket = io();
+// Socket.IO connection with error handling
+const socket = io({
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: 5,
+    timeout: 20000
+});
+
+// Connection event handlers
+socket.on('connect', () => {
+    console.log('✅ Connected to server');
+});
+
+socket.on('connect_error', (error) => {
+    console.error('❌ Connection error:', error);
+    showError('Connection error. Please check your internet connection and try again.');
+});
+
+socket.on('disconnect', (reason) => {
+    console.warn('⚠️ Disconnected:', reason);
+    if (reason === 'io server disconnect') {
+        // Server forcefully disconnected - try to reconnect
+        socket.connect();
+    }
+});
+
+socket.on('reconnect', (attemptNumber) => {
+    console.log(`✅ Reconnected after ${attemptNumber} attempts`);
+});
+
+socket.on('reconnect_failed', () => {
+    showError('Unable to connect to server. Please refresh the page.');
+});
 
 // Game state
 let gameState = {
@@ -10,6 +44,8 @@ let gameState = {
     startTime: null,
     errors: 0,
     typedChars: 0,
+    hearts: 3,
+    totalErrors: 0,
     gameMode: 'multiplayer',
     difficulty: 'level3',
     passageLength: 'medium'
@@ -60,7 +96,10 @@ const elements = {
     resultsContainer: document.getElementById('resultsContainer'),
     hostRematchControls: document.getElementById('hostRematchControls'),
     rematchBtn: document.getElementById('rematchBtn'),
-    backToMenuBtn: document.getElementById('backToMenuBtn')
+    backToMenuBtn: document.getElementById('backToMenuBtn'),
+    heart1: document.getElementById('heart1'),
+    heart2: document.getElementById('heart2'),
+    heart3: document.getElementById('heart3')
 };
 
 // Utility functions
@@ -305,6 +344,11 @@ socket.on('gameStart', ({ passage, startTime }) => {
     gameState.currentIndex = 0;
     gameState.errors = 0;
     gameState.typedChars = 0;
+    gameState.hearts = 3;
+    gameState.totalErrors = 0;
+
+    // Reset hearts display
+    updateHeartsDisplay();
 
     displayPassage();
     elements.typingInput.value = '';
@@ -450,6 +494,18 @@ function startTimer() {
 // Track the furthest correct position reached
 let furthestCorrectPosition = 0;
 
+// Function to update hearts display
+function updateHeartsDisplay() {
+    const hearts = [elements.heart1, elements.heart2, elements.heart3];
+    hearts.forEach((heart, index) => {
+        if (index < gameState.hearts) {
+            heart.classList.remove('lost');
+        } else {
+            heart.classList.add('lost');
+        }
+    });
+}
+
 // Prevent backspace on correctly typed characters
 elements.typingInput.addEventListener('keydown', (e) => {
     const typed = elements.typingInput.value;
@@ -476,10 +532,28 @@ elements.typingInput.addEventListener('keydown', (e) => {
 // Typing input handler
 elements.typingInput.addEventListener('input', () => {
     const typed = elements.typingInput.value;
+    const previousLength = gameState.currentIndex;
     gameState.currentIndex = typed.length;
     gameState.typedChars = typed.length;
 
-    // Count errors
+    // Track errors incrementally - only for newly typed characters
+    if (typed.length > previousLength) {
+        const newChar = typed[typed.length - 1];
+        const expectedChar = gameState.passage[typed.length - 1];
+
+        if (newChar !== expectedChar) {
+            // Increment total errors
+            gameState.totalErrors++;
+
+            // Lose a heart if we still have hearts
+            if (gameState.hearts > 0) {
+                gameState.hearts--;
+                updateHeartsDisplay();
+            }
+        }
+    }
+
+    // Count current errors in typed text (for accuracy calculation)
     gameState.errors = 0;
     for (let i = 0; i < typed.length; i++) {
         if (typed[i] !== gameState.passage[i]) {
@@ -496,11 +570,13 @@ elements.typingInput.addEventListener('input', () => {
     const wpm = Math.round(wordsTyped / elapsed) || 0;
     const accuracy = typed.length > 0 ? Math.round(((typed.length - gameState.errors) / typed.length) * 100) : 100;
 
-    // Send progress update
+    // Send progress update with errors and hearts
     socket.emit('updateProgress', {
         progress,
         wpm,
-        accuracy
+        accuracy,
+        errors: gameState.totalErrors,
+        hearts: gameState.hearts
     });
 
     // Check if finished
@@ -550,12 +626,35 @@ function displayResults(results) {
 
         const stats = document.createElement('div');
         stats.className = 'player-stats';
-        const time = player.finishTime ? (player.finishTime / 1000).toFixed(2) : 'DNF';
-        stats.innerHTML = `
-            <span>${time}s</span> •
-            <span>${player.wpm} WPM</span> •
-            <span>${player.accuracy}% accuracy</span>
-        `;
+
+        // Display time breakdown
+        let timeDisplay = 'DNF';
+        if (player.finishTime) {
+            const rawTime = player.rawTime ? (player.rawTime / 1000).toFixed(2) : (player.finishTime / 1000).toFixed(2);
+            const penaltyTime = player.penaltyTime ? (player.penaltyTime / 1000).toFixed(1) : '0.0';
+            const totalTime = player.totalTime ? (player.totalTime / 1000).toFixed(2) : (player.finishTime / 1000).toFixed(2);
+            const errors = player.errors || 0;
+
+            // Show breakdown if there are penalties
+            if (player.penaltyTime && player.penaltyTime > 0) {
+                timeDisplay = `<span style="color: #00d4ff;">${rawTime}s</span> + <span style="color: #ff3264;">${penaltyTime}s</span> = <span style="color: #00ff88; font-weight: 700;">${totalTime}s</span>`;
+            } else {
+                timeDisplay = `<span style="color: #00ff88; font-weight: 700;">${totalTime}s</span>`;
+            }
+
+            stats.innerHTML = `
+                ${timeDisplay} •
+                <span>${player.wpm} WPM</span> •
+                <span>${player.accuracy}% accuracy</span> •
+                <span style="color: ${errors > 3 ? '#ff3264' : '#fbbf24'};">${errors} errors</span>
+            `;
+        } else {
+            stats.innerHTML = `
+                <span>${timeDisplay}</span> •
+                <span>${player.wpm} WPM</span> •
+                <span>${player.accuracy}% accuracy</span>
+            `;
+        }
 
         info.appendChild(name);
         info.appendChild(stats);
@@ -563,11 +662,138 @@ function displayResults(results) {
         div.appendChild(rank);
         div.appendChild(info);
 
+        // Add friend request button for other players (not yourself, not bots)
+        if (player.id !== socket.id && !player.isBot && currentUserId) {
+            const friendActions = document.createElement('div');
+            friendActions.className = 'friend-actions-results';
+            friendActions.id = `friend-actions-${player.id}`;
+
+            // Check if already friends or request pending
+            checkFriendStatus(player.name, player.id, friendActions);
+
+            div.appendChild(friendActions);
+        }
+
         elements.resultsContainer.appendChild(div);
     });
 
     if (gameState.isHost) {
         elements.hostRematchControls.classList.remove('hidden');
+    }
+}
+
+// Check friend status and display appropriate button
+async function checkFriendStatus(username, playerId, container) {
+    try {
+        // Get friends list
+        const friendsResponse = await fetch('/api/friends/list');
+        const friendsData = await friendsResponse.json();
+        const friends = friendsData.friends || [];
+
+        // Get pending requests
+        const requestsResponse = await fetch('/api/friends/pending');
+        const requestsData = await requestsResponse.json();
+        const receivedRequests = requestsData.received || [];
+        const sentRequests = requestsData.sent || [];
+
+        // Check if already friends
+        const isFriend = friends.some(f => f.username === username);
+        if (isFriend) {
+            container.innerHTML = '<span style="color: var(--color-success); font-size: 14px;">✓ Friends</span>';
+            return;
+        }
+
+        // Check if request already sent
+        const requestSent = sentRequests.some(r => r.to.username === username);
+        if (requestSent) {
+            container.innerHTML = '<span style="color: rgba(226, 232, 240, 0.6); font-size: 14px;">Request Sent</span>';
+            return;
+        }
+
+        // Check if request received (show accept/reject)
+        const requestReceived = receivedRequests.find(r => r.from.username === username);
+        if (requestReceived) {
+            container.innerHTML = `
+                <button class="btn-small btn-primary" onclick="acceptFriendRequestInGame('${requestReceived.id}', '${playerId}')">Accept</button>
+                <button class="btn-small btn-secondary" onclick="rejectFriendRequestInGame('${requestReceived.id}', '${playerId}')">Reject</button>
+            `;
+            return;
+        }
+
+        // Show add friend button
+        container.innerHTML = `<button class="btn-small btn-primary" onclick="sendFriendRequestInGame('${username}', '${playerId}')">Add Friend</button>`;
+    } catch (error) {
+        console.error('Error checking friend status:', error);
+    }
+}
+
+// Send friend request from game results
+async function sendFriendRequestInGame(username, playerId) {
+    try {
+        const response = await fetch('/api/friends/request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Emit socket event to notify recipient
+            if (data.recipientId) {
+                socket.emit('friendRequestSent', {
+                    recipientId: data.recipientId,
+                    requestId: data.request.id
+                });
+            }
+
+            // Update button
+            const container = document.getElementById(`friend-actions-${playerId}`);
+            if (container) {
+                container.innerHTML = '<span style="color: rgba(226, 232, 240, 0.6); font-size: 14px;">Request Sent</span>';
+            }
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        console.error('Error sending friend request:', error);
+        alert('Failed to send friend request');
+    }
+}
+
+// Accept friend request from game results
+async function acceptFriendRequestInGame(requestId, playerId) {
+    try {
+        const response = await fetch(`/api/friends/accept/${requestId}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            const container = document.getElementById(`friend-actions-${playerId}`);
+            if (container) {
+                container.innerHTML = '<span style="color: var(--color-success); font-size: 14px;">✓ Friends</span>';
+            }
+        }
+    } catch (error) {
+        console.error('Error accepting friend request:', error);
+    }
+}
+
+// Reject friend request from game results
+async function rejectFriendRequestInGame(requestId, playerId) {
+    try {
+        const response = await fetch(`/api/friends/reject/${requestId}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            const container = document.getElementById(`friend-actions-${playerId}`);
+            if (container) {
+                container.innerHTML = `<button class="btn-small btn-primary" onclick="sendFriendRequestInGame('${playerId}')">Add Friend</button>`;
+            }
+        }
+    } catch (error) {
+        console.error('Error rejecting friend request:', error);
     }
 }
 
@@ -625,4 +851,164 @@ async function saveGameResult(results) {
         console.error('Error saving game result:', error);
         // Don't show error to user, just log it
     }
+}
+
+// ===== FRIENDS AND INVITE FUNCTIONALITY =====
+
+let currentUserId = null;
+let currentInviteRoomCode = null;
+
+// Check if user is logged in and register online status
+async function registerUserOnline() {
+    try {
+        const response = await fetch('/api/auth/me');
+        const data = await response.json();
+
+        if (data.success && data.user) {
+            currentUserId = data.user._id;
+
+            // Notify server that user is online
+            socket.emit('userOnline', { userId: currentUserId });
+
+            // Show invite friends button in lobby
+            const inviteContainer = document.getElementById('inviteFriendsContainer');
+            if (inviteContainer) {
+                inviteContainer.classList.remove('hidden');
+            }
+        }
+    } catch (error) {
+        console.error('Error registering user online:', error);
+    }
+}
+
+// Call this when socket connects
+socket.on('connect', () => {
+    registerUserOnline();
+});
+
+// Handle friend online/offline events
+socket.on('friendOnline', ({ userId, username, displayName }) => {
+    console.log(`Friend ${username} is now online`);
+});
+
+socket.on('friendOffline', ({ userId, username }) => {
+    console.log(`Friend ${username} is now offline`);
+});
+
+// Handle incoming game invite
+socket.on('gameInvite', ({ from, roomCode }) => {
+    currentInviteRoomCode = roomCode;
+
+    const notification = document.getElementById('gameInviteNotification');
+    const inviteFromUser = document.getElementById('inviteFromUser');
+
+    inviteFromUser.textContent = `${from.username} invited you to play!`;
+    notification.classList.remove('hidden');
+
+    // Auto-hide after 30 seconds
+    setTimeout(() => {
+        if (notification && !notification.classList.contains('hidden')) {
+            notification.classList.add('hidden');
+        }
+    }, 30000);
+});
+
+// Accept game invite
+document.getElementById('acceptInviteBtn')?.addEventListener('click', () => {
+    if (currentInviteRoomCode) {
+        const playerName = gameState.playerName || localStorage.getItem('username') || 'Guest';
+
+        // Join the room
+        socket.emit('joinRoom', { roomCode: currentInviteRoomCode, playerName });
+
+        // Hide notification
+        document.getElementById('gameInviteNotification').classList.add('hidden');
+        currentInviteRoomCode = null;
+    }
+});
+
+// Decline game invite
+document.getElementById('declineInviteBtn')?.addEventListener('click', () => {
+    document.getElementById('gameInviteNotification').classList.add('hidden');
+    currentInviteRoomCode = null;
+});
+
+// Open friends invite modal
+document.getElementById('inviteFriendsBtn')?.addEventListener('click', async () => {
+    try {
+        const response = await fetch('/api/friends/online');
+        const data = await response.json();
+
+        const onlineFriends = data.onlineFriends || [];
+        const modal = document.getElementById('friendsInviteModal');
+        const friendsList = document.getElementById('onlineFriendsList');
+
+        if (onlineFriends.length === 0) {
+            friendsList.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: rgba(226, 232, 240, 0.6);">
+                    <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+                    <div style="font-size: 18px;">No friends online</div>
+                    <div style="font-size: 14px; margin-top: 8px;">Invite your friends to add them!</div>
+                </div>
+            `;
+        } else {
+            friendsList.innerHTML = onlineFriends.map(friend => {
+                const initial = friend.username.charAt(0).toUpperCase();
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white;">
+                                ${initial}
+                            </div>
+                            <div>
+                                <div style="font-size: 16px; font-weight: 600; color: #e2e8f0;">${friend.username}</div>
+                                <div style="font-size: 13px; color: var(--color-success); display: flex; align-items: center; gap: 6px;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); box-shadow: 0 0 8px var(--color-success);"></span>
+                                    Online
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="inviteFriendToGame('${friend.id}', '${friend.username}')" class="btn btn-primary btn-small">
+                            Invite
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error loading online friends:', error);
+    }
+});
+
+// Close friends modal
+document.getElementById('closeFriendsModal')?.addEventListener('click', () => {
+    document.getElementById('friendsInviteModal').classList.add('hidden');
+});
+
+// Close modal when clicking outside
+document.getElementById('friendsInviteModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'friendsInviteModal') {
+        document.getElementById('friendsInviteModal').classList.add('hidden');
+    }
+});
+
+// Invite friend to game
+function inviteFriendToGame(friendId, friendUsername) {
+    const roomCode = gameState.roomCode;
+
+    if (!roomCode) {
+        alert('You need to create a room first!');
+        return;
+    }
+
+    // Send invite via socket
+    socket.emit('inviteFriend', { friendId, roomCode });
+
+    // Show feedback
+    alert(`Invite sent to ${friendUsername}!`);
+
+    // Close modal
+    document.getElementById('friendsInviteModal').classList.add('hidden');
 }

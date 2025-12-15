@@ -1,4 +1,34 @@
+# Dependencies
 node_modules/
+package-lock.json
+
+# Environment variables
 .env
+.env.local
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
 nul
+
+# IDE
+.vscode/
+.idea/
 .claude/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+
+# Temporary files
+tmp/
+temp/

@@ -248,3 +248,52 @@ exports.resetStats = async (req, res) => {
     });
   }
 };
+
+/**
+ * Update user bio
+ * POST /api/profile/update-bio
+ */
+exports.updateBio = async (req, res) => {
+  try {
+    if (!req.session.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authenticated'
+      });
+    }
+
+    const { bio } = req.body;
+
+    if (bio && bio.length > 200) {
+      return res.status(400).json({
+        success: false,
+        message: 'Bio cannot exceed 200 characters'
+      });
+    }
+
+    const user = await User.findById(req.session.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    user.profile.bio = bio || '';
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Bio updated successfully',
+      bio: user.profile.bio
+    });
+
+  } catch (error) {
+    console.error('Update bio error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};

@@ -109,6 +109,22 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  // Online Status
+  onlineStatus: {
+    isOnline: {
+      type: Boolean,
+      default: false
+    },
+    lastSeen: {
+      type: Date,
+      default: Date.now
+    },
+    socketId: {
+      type: String,
+      default: null
+    }
+  },
+
   // Metadata
   createdAt: {
     type: Date,

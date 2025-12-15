@@ -7,54 +7,319 @@
   <link rel="stylesheet" href="auth-styles.css">
 </head>
 <body>
+  <!-- Full-Page Animated Background -->
+  <div class="premium-background">
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+    <canvas id="particleCanvas" class="particle-canvas"></canvas>
+  </div>
+
+  <!-- Home Button -->
+  <a href="index.html" class="home-button">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </a>
+
+  <!-- Split-Screen Container -->
   <div class="auth-container">
-    <div class="auth-box">
-      <div class="auth-header">
-        <h1>⚡ Speed Typing Battle</h1>
-        <p>Login to continue your typing journey</p>
-      </div>
 
-      <form id="loginForm" class="auth-form">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            required
-            autocomplete="username"
-            placeholder="Enter your username"
-            minlength="3"
-            maxlength="20"
-          >
+    <!-- LEFT SECTION - FORM AREA -->
+    <div class="form-section">
+      <div class="form-content">
+
+        <!-- Header -->
+        <div class="auth-header">
+          <div class="sanctuary-brand">Typing Sanctuary</div>
+          <h1 class="title-gradient">Welcome Back</h1>
+          <p class="subtitle">Login to continue your typing journey</p>
         </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            required
-            autocomplete="current-password"
-            placeholder="Enter your password"
-            minlength="6"
-          >
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form">
+
+          <!-- Username Field -->
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="username"
+                name="username"
+                required
+                autocomplete="username"
+                minlength="3"
+                maxlength="20"
+                class="premium-input"
+                placeholder=" "
+              >
+              <label for="username" class="floating-label">Username</label>
+              <div class="input-border"></div>
+              <div class="input-glow"></div>
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                autocomplete="current-password"
+                minlength="6"
+                class="premium-input"
+                placeholder=" "
+              >
+              <label for="password" class="floating-label">Password</label>
+              <button type="button" class="password-toggle" id="passwordToggle">
+                <svg class="eye-icon show-password" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <svg class="eye-icon hide-password" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <div class="input-border"></div>
+              <div class="input-glow"></div>
+            </div>
+          </div>
+
+          <!-- Forgot Password -->
+          <div class="form-options">
+            <a href="forgot-password.html" class="forgot-password">Forgot password?</a>
+          </div>
+
+          <!-- Error Message -->
+          <div id="errorMessage" class="error-message"></div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="premium-button" id="loginBtn">
+            <span class="button-text">Login</span>
+            <span class="button-glow"></span>
+            <span class="button-shimmer"></span>
+          </button>
+
+        </form>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+          <p class="footer-text">
+            Don't have an account?
+            <a href="register.html" class="link-gradient">Register here</a>
+          </p>
         </div>
 
-        <div id="errorMessage" class="error-message"></div>
-
-        <button type="submit" class="btn-primary" id="loginBtn">
-          Login
-        </button>
-      </form>
-
-      <div class="auth-footer">
-        <p>Don't have an account? <a href="register.html">Register here</a></p>
       </div>
     </div>
+
+    <!-- RIGHT SECTION - HERO SHOWCASE -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <h2 class="hero-title">Master Your Speed</h2>
+        <p class="hero-subtitle">
+          Join thousands of typists improving their speed and accuracy every day.
+          Challenge yourself, compete with others, and track your progress.
+        </p>
+
+        <!-- Typing Demo -->
+        <div class="typing-demo" id="typingDemo">
+          The quick brown fox...
+        </div>
+
+        <!-- Features -->
+        <div class="hero-stats">
+          <div class="stat-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" stroke="url(#feature-gradient-1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="feature-gradient-1" x1="3" y1="2" x2="21" y2="22">
+                  <stop offset="0%" stop-color="#00d9ff"/>
+                  <stop offset="100%" stop-color="#a855f7"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="stat-label">Real-time Battles</span>
+          </div>
+          <div class="stat-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="url(#feature-gradient-2)" stroke-width="2"/>
+              <path d="M12 6v6l4 2" stroke="url(#feature-gradient-2)" stroke-width="2" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="feature-gradient-2" x1="2" y1="2" x2="22" y2="22">
+                  <stop offset="0%" stop-color="#00d9ff"/>
+                  <stop offset="100%" stop-color="#a855f7"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="stat-label">Track Progress</span>
+          </div>
+          <div class="stat-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="url(#feature-gradient-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="feature-gradient-3" x1="2" y1="2" x2="22" y2="22">
+                  <stop offset="0%" stop-color="#00d9ff"/>
+                  <stop offset="100%" stop-color="#a855f7"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="stat-label">Level Up Skills</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="auth.js"></script>
+  <script>
+    // Enhanced Particle Animation
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    const particleCount = 80;
+    const connectionDistance = 120;
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2.5 + 0.5;
+        this.speedX = Math.random() * 0.8 - 0.4;
+        this.speedY = Math.random() * 0.8 - 0.4;
+        this.opacity = Math.random() * 0.5 + 0.3;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        if (this.x > canvas.width) this.x = 0;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.y > canvas.height) this.y = 0;
+        if (this.y < 0) this.y = canvas.height;
+      }
+
+      draw() {
+        ctx.fillStyle = `rgba(0, 217, 255, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Create particles
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    // Draw connections between nearby particles
+    function drawConnections() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < connectionDistance) {
+            const opacity = (1 - distance / connectionDistance) * 0.15;
+            ctx.strokeStyle = `rgba(0, 217, 255, ${opacity})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawConnections();
+
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+      });
+
+      requestAnimationFrame(animateParticles);
+    }
+
+    animateParticles();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Animated Typing Demo
+    const typingDemo = document.getElementById('typingDemo');
+    const phrases = [
+      'The quick brown fox...',
+      'jumps over the lazy dog',
+      'Type faster, type better',
+      'Challenge yourself today',
+      'Master your keyboard'
+    ];
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
+    function typeEffect() {
+      const currentPhrase = phrases[phraseIndex];
+
+      if (isDeleting) {
+        typingDemo.textContent = currentPhrase.substring(0, charIndex - 1);
+        charIndex--;
+      } else {
+        typingDemo.textContent = currentPhrase.substring(0, charIndex + 1);
+        charIndex++;
+      }
+
+      let typeSpeed = isDeleting ? 50 : 100;
+
+      if (!isDeleting && charIndex === currentPhrase.length) {
+        typeSpeed = 2000;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        typeSpeed = 500;
+      }
+
+      setTimeout(typeEffect, typeSpeed);
+    }
+
+    // Start typing effect after page load
+    setTimeout(typeEffect, 1000);
+
+    // Password Toggle
+    const passwordToggle = document.getElementById('passwordToggle');
+    const passwordInput = document.getElementById('password');
+
+    passwordToggle.addEventListener('click', () => {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      passwordToggle.classList.toggle('active');
+    });
+
+    // Auto-focus first input
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('username').focus();
+      document.body.classList.add('loaded');
+    });
+  </script>
 </body>
 </html>

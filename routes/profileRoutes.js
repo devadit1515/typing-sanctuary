@@ -24,4 +24,7 @@ router.get('/stats', requireAuth, profileController.getStats);
 // Reset current user's stats (protected)
 router.post('/reset-stats', requireAuth, profileController.resetStats);
 
+// Update bio (protected)
+router.post('/update-bio', requireAuth, profileController.updateBio);
+
 module.exports = router;

@@ -7,82 +7,451 @@
   <link rel="stylesheet" href="auth-styles.css">
 </head>
 <body>
+  <!-- Full-Page Animated Background -->
+  <div class="premium-background">
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+    <canvas id="particleCanvas" class="particle-canvas"></canvas>
+  </div>
+
+  <!-- Home Button -->
+  <a href="index.html" class="home-button">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </a>
+
+  <!-- Split-Screen Container -->
   <div class="auth-container">
-    <div class="auth-box">
-      <div class="auth-header">
-        <h1>⚡ Speed Typing Battle</h1>
-        <p>Create your account to start playing</p>
-      </div>
 
-      <form id="registerForm" class="auth-form">
-        <div class="form-group">
-          <label for="username">Username *</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            required
-            autocomplete="username"
-            placeholder="Choose a username (3-20 characters)"
-            minlength="3"
-            maxlength="20"
-            pattern="[a-zA-Z0-9_]+"
-          >
-          <small class="form-hint">Letters, numbers, and underscores only</small>
-          <div id="usernameAvailability" class="availability-message"></div>
+    <!-- LEFT SECTION - FORM AREA -->
+    <div class="form-section">
+      <div class="form-content">
+
+        <!-- Header -->
+        <div class="auth-header">
+          <div class="sanctuary-brand">Typing Sanctuary</div>
+          <h1 class="title-gradient">Join the Battle</h1>
+          <p class="subtitle">Create your account and start your journey</p>
         </div>
 
-        <div class="form-group">
-          <label for="email">Email (optional)</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            autocomplete="email"
-            placeholder="your@email.com (optional)"
-          >
-          <small class="form-hint">For password recovery (optional)</small>
+        <!-- Register Form -->
+        <form id="registerForm" class="auth-form">
+
+          <!-- Username Field -->
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="username"
+                name="username"
+                required
+                autocomplete="username"
+                minlength="3"
+                maxlength="20"
+                pattern="[a-zA-Z0-9_]+"
+                class="premium-input"
+                placeholder=" "
+              >
+              <label for="username" class="floating-label">Username</label>
+              <div class="char-count">
+                <span id="usernameCount">0</span>/20
+              </div>
+              <div class="input-border"></div>
+              <div class="input-glow"></div>
+            </div>
+            <small class="form-hint">Letters, numbers, and underscores only</small>
+            <div id="usernameAvailability" class="availability-message"></div>
+          </div>
+
+          <!-- Email Field -->
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                autocomplete="email"
+                class="premium-input"
+                placeholder=" "
+              >
+              <label for="email" class="floating-label">Email (optional)</label>
+              <div class="input-border"></div>
+              <div class="input-glow"></div>
+            </div>
+            <small class="form-hint">For password recovery (optional)</small>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                autocomplete="new-password"
+                minlength="6"
+                class="premium-input"
+                placeholder=" "
+              >
+              <label for="password" class="floating-label">Password</label>
+              <button type="button" class="password-toggle" id="passwordToggle">
+                <svg class="eye-icon show-password" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <svg class="eye-icon hide-password" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <div class="input-border"></div>
+              <div class="input-glow"></div>
+            </div>
+            <!-- Password Strength Indicator -->
+            <div class="password-strength">
+              <div class="strength-bar">
+                <div class="strength-fill" id="strengthFill"></div>
+              </div>
+              <span class="strength-text" id="strengthText">Password strength</span>
+            </div>
+          </div>
+
+          <!-- Confirm Password Field -->
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                required
+                autocomplete="new-password"
+                minlength="6"
+                class="premium-input"
+                placeholder=" "
+              >
+              <label for="confirmPassword" class="floating-label">Confirm Password</label>
+              <button type="button" class="password-toggle" id="confirmPasswordToggle">
+                <svg class="eye-icon show-password" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <svg class="eye-icon hide-password" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <div class="input-border"></div>
+              <div class="input-glow"></div>
+              <div class="match-indicator" id="matchIndicator">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <div id="errorMessage" class="error-message"></div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="premium-button" id="registerBtn">
+            <span class="button-text">Create Account</span>
+            <span class="button-glow"></span>
+            <span class="button-shimmer"></span>
+          </button>
+
+        </form>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+          <p class="footer-text">
+            Already have an account?
+            <a href="login.html" class="link-gradient">Login here</a>
+          </p>
         </div>
 
-        <div class="form-group">
-          <label for="password">Password *</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            required
-            autocomplete="new-password"
-            placeholder="Choose a password (min 6 characters)"
-            minlength="6"
-          >
-        </div>
-
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password *</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            required
-            autocomplete="new-password"
-            placeholder="Re-enter your password"
-            minlength="6"
-          >
-        </div>
-
-        <div id="errorMessage" class="error-message"></div>
-
-        <button type="submit" class="btn-primary" id="registerBtn">
-          Create Account
-        </button>
-      </form>
-
-      <div class="auth-footer">
-        <p>Already have an account? <a href="login.html">Login here</a></p>
       </div>
     </div>
+
+    <!-- RIGHT SECTION - HERO SHOWCASE -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <h2 class="hero-title">Start Your Journey</h2>
+        <p class="hero-subtitle">
+          Transform your typing skills from beginner to expert.
+          Join our vibrant community and unlock your full potential.
+        </p>
+
+        <!-- Typing Demo -->
+        <div class="typing-demo" id="typingDemo">
+          Your journey begins here...
+        </div>
+
+        <!-- Features -->
+        <div class="hero-stats">
+          <div class="stat-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="url(#register-gradient-1)" stroke-width="2"/>
+              <path d="M9 12l2 2 4-4" stroke="url(#register-gradient-1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="register-gradient-1" x1="3" y1="3" x2="21" y2="21">
+                  <stop offset="0%" stop-color="#00d9ff"/>
+                  <stop offset="100%" stop-color="#a855f7"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="stat-label">100% Free</span>
+          </div>
+          <div class="stat-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="url(#register-gradient-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="9" cy="7" r="4" stroke="url(#register-gradient-2)" stroke-width="2"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="url(#register-gradient-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="register-gradient-2" x1="1" y1="3" x2="23" y2="21">
+                  <stop offset="0%" stop-color="#00d9ff"/>
+                  <stop offset="100%" stop-color="#a855f7"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="stat-label">Join Community</span>
+          </div>
+          <div class="stat-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="url(#register-gradient-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="22 4 12 14.01 9 11.01" stroke="url(#register-gradient-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="register-gradient-3" x1="2" y1="2" x2="22" y2="22">
+                  <stop offset="0%" stop-color="#00d9ff"/>
+                  <stop offset="100%" stop-color="#a855f7"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <span class="stat-label">Start Instantly</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="auth.js"></script>
+  <script>
+    // Enhanced Particle Animation
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    const particleCount = 80;
+    const connectionDistance = 120;
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2.5 + 0.5;
+        this.speedX = Math.random() * 0.8 - 0.4;
+        this.speedY = Math.random() * 0.8 - 0.4;
+        this.opacity = Math.random() * 0.5 + 0.3;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        if (this.x > canvas.width) this.x = 0;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.y > canvas.height) this.y = 0;
+        if (this.y < 0) this.y = canvas.height;
+      }
+
+      draw() {
+        ctx.fillStyle = `rgba(0, 217, 255, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Create particles
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    // Draw connections between nearby particles
+    function drawConnections() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < connectionDistance) {
+            const opacity = (1 - distance / connectionDistance) * 0.15;
+            ctx.strokeStyle = `rgba(0, 217, 255, ${opacity})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawConnections();
+
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+      });
+
+      requestAnimationFrame(animateParticles);
+    }
+
+    animateParticles();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Animated Typing Demo
+    const typingDemo = document.getElementById('typingDemo');
+    const phrases = [
+      'Your journey begins here...',
+      'Practice makes perfect',
+      'Speed meets accuracy',
+      'Compete and improve',
+      'Become a typing master'
+    ];
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
+    function typeEffect() {
+      const currentPhrase = phrases[phraseIndex];
+
+      if (isDeleting) {
+        typingDemo.textContent = currentPhrase.substring(0, charIndex - 1);
+        charIndex--;
+      } else {
+        typingDemo.textContent = currentPhrase.substring(0, charIndex + 1);
+        charIndex++;
+      }
+
+      let typeSpeed = isDeleting ? 50 : 100;
+
+      if (!isDeleting && charIndex === currentPhrase.length) {
+        typeSpeed = 2000;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        typeSpeed = 500;
+      }
+
+      setTimeout(typeEffect, typeSpeed);
+    }
+
+    // Start typing effect after page load
+    setTimeout(typeEffect, 1000);
+
+    // Password Toggles
+    const passwordToggle = document.getElementById('passwordToggle');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+
+    passwordToggle.addEventListener('click', () => {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      passwordToggle.classList.toggle('active');
+    });
+
+    confirmPasswordToggle.addEventListener('click', () => {
+      const type = confirmPasswordInput.type === 'password' ? 'text' : 'password';
+      confirmPasswordInput.type = type;
+      confirmPasswordToggle.classList.toggle('active');
+    });
+
+    // Character Counter
+    const usernameInput = document.getElementById('username');
+    const usernameCount = document.getElementById('usernameCount');
+
+    usernameInput.addEventListener('input', () => {
+      usernameCount.textContent = usernameInput.value.length;
+    });
+
+    // Password Strength Indicator
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+
+    passwordInput.addEventListener('input', () => {
+      const password = passwordInput.value;
+      let strength = 0;
+      let text = 'Weak';
+      let color = '#ff3264';
+
+      if (password.length >= 6) strength += 25;
+      if (password.length >= 10) strength += 25;
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+      if (/[0-9]/.test(password)) strength += 15;
+      if (/[^a-zA-Z0-9]/.test(password)) strength += 10;
+
+      if (strength >= 75) {
+        text = 'Strong';
+        color = '#00ff9f';
+      } else if (strength >= 50) {
+        text = 'Medium';
+        color = '#fbbf24';
+      }
+
+      strengthFill.style.width = `${strength}%`;
+      strengthFill.style.background = `linear-gradient(90deg, ${color}, ${color}dd)`;
+      strengthText.textContent = `Password strength: ${text}`;
+      strengthText.style.color = color;
+    });
+
+    // Password Match Indicator
+    const matchIndicator = document.getElementById('matchIndicator');
+
+    function checkPasswordMatch() {
+      if (confirmPasswordInput.value && passwordInput.value) {
+        if (confirmPasswordInput.value === passwordInput.value) {
+          matchIndicator.classList.add('show');
+          confirmPasswordInput.parentElement.classList.add('match');
+          confirmPasswordInput.parentElement.classList.remove('no-match');
+        } else {
+          matchIndicator.classList.remove('show');
+          confirmPasswordInput.parentElement.classList.add('no-match');
+          confirmPasswordInput.parentElement.classList.remove('match');
+        }
+      } else {
+        matchIndicator.classList.remove('show');
+        confirmPasswordInput.parentElement.classList.remove('match', 'no-match');
+      }
+    }
+
+    passwordInput.addEventListener('input', checkPasswordMatch);
+    confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+
+    // Auto-focus first input
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('username').focus();
+      document.body.classList.add('loaded');
+    });
+  </script>
 </body>
 </html>

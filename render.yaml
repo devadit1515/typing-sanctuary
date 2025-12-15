@@ -1,0 +1,31 @@
+# Render Blueprint for Speed Typing Battle
+# This file allows one-click deployment to Render
+
+services:
+  - type: web
+    name: speed-typing-battle
+    env: node
+    region: oregon # Change to your preferred region
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false # User must set this manually
+      - key: SESSION_SECRET
+        generateValue: true # Render auto-generates a secure random value
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USER
+        sync: false # User must set this manually
+      - key: EMAIL_PASSWORD
+        sync: false # User must set this manually
+      - key: EMAIL_FROM
+        sync: false # User must set this manually

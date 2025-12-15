@@ -30,7 +30,7 @@
     --glass-bg-active: rgba(255, 255, 255, 0.08);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-border-bright: rgba(255, 255, 255, 0.2);
-    --blur-amount: 20px;
+    --blur-amount: 10px;
 
     /* Transitions */
     --transition-speed: 0.3s;
@@ -245,8 +245,8 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: var(--glow-primary);
     animation: titleShimmer 3s ease-in-out infinite, fadeInTitle 1s var(--transition-easing);
+    filter: drop-shadow(0 0 20px rgba(138, 43, 226, 0.5));
 }
 
 @keyframes titleShimmer {
@@ -525,16 +525,35 @@ select:focus,
     box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.1), 0 8px 24px rgba(0, 212, 255, 0.15);
 }
 
+/* Select dropdown options styling */
 select option {
-    background: #1e293b;
+    background: #1a1a2e;
     color: #e2e8f0;
     padding: 12px;
 }
 
-select option:checked,
+select option:checked {
+    background: #2d2d44;
+    color: #00d4ff;
+    font-weight: 600;
+}
+
 select option:hover {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-    color: white;
+    background: #252540;
+    color: #ffffff;
+}
+
+/* Fix for selected option appearing white */
+select option:checked:hover {
+    background: #2d2d44;
+    color: #00d4ff;
+}
+
+/* Additional fix for webkit browsers */
+select option:active,
+select option[selected] {
+    background: #2d2d44 !important;
+    color: #00d4ff !important;
 }
 
 /* ========================================
@@ -772,6 +791,45 @@ select option:hover {
     text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
 }
 
+/* Hearts Display */
+.hearts-container {
+    position: fixed;
+    top: 32px;
+    right: 40px;
+    display: flex;
+    gap: 16px;
+    z-index: 1000;
+    padding: 16px 24px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.heart {
+    font-size: 36px;
+    transition: all 0.3s var(--transition-easing);
+    filter: drop-shadow(0 0 12px rgba(255, 50, 100, 0.6));
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.heart.lost {
+    opacity: 0.15;
+    filter: grayscale(100%) drop-shadow(0 0 4px rgba(255, 255, 255, 0.1));
+    transform: scale(0.8);
+    animation: none;
+}
+
+@keyframes heartbeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
 /* Passage Container */
 .passage-container {
     position: relative;
@@ -995,6 +1053,12 @@ select option:hover {
     font-weight: 700;
     margin-bottom: 8px;
     color: #e2e8f0;
+}
+
+.friend-actions-results {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 .player-info .player-stats {
@@ -1241,6 +1305,43 @@ select option:hover {
 }
 
 /* ========================================
+   BRAND LOGO
+   ======================================== */
+.brand-logo {
+    position: fixed;
+    top: 32px;
+    left: 40px;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.brand-text {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    background: linear-gradient(135deg, #00d9ff 0%, #a855f7 50%, #00ff9f 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 8s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.5))
+            drop-shadow(0 0 40px rgba(168, 85, 247, 0.3))
+            drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    transition: all 0.3s var(--transition-easing);
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* ========================================
    CREDIT FOOTER
    ======================================== */
 .credit-footer {
@@ -1399,35 +1500,6 @@ select option:hover {
     box-shadow: 0 4px 16px rgba(183, 77, 255, 0.3);
 }
 
-/* Leaderboard Link */
-.leaderboard-link {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--blur-amount));
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    padding: 12px 20px;
-    color: #e2e8f0;
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: 600;
-    transition: all var(--transition-speed) var(--transition-easing);
-    box-shadow: var(--shadow-md);
-}
-
-.leaderboard-link:hover {
-    background: var(--glass-bg-hover);
-    border-color: var(--color-primary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
 /* Auth Buttons Corner */
 .auth-buttons-corner {
     position: fixed;
@@ -1464,6 +1536,15 @@ select option:hover {
 
 /* Responsive adjustments for mobile */
 @media (max-width: 768px) {
+    .brand-logo {
+        top: 20px;
+        left: 20px;
+    }
+
+    .brand-text {
+        font-size: 24px;
+    }
+
     .user-profile {
         top: 10px;
         right: 10px;
@@ -1472,13 +1553,6 @@ select option:hover {
     }
 
     .profile-username {
-        font-size: 14px;
-    }
-
-    .leaderboard-link {
-        top: 10px;
-        left: 10px;
-        padding: 8px 12px;
         font-size: 14px;
     }
 
