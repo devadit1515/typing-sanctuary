@@ -1431,8 +1431,8 @@ select option:hover {
 /* Auth Buttons Corner */
 .auth-buttons-corner {
     position: fixed;
-    bottom: 20px;
-    left: 20px;
+    top: 20px;
+    right: 20px;
     z-index: 100;
     display: flex;
     gap: 12px;
@@ -1483,8 +1483,8 @@ select option:hover {
     }
 
     .auth-buttons-corner {
-        bottom: 10px;
-        left: 10px;
+        top: 10px;
+        right: 10px;
         padding: 8px 12px;
         flex-direction: column;
         gap: 8px;
