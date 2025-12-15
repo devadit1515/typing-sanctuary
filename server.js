@@ -447,21 +447,36 @@ io.on('connection', (socket) => {
         const allFinished = Array.from(room.players.values()).every(p => p.finished);
         if (allFinished) {
           room.gameState = 'finished';
+
+          // Debug: Log all players before sorting
+          console.log('=== BEFORE SORTING ===');
+          Array.from(room.players.values()).forEach(p => {
+            console.log(`${p.name}: finishTime=${p.finishTime}ms, totalTime=${p.totalTime}ms, isBot=${p.isBot}`);
+          });
+
           const results = Array.from(room.players.values())
             .sort((a, b) => {
-              // SIMPLE: Use finishTime (or totalTime as fallback) for sorting
-              // Both players and bots have finishTime set when they finish
-              const timeA = a.finishTime || a.totalTime || null;
-              const timeB = b.finishTime || b.totalTime || null;
+              // Use finishTime which exists for both players and bots
+              const timeA = a.finishTime;
+              const timeB = b.finishTime;
 
               // Players who didn't finish go to the bottom
-              if (timeA === null && timeB === null) return 0;
-              if (timeA === null) return 1;
-              if (timeB === null) return -1;
+              if (!timeA && !timeB) return 0;
+              if (!timeA) return 1;
+              if (!timeB) return -1;
 
               // Sort by time (LOWER TIME WINS)
-              return timeA - timeB;
+              const result = timeA - timeB;
+              console.log(`Comparing ${a.name}(${timeA}ms) vs ${b.name}(${timeB}ms) = ${result}`);
+              return result;
             });
+
+          // Debug: Log results after sorting
+          console.log('=== AFTER SORTING ===');
+          results.forEach((p, i) => {
+            console.log(`#${i + 1}: ${p.name} - ${p.finishTime}ms`);
+          });
+
           io.to(roomCode).emit('gameFinished', { results });
         }
       }
