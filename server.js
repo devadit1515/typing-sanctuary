@@ -448,41 +448,58 @@ io.on('connection', (socket) => {
           accuracy: bot.accuracy
         });
 
-        // Check if all players finished
-        const allFinished = Array.from(room.players.values()).every(p => p.finished);
-        if (allFinished) {
+        // Check if game should end
+        const allPlayers = Array.from(room.players.values());
+        const finishedCount = allPlayers.filter(p => p.finished).length;
+        const totalPlayers = allPlayers.length;
+
+        // SPECIAL CASE: 5+ players - End game when first 3 finish
+        const shouldEndGame5Plus = totalPlayers >= 5 && finishedCount >= 3;
+
+        // Normal case: All players finished
+        const allFinished = allPlayers.every(p => p.finished);
+
+        if (allFinished || shouldEndGame5Plus) {
           room.gameState = 'finished';
+
+          if (shouldEndGame5Plus && !allFinished) {
+            console.log(`🏁 5+ PLAYER MODE: Game ending early (${finishedCount}/${totalPlayers} finished)`);
+          }
 
           // Debug: Log all players before sorting
           console.log('=== BOT FINISH: BEFORE SORTING ===');
-          Array.from(room.players.values()).forEach(p => {
-            console.log(`${p.name}: totalTime=${p.totalTime}ms, finishTime=${p.finishTime}ms, isBot=${p.isBot}`);
+          allPlayers.forEach(p => {
+            console.log(`${p.name}: finished=${p.finished}, totalTime=${p.totalTime}ms, progress=${p.progress}%, accuracy=${p.accuracy}%`);
           });
 
-          const results = Array.from(room.players.values())
+          const results = allPlayers
             .sort((a, b) => {
-              // Use totalTime for consistent sorting (includes penalties for players, equals finishTime for bots)
-              const timeA = a.totalTime;
-              const timeB = b.totalTime;
+              // Finished players ranked by time
+              if (a.finished && b.finished) {
+                return a.totalTime - b.totalTime; // Lower time wins
+              }
 
-              // Players who didn't finish go to the bottom
-              if (!timeA && !timeB) return 0;
-              if (!timeA) return 1;
-              if (!timeB) return -1;
+              // Finished players always rank above unfinished
+              if (a.finished && !b.finished) return -1;
+              if (!a.finished && b.finished) return 1;
 
-              // Sort by time (LOWER TIME WINS)
-              const result = timeA - timeB;
-              console.log(`Comparing ${a.name}(${timeA}ms) vs ${b.name}(${timeB}ms) = ${result}`);
-              return result;
+              // Unfinished players ranked by composite score
+              // Score = (progress * 0.7) + (accuracy * 0.3)
+              const scoreA = (a.progress * 0.7) + (a.accuracy * 0.3);
+              const scoreB = (b.progress * 0.7) + (b.accuracy * 0.3);
+
+              console.log(`Unfinished: ${a.name} score=${scoreA.toFixed(2)} vs ${b.name} score=${scoreB.toFixed(2)}`);
+              return scoreB - scoreA; // Higher score wins
             });
 
           // Debug: Log results after sorting
           console.log('=== BOT FINISH: AFTER SORTING ===');
           results.forEach((p, i) => {
-            console.log(`#${i + 1}: ${p.name} - totalTime=${p.totalTime}ms`);
+            const status = p.finished ? `${p.totalTime}ms` : `${p.progress.toFixed(1)}% progress, ${p.accuracy}% acc`;
+            console.log(`#${i + 1}: ${p.name} - ${status}`);
           });
 
-          io.to(roomCode).emit('gameFinished', { results });
+          io.to(roomCode).emit('gameFinished', { results, earlyEnd: shouldEndGame5Plus && !allFinished });
         }
       }
 
@@ -536,37 +553,58 @@ io.on('connection', (socket) => {
           accuracy: player.accuracy
         });
 
-        // Check if all players finished
-        const allFinished = Array.from(room.players.values()).every(p => p.finished);
-        if (allFinished) {
+        // Check if game should end
+        const allPlayers = Array.from(room.players.values());
+        const finishedCount = allPlayers.filter(p => p.finished).length;
+        const totalPlayers = allPlayers.length;
+
+        // SPECIAL CASE: 5+ players - End game when first 3 finish
+        const shouldEndGame5Plus = totalPlayers >= 5 && finishedCount >= 3;
+
+        // Normal case: All players finished
+        const allFinished = allPlayers.every(p => p.finished);
+
+        if (allFinished || shouldEndGame5Plus) {
           room.gameState = 'finished';
+
+          if (shouldEndGame5Plus && !allFinished) {
+            console.log(`🏁 5+ PLAYER MODE: Game ending early (${finishedCount}/${totalPlayers} finished)`);
+          }
 
           // Debug: Log all players before sorting
           console.log('=== PLAYER FINISH: BEFORE SORTING ===');
-          Array.from(room.players.values()).forEach(p => {
-            console.log(`${p.name}: totalTime=${p.totalTime}ms, rawTime=${p.rawTime}ms, penaltyTime=${p.penaltyTime}ms, isBot=${p.isBot}`);
+          allPlayers.forEach(p => {
+            console.log(`${p.name}: finished=${p.finished}, totalTime=${p.totalTime}ms, progress=${p.progress}%, accuracy=${p.accuracy}%`);
           });
 
-          const results = Array.from(room.players.values())
+          const results = allPlayers
             .sort((a, b) => {
-              // Players who didn't finish (totalTime === null) go to the bottom
-              if (a.totalTime === null && b.totalTime === null) return 0;
-              if (a.totalTime === null) return 1;
-              if (b.totalTime === null) return -1;
+              // Finished players ranked by time
+              if (a.finished && b.finished) {
+                return a.totalTime - b.totalTime; // Lower time wins
+              }
 
-              // Sort by total time (raw time + penalties for players, raw time for bots)
-              const result = a.totalTime - b.totalTime;
-              console.log(`Comparing ${a.name}(${a.totalTime}ms) vs ${b.name}(${b.totalTime}ms) = ${result}`);
-              return result; // LOWER TIME WINS
+              // Finished players always rank above unfinished
+              if (a.finished && !b.finished) return -1;
+              if (!a.finished && b.finished) return 1;
+
+              // Unfinished players ranked by composite score
+              // Score = (progress * 0.7) + (accuracy * 0.3)
+              const scoreA = (a.progress * 0.7) + (a.accuracy * 0.3);
+              const scoreB = (b.progress * 0.7) + (b.accuracy * 0.3);
+
+              console.log(`Unfinished: ${a.name} score=${scoreA.toFixed(2)} vs ${b.name} score=${scoreB.toFixed(2)}`);
+              return scoreB - scoreA; // Higher score wins
             });
 
           // Debug: Log results after sorting
           console.log('=== PLAYER FINISH: AFTER SORTING ===');
           results.forEach((p, i) => {
-            console.log(`#${i + 1}: ${p.name} - totalTime=${p.totalTime}ms`);
+            const status = p.finished ? `${p.totalTime}ms` : `${p.progress.toFixed(1)}% progress, ${p.accuracy}% acc`;
+            console.log(`#${i + 1}: ${p.name} - ${status}`);
           });
 
-          io.to(roomCode).emit('gameFinished', { results });
+          io.to(roomCode).emit('gameFinished', { results, earlyEnd: shouldEndGame5Plus && !allFinished });
         }
       }
 

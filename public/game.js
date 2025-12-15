@@ -398,20 +398,20 @@ socket.on('playerFinished', ({ playerId, playerName, finishTime, wpm, accuracy }
     console.log(`${playerName} finished! Time: ${(finishTime / 1000).toFixed(2)}s, WPM: ${wpm}, Accuracy: ${accuracy}%`);
 });
 
-socket.on('gameFinished', ({ results }) => {
-    displayResults(results);
+socket.on('gameFinished', ({ results, earlyEnd }) => {
+    displayResults(results, earlyEnd);
     showScreen('results');
 
     // Save game result to database
     saveGameResult(results);
 });
 
-socket.on('playerLeft', ({ playerName, totalPlayers, results }) => {
+socket.on('playerLeft', ({ playerName, totalPlayers, results, earlyEnd }) => {
     console.log(`🚪 ${playerName} left the game. Players remaining: ${totalPlayers}`);
 
     // If results are provided (1v1 or game ended due to leave), show results screen
     if (results) {
-        displayResults(results);
+        displayResults(results, earlyEnd);
         showScreen('results');
         saveGameResult(results);
     }
@@ -620,8 +620,30 @@ elements.typingInput.addEventListener('input', () => {
     }
 });
 
-function displayResults(results) {
+function displayResults(results, earlyEnd = false) {
     elements.resultsContainer.innerHTML = '';
+
+    // Show early end notice for 5+ player games
+    if (earlyEnd) {
+        const notice = document.createElement('div');
+        notice.style.cssText = `
+            background: linear-gradient(135deg, #fbbf2440, #ff326440);
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fbbf24;
+        `;
+        notice.innerHTML = `
+            <div style="font-size: 24px; margin-bottom: 8px;">🏁</div>
+            <div>Game ended - First 3 players finished!</div>
+            <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Remaining players ranked by progress & accuracy</div>
+        `;
+        elements.resultsContainer.appendChild(notice);
+    }
 
     // Check if current player won
     const winner = results[0];
@@ -672,7 +694,8 @@ function displayResults(results) {
         let timeDisplay = 'DNF';
         if (player.left && player.dnf) {
             timeDisplay = 'Left Game';
-        } else if (player.finishTime) {
+        } else if (player.finished && player.finishTime) {
+            // Player finished - show time
             const rawTime = player.rawTime ? (player.rawTime / 1000).toFixed(2) : (player.finishTime / 1000).toFixed(2);
             const penaltyTime = player.penaltyTime ? (player.penaltyTime / 1000).toFixed(1) : '0.0';
             const totalTime = player.totalTime ? (player.totalTime / 1000).toFixed(2) : (player.finishTime / 1000).toFixed(2);
@@ -690,6 +713,14 @@ function displayResults(results) {
                 <span>${player.wpm} WPM</span> •
                 <span>${player.accuracy}% accuracy</span> •
                 <span style="color: ${errors > 3 ? '#ff3264' : '#fbbf24'};">${errors} errors</span>
+            `;
+        } else if (!player.finished && player.progress !== undefined) {
+            // Player didn't finish - show progress and accuracy
+            stats.innerHTML = `
+                <span style="color: #fbbf24; font-weight: 700;">${player.progress.toFixed(1)}% Complete</span> •
+                <span>${player.wpm} WPM</span> •
+                <span>${player.accuracy}% accuracy</span> •
+                <span style="color: #ff3264;">${player.errors || 0} errors</span>
             `;
         } else {
             stats.innerHTML = `
