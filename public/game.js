@@ -559,6 +559,9 @@ elements.typingInput.addEventListener('input', () => {
                 gameState.hearts--;
                 lostHeartsForErrors.add(newCharIndex); // Track which position caused heart loss
                 updateHeartsDisplay();
+                console.log(`❌ Error at position ${newCharIndex}. Lost heart. Hearts: ${gameState.hearts}`);
+            } else {
+                console.log(`❌ Error at position ${newCharIndex}. No hearts to lose.`);
             }
         }
     }
@@ -572,7 +575,10 @@ elements.typingInput.addEventListener('input', () => {
     }
 
     // Find positions that were errors but are now fixed
-    errorPositions.forEach(pos => {
+    // Convert to array to avoid modifying set during iteration
+    const errorPositionsArray = Array.from(errorPositions);
+    errorPositionsArray.forEach(pos => {
+        // If the position is within typed text and is now correct
         if (pos < typed.length && !currentErrorPositions.has(pos)) {
             // Error was corrected!
             errorPositions.delete(pos);
@@ -583,7 +589,13 @@ elements.typingInput.addEventListener('input', () => {
                 lostHeartsForErrors.delete(pos);
                 gameState.totalErrors--; // Remove the error from count
                 updateHeartsDisplay();
+                console.log(`✅ Heart restored! Position ${pos} corrected. Hearts: ${gameState.hearts}`);
             }
+        }
+        // If the position was deleted (beyond current typed length), clear it
+        else if (pos >= typed.length) {
+            errorPositions.delete(pos);
+            // Don't restore heart when just deleting - only when correcting
         }
     });
 
