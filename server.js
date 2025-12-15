@@ -449,13 +449,17 @@ io.on('connection', (socket) => {
           room.gameState = 'finished';
           const results = Array.from(room.players.values())
             .sort((a, b) => {
-              // Players who didn't finish (finishTime === null) go to the bottom
-              if (a.finishTime === null && b.finishTime === null) return 0;
-              if (a.finishTime === null) return 1;
-              if (b.finishTime === null) return -1;
+              // Get the time to compare (totalTime for players, finishTime for bots)
+              const timeA = a.totalTime !== undefined ? a.totalTime : a.finishTime;
+              const timeB = b.totalTime !== undefined ? b.totalTime : b.finishTime;
 
-              // Sort by finish time
-              return a.finishTime - b.finishTime;
+              // Players who didn't finish go to the bottom
+              if (timeA === null && timeB === null) return 0;
+              if (timeA === null) return 1;
+              if (timeB === null) return -1;
+
+              // Sort by time (lower is better)
+              return timeA - timeB;
             });
           io.to(roomCode).emit('gameFinished', { results });
         }

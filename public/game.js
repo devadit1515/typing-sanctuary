@@ -347,6 +347,10 @@ socket.on('gameStart', ({ passage, startTime }) => {
     gameState.hearts = 3;
     gameState.totalErrors = 0;
 
+    // Reset error tracking
+    errorPositions.clear();
+    lostHeartsForErrors.clear();
+
     // Reset hearts display
     updateHeartsDisplay();
 
@@ -491,8 +495,9 @@ function startTimer() {
     }, 100);
 }
 
-// Track the furthest correct position reached
-let furthestCorrectPosition = 0;
+// Track errors at each position to allow heart restoration
+let errorPositions = new Set(); // Tracks positions where errors were made
+let lostHeartsForErrors = new Set(); // Tracks which error positions caused heart loss
 
 // Function to update hearts display
 function updateHeartsDisplay() {
@@ -538,20 +543,49 @@ elements.typingInput.addEventListener('input', () => {
 
     // Track errors incrementally - only for newly typed characters
     if (typed.length > previousLength) {
-        const newChar = typed[typed.length - 1];
-        const expectedChar = gameState.passage[typed.length - 1];
+        const newCharIndex = typed.length - 1;
+        const newChar = typed[newCharIndex];
+        const expectedChar = gameState.passage[newCharIndex];
 
         if (newChar !== expectedChar) {
+            // Mark this position as having an error
+            errorPositions.add(newCharIndex);
+
             // Increment total errors
             gameState.totalErrors++;
 
             // Lose a heart if we still have hearts
             if (gameState.hearts > 0) {
                 gameState.hearts--;
+                lostHeartsForErrors.add(newCharIndex); // Track which position caused heart loss
                 updateHeartsDisplay();
             }
         }
     }
+
+    // Check for corrected errors (when user deletes and retypes correctly)
+    const currentErrorPositions = new Set();
+    for (let i = 0; i < typed.length; i++) {
+        if (typed[i] !== gameState.passage[i]) {
+            currentErrorPositions.add(i);
+        }
+    }
+
+    // Find positions that were errors but are now fixed
+    errorPositions.forEach(pos => {
+        if (pos < typed.length && !currentErrorPositions.has(pos)) {
+            // Error was corrected!
+            errorPositions.delete(pos);
+
+            // If this error caused a heart loss, restore the heart
+            if (lostHeartsForErrors.has(pos) && gameState.hearts < 3) {
+                gameState.hearts++;
+                lostHeartsForErrors.delete(pos);
+                gameState.totalErrors--; // Remove the error from count
+                updateHeartsDisplay();
+            }
+        }
+    });
 
     // Count current errors in typed text (for accuracy calculation)
     gameState.errors = 0;
