@@ -530,13 +530,8 @@ elements.typingInput.addEventListener('keydown', (e) => {
             return false;
         }
 
-        // Restore a heart when backspacing (if we lost any)
-        if (heartsLost > 0 && gameState.hearts < 3) {
-            gameState.hearts++;
-            heartsLost--;
-            updateHeartsDisplay();
-            console.log(`✅ Backspace pressed - Heart restored! Hearts: ${gameState.hearts}`);
-        }
+        // NOTE: Hearts are NOT restored on backspace
+        // Hearts restore only when you TYPE the correct character to fix an error
     }
 });
 
@@ -560,6 +555,17 @@ elements.typingInput.addEventListener('input', () => {
                 heartsLost++;
                 updateHeartsDisplay();
                 console.log(`❌ Wrong character typed. Lost heart. Hearts: ${gameState.hearts}`);
+            } else {
+                console.log(`❌ Wrong character typed. No hearts left.`);
+            }
+        } else {
+            // Typed correct character - check if this fixes a previous error
+            // This can happen when you backspace red text and retype it correctly
+            if (heartsLost > 0 && gameState.hearts < 3) {
+                gameState.hearts++;
+                heartsLost--;
+                updateHeartsDisplay();
+                console.log(`✅ Error corrected by typing correctly. Heart restored! Hearts: ${gameState.hearts}`);
             }
         }
     }
@@ -581,14 +587,17 @@ elements.typingInput.addEventListener('input', () => {
     const wpm = Math.round(wordsTyped / elapsed) || 0;
     const accuracy = typed.length > 0 ? Math.round(((typed.length - gameState.errors) / typed.length) * 100) : 100;
 
-    // Send progress update with CURRENT red letters count (these are the penalty errors)
+    // Calculate penalty errors: Only errors AFTER losing all 3 hearts (first 3 errors are free)
+    const penaltyErrors = Math.max(0, gameState.errors - (3 - heartsLost));
+
+    // Send progress update
     socket.emit('updateProgress', {
         progress,
         wpm,
         accuracy,
         errors: gameState.errors, // Current red letters
         hearts: gameState.hearts,
-        penaltyErrors: gameState.errors // Penalty = number of red letters still visible
+        penaltyErrors: penaltyErrors // Only errors beyond the 3 hearts cause penalties
     });
 
     // Check if finished
