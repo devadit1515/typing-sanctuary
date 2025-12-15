@@ -572,37 +572,8 @@ elements.typingInput.addEventListener('keydown', (e) => {
 // Typing input handler
 elements.typingInput.addEventListener('input', () => {
     const typed = elements.typingInput.value;
-    const previousLength = gameState.currentIndex;
     gameState.currentIndex = typed.length;
     gameState.typedChars = typed.length;
-
-    // When typing forward - lose hearts for wrong characters
-    if (typed.length > previousLength) {
-        const newCharIndex = typed.length - 1;
-        const newChar = typed[newCharIndex];
-        const expectedChar = gameState.passage[newCharIndex];
-
-        if (newChar !== expectedChar) {
-            // Lose a heart if we still have hearts
-            if (gameState.hearts > 0) {
-                gameState.hearts--;
-                heartsLost++;
-                updateHeartsDisplay();
-                console.log(`❌ Wrong character typed. Lost heart. Hearts: ${gameState.hearts}`);
-            } else {
-                console.log(`❌ Wrong character typed. No hearts left.`);
-            }
-        } else {
-            // Typed correct character - check if this fixes a previous error
-            // This can happen when you backspace red text and retype it correctly
-            if (heartsLost > 0 && gameState.hearts < 3) {
-                gameState.hearts++;
-                heartsLost--;
-                updateHeartsDisplay();
-                console.log(`✅ Error corrected by typing correctly. Heart restored! Hearts: ${gameState.hearts}`);
-            }
-        }
-    }
 
     // Count current red letters (errors) in typed text
     gameState.errors = 0;
@@ -611,6 +582,15 @@ elements.typingInput.addEventListener('input', () => {
             gameState.errors++;
         }
     }
+
+    // Hearts ALWAYS equal 3 minus the number of red letters currently on screen
+    // If 0 red letters → 3 hearts
+    // If 1 red letter → 2 hearts
+    // If 2 red letters → 1 heart
+    // If 3+ red letters → 0 hearts
+    gameState.hearts = Math.max(0, 3 - gameState.errors);
+    heartsLost = Math.min(3, gameState.errors); // How many hearts we've lost
+    updateHeartsDisplay();
 
     displayPassage();
 
