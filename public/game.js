@@ -347,10 +347,8 @@ socket.on('gameStart', ({ passage, startTime }) => {
     gameState.hearts = 3;
     gameState.totalErrors = 0;
 
-    // Reset error tracking
-    errorPositions.clear();
-    lostHeartsForErrors.clear();
-    penaltyErrorPositions.clear();
+    // Reset heart tracking
+    heartsLost = 0;
 
     // Reset hearts display
     updateHeartsDisplay();
@@ -496,10 +494,8 @@ function startTimer() {
     }, 100);
 }
 
-// Track errors at each position to allow heart restoration
-let errorPositions = new Set(); // Tracks positions where errors were made
-let lostHeartsForErrors = new Set(); // Tracks which error positions caused heart loss
-let penaltyErrorPositions = new Set(); // Tracks which error positions caused time penalties (made at 0 hearts)
+// Simple heart tracking
+let heartsLost = 0; // How many hearts we've lost total
 
 // Function to update hearts display
 function updateHeartsDisplay() {
@@ -513,7 +509,7 @@ function updateHeartsDisplay() {
     });
 }
 
-// Prevent backspace on correctly typed characters
+// Prevent backspace on correctly typed characters, restore heart when backspacing
 elements.typingInput.addEventListener('keydown', (e) => {
     const typed = elements.typingInput.value;
 
@@ -533,6 +529,14 @@ elements.typingInput.addEventListener('keydown', (e) => {
             e.preventDefault();
             return false;
         }
+
+        // Restore a heart when backspacing (if we lost any)
+        if (heartsLost > 0 && gameState.hearts < 3) {
+            gameState.hearts++;
+            heartsLost--;
+            updateHeartsDisplay();
+            console.log(`✅ Backspace pressed - Heart restored! Hearts: ${gameState.hearts}`);
+        }
     }
 });
 
@@ -543,73 +547,24 @@ elements.typingInput.addEventListener('input', () => {
     gameState.currentIndex = typed.length;
     gameState.typedChars = typed.length;
 
-    // Track errors incrementally - only for newly typed characters
+    // When typing forward - lose hearts for wrong characters
     if (typed.length > previousLength) {
         const newCharIndex = typed.length - 1;
         const newChar = typed[newCharIndex];
         const expectedChar = gameState.passage[newCharIndex];
 
         if (newChar !== expectedChar) {
-            // Mark this position as having an error
-            errorPositions.add(newCharIndex);
-
-            // Increment total errors
-            gameState.totalErrors++;
-
             // Lose a heart if we still have hearts
             if (gameState.hearts > 0) {
                 gameState.hearts--;
-                lostHeartsForErrors.add(newCharIndex); // Track which position caused heart loss
+                heartsLost++;
                 updateHeartsDisplay();
-                console.log(`❌ Error at position ${newCharIndex}. Lost heart. Hearts: ${gameState.hearts}`);
-            } else {
-                // No hearts left - this error causes a time penalty
-                penaltyErrorPositions.add(newCharIndex);
-                console.log(`❌ Error at position ${newCharIndex}. No hearts. Penalty added. Penalties: ${penaltyErrorPositions.size}`);
+                console.log(`❌ Wrong character typed. Lost heart. Hearts: ${gameState.hearts}`);
             }
         }
     }
 
-    // Check for corrected errors (when user deletes and retypes correctly)
-    const currentErrorPositions = new Set();
-    for (let i = 0; i < typed.length; i++) {
-        if (typed[i] !== gameState.passage[i]) {
-            currentErrorPositions.add(i);
-        }
-    }
-
-    // Find positions that were errors but are now fixed
-    // Convert to array to avoid modifying set during iteration
-    const errorPositionsArray = Array.from(errorPositions);
-    errorPositionsArray.forEach(pos => {
-        // If the position is within typed text and is now correct
-        if (pos < typed.length && !currentErrorPositions.has(pos)) {
-            // Error was corrected!
-            errorPositions.delete(pos);
-
-            // If this error caused a heart loss, restore the heart
-            if (lostHeartsForErrors.has(pos) && gameState.hearts < 3) {
-                gameState.hearts++;
-                lostHeartsForErrors.delete(pos);
-                gameState.totalErrors--; // Remove the error from count
-                updateHeartsDisplay();
-                console.log(`✅ Heart restored! Position ${pos} corrected. Hearts: ${gameState.hearts}`);
-            }
-            // If this error caused a time penalty, remove it
-            else if (penaltyErrorPositions.has(pos)) {
-                penaltyErrorPositions.delete(pos);
-                gameState.totalErrors--; // Remove the error from count
-                console.log(`✅ Penalty removed! Position ${pos} corrected. Penalties: ${penaltyErrorPositions.size}`);
-            }
-        }
-        // If the position was deleted (beyond current typed length), clear it
-        else if (pos >= typed.length) {
-            errorPositions.delete(pos);
-            // Don't restore heart when just deleting - only when correcting
-        }
-    });
-
-    // Count current errors in typed text (for accuracy calculation)
+    // Count current red letters (errors) in typed text
     gameState.errors = 0;
     for (let i = 0; i < typed.length; i++) {
         if (typed[i] !== gameState.passage[i]) {
@@ -626,14 +581,14 @@ elements.typingInput.addEventListener('input', () => {
     const wpm = Math.round(wordsTyped / elapsed) || 0;
     const accuracy = typed.length > 0 ? Math.round(((typed.length - gameState.errors) / typed.length) * 100) : 100;
 
-    // Send progress update with errors and hearts
+    // Send progress update with CURRENT red letters count (these are the penalty errors)
     socket.emit('updateProgress', {
         progress,
         wpm,
         accuracy,
-        errors: gameState.totalErrors,
+        errors: gameState.errors, // Current red letters
         hearts: gameState.hearts,
-        penaltyErrors: penaltyErrorPositions.size // Send count of errors that cause time penalties
+        penaltyErrors: gameState.errors // Penalty = number of red letters still visible
     });
 
     // Check if finished
