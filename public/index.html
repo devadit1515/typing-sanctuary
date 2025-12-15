@@ -22,7 +22,7 @@
     <div class="credit-footer">Made by Devadit</div>
 
     <!-- User Profile Display -->
-    <div id="userProfile" class="user-profile hidden">
+    <div id="userProfile" class="user-profile hidden" style="display: none !important;">
         <div class="profile-info">
             <span class="profile-username" id="profileUsername"></span>
         </div>
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Login/Register Buttons (for non-logged in users) -->
-    <div id="authButtons" class="auth-buttons-corner hidden">
+    <div id="authButtons" class="auth-buttons-corner hidden" style="display: none !important;">
         <a href="/login.html" class="btn btn-outline btn-small">Login</a>
         <a href="/register.html" class="btn btn-outline btn-small">Register</a>
     </div>
@@ -44,13 +44,13 @@
             </div>
 
             <!-- Username Display (for logged in users) -->
-            <div id="loggedInUsername" class="logged-in-username hidden">
+            <div id="loggedInUsername" class="logged-in-username hidden" style="display: none !important;">
                 <p>Welcome back, <strong id="welcomeUsername"></strong>!</p>
             </div>
 
-            <!-- Username Input (for non-logged in users) -->
+            <!-- Username Input (for guest users only) -->
             <div class="input-group" id="usernameInputGroup">
-                <input type="text" id="playerName" placeholder="Enter your username" maxlength="20">
+                <input type="text" id="playerName" placeholder="Enter your guest username" maxlength="20">
             </div>
 
             <!-- Main Mode Selection -->
@@ -134,8 +134,8 @@
                 <button id="copyCodeBtn" class="btn btn-small">Copy</button>
             </div>
 
-            <!-- Invite Friends Button (Only shown for logged in users) -->
-            <div id="inviteFriendsContainer" class="hidden" style="margin: 20px 0; text-align: center;">
+            <!-- Invite Friends Button (HIDDEN - Guest mode only) -->
+            <div id="inviteFriendsContainer" class="hidden" style="display: none !important; margin: 20px 0; text-align: center;">
                 <button id="inviteFriendsBtn" class="btn btn-secondary" style="width: 100%;">
                     Invite Friends
                 </button>
@@ -204,8 +204,8 @@
         </div>
     </div>
 
-    <!-- Friends Invite Modal -->
-    <div id="friendsInviteModal" class="modal hidden">
+    <!-- Friends Invite Modal (HIDDEN - Guest mode only) -->
+    <div id="friendsInviteModal" class="modal hidden" style="display: none !important;">
         <div class="modal-content" style="max-width: 500px; max-height: 70vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h2 style="font-size: 28px; color: #e2e8f0;">Invite Friends</h2>
