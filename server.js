@@ -475,7 +475,7 @@ io.on('connection', (socket) => {
   }
 
   // Update player progress
-  socket.on('updateProgress', ({ progress, wpm, accuracy, errors, hearts }) => {
+  socket.on('updateProgress', ({ progress, wpm, accuracy, errors, hearts, penaltyErrors }) => {
     const roomCode = socket.roomCode;
     const room = rooms.get(roomCode);
 
@@ -490,15 +490,16 @@ io.on('connection', (socket) => {
       player.accuracy = accuracy;
       player.errors = errors || 0;
       player.hearts = hearts !== undefined ? hearts : 3;
+      player.penaltyErrors = penaltyErrors || 0;
 
       // Check if player finished
       if (progress >= 100 && !player.finished) {
         player.finished = true;
         player.rawTime = Date.now() - room.startTime;
 
-        // Calculate penalty time: 0.5 seconds per error AFTER hearts run out
-        const errorsAfterHearts = Math.max(0, player.errors - 3);
-        player.penaltyTime = errorsAfterHearts * 500; // 500ms = 0.5 seconds
+        // Calculate penalty time: 0.5 seconds per penalty error (errors made while at 0 hearts)
+        // Use penaltyErrors from client which accurately tracks errors made at 0 hearts
+        player.penaltyTime = player.penaltyErrors * 500; // 500ms = 0.5 seconds
         player.totalTime = player.rawTime + player.penaltyTime;
         player.finishTime = player.totalTime; // For backward compatibility
 

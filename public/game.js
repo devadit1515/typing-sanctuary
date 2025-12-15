@@ -350,6 +350,7 @@ socket.on('gameStart', ({ passage, startTime }) => {
     // Reset error tracking
     errorPositions.clear();
     lostHeartsForErrors.clear();
+    penaltyErrorPositions.clear();
 
     // Reset hearts display
     updateHeartsDisplay();
@@ -498,6 +499,7 @@ function startTimer() {
 // Track errors at each position to allow heart restoration
 let errorPositions = new Set(); // Tracks positions where errors were made
 let lostHeartsForErrors = new Set(); // Tracks which error positions caused heart loss
+let penaltyErrorPositions = new Set(); // Tracks which error positions caused time penalties (made at 0 hearts)
 
 // Function to update hearts display
 function updateHeartsDisplay() {
@@ -561,7 +563,9 @@ elements.typingInput.addEventListener('input', () => {
                 updateHeartsDisplay();
                 console.log(`❌ Error at position ${newCharIndex}. Lost heart. Hearts: ${gameState.hearts}`);
             } else {
-                console.log(`❌ Error at position ${newCharIndex}. No hearts to lose.`);
+                // No hearts left - this error causes a time penalty
+                penaltyErrorPositions.add(newCharIndex);
+                console.log(`❌ Error at position ${newCharIndex}. No hearts. Penalty added. Penalties: ${penaltyErrorPositions.size}`);
             }
         }
     }
@@ -590,6 +594,12 @@ elements.typingInput.addEventListener('input', () => {
                 gameState.totalErrors--; // Remove the error from count
                 updateHeartsDisplay();
                 console.log(`✅ Heart restored! Position ${pos} corrected. Hearts: ${gameState.hearts}`);
+            }
+            // If this error caused a time penalty, remove it
+            else if (penaltyErrorPositions.has(pos)) {
+                penaltyErrorPositions.delete(pos);
+                gameState.totalErrors--; // Remove the error from count
+                console.log(`✅ Penalty removed! Position ${pos} corrected. Penalties: ${penaltyErrorPositions.size}`);
             }
         }
         // If the position was deleted (beyond current typed length), clear it
@@ -622,7 +632,8 @@ elements.typingInput.addEventListener('input', () => {
         wpm,
         accuracy,
         errors: gameState.totalErrors,
-        hearts: gameState.hearts
+        hearts: gameState.hearts,
+        penaltyErrors: penaltyErrorPositions.size // Send count of errors that cause time penalties
     });
 
     // Check if finished
