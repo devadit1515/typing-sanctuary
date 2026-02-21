@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biometric Security Dashboard - Typing Sanctuary</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .dashboard-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .dashboard-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dashboard-header p {
+            color: rgba(226, 232, 240, 0.7);
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            color: rgba(226, 232, 240, 0.6);
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.positive {
+            color: #86efac;
+        }
+
+        .stat-change.negative {
+            color: #fca5a5;
+        }
+
+        .chart-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chart-section h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .auth-history {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-history h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .history-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .history-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .history-icon.success {
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .history-icon.warning {
+            background: rgba(251, 191, 36, 0.2);
+        }
+
+        .history-icon.danger {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .history-details {
+            flex: 1;
+        }
+
+        .history-time {
+            font-size: 14px;
+            color: rgba(226, 232, 240, 0.6);
+            margin-bottom: 4px;
+        }
+
+        .history-method {
+            font-size: 16px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .anomaly-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .anomaly-badge.low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .anomaly-badge.medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fcd34d;
+        }
+
+        .anomaly-badge.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(226, 232, 240, 0.6);
+            font-size: 18px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(226, 232, 240, 0.5);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .refresh-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+        }
+
+        .refresh-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(183, 77, 255, 0.4);
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: rgba(226, 232, 240, 0.9);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles Background -->
+    <div class="particles" id="particlesContainer"></div>
+
+    <!-- Grid Overlay -->
+    <div class="grid-overlay"></div>
+
+    <!-- Brand Logo Top Left -->
+    <div class="brand-logo">
+        <a href="/index-research.html" style="text-decoration: none; color: inherit;">
+            <span class="brand-text">Typing Sanctuary Research</span>
+        </a>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>🔐 Biometric Security Dashboard</h1>
+            <p>Real-time monitoring of keystroke authentication and anomaly detection</p>
+            <div style="margin-top: 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                <a href="/index-research.html" class="back-link">← Back to Research</a>
+                <a href="/typing-dna-visualization.html" class="back-link" style="background: linear-gradient(135deg, #b74dff, #ff3264); padding: 8px 20px; border-radius: 8px; color: white;">
+                    🧬 View Your Typing DNA
+                </a>
+                <a href="/data-export.html" class="back-link">
+                    📥 Export Data
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">✓</div>
+                <div class="stat-label">Enrollment Status</div>
+                <div class="stat-value" id="enrollmentStatus">Loading...</div>
+                <div class="stat-change positive" id="enrollmentProgress">
+                    <span>● </span><span>Checking...</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">Samples Collected</div>
+                <div class="stat-value" id="samplesCount">-</div>
+                <div class="stat-change" id="samplesProgress">
+                    <span>● </span><span>-</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-label">Avg Anomaly Score</div>
+                <div class="stat-value" id="avgAnomalyScore">-</div>
+                <div class="stat-change" id="anomalyTrend">
+                    <span>● </span><span>No data</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🔒</div>
+                <div class="stat-label">Auth Attempts</div>
+                <div class="stat-value" id="authAttempts">-</div>
+                <div class="stat-change positive" id="authSuccess">
+                    <span>● </span><span>-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anomaly Score Chart -->
+        <div class="chart-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2>Anomaly Score History</h2>
+                <button class="refresh-button" onclick="loadDashboardData()">🔄 Refresh</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="anomalyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Your Typing Profile -->
+        <div class="chart-section">
+            <h2>Your Typing Profile</h2>
+            <div class="chart-container">
+                <canvas id="profileChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Authentication History -->
+        <div class="auth-history">
+            <h2>Recent Authentication Attempts</h2>
+            <div id="authHistory">
+                <div class="loading">Loading authentication history...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="particles.js"></script>
+    <script>
+        let anomalyChart = null;
+        let profileChart = null;
+
+        // Initialize particles
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('particlesContainer');
+            if (container) {
+                for (let i = 0; i < 50; i++) {
+                    createParticle(container);
+                }
+            }
+
+            // Load dashboard data
+            loadDashboardData();
+        });
+
+        function createParticle(container) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            container.appendChild(particle);
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Check authentication
+                const sessionResponse = await fetch('/api/auth/session');
+                const sessionData = await sessionResponse.json();
+
+                if (!sessionData.authenticated) {
+                    window.location.href = '/auth.html?redirect=biometric-dashboard.html';
+                    return;
+                }
+
+                // Load biometric profile
+                const profileResponse = await fetch('/api/biometric/profile');
+                const profileData = await profileResponse.json();
+
+                if (profileData.success && profileData.enrolled) {
+                    updateStats(profileData.profile);
+                    createProfileChart(profileData.profile);
+                } else {
+                    showNotEnrolled();
+                }
+
+                // Load authentication history
+                const historyResponse = await fetch('/api/biometric/auth-history');
+                const historyData = await historyResponse.json();
+
+                if (historyData.success) {
+                    updateHistory(historyData.history);
+                    createAnomalyChart(historyData.history);
+                }
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError();
+            }
+        }
+
+        function updateStats(profile) {
+            // Enrollment status
+            const status = profile.enrollmentStatus;
+            document.getElementById('enrollmentStatus').textContent =
+                status === 'completed' ? 'Enrolled' :
+                status === 'in_progress' ? 'In Progress' : 'Not Started';
+
+            // Samples
+            const samplesCollected = profile.enrollmentProgress?.samplesCollected || 0;
+            const samplesRequired = profile.enrollmentProgress?.samplesRequired || 5;
+            document.getElementById('samplesCount').textContent = samplesCollected;
+            document.getElementById('samplesProgress').innerHTML =
+                `<span>● </span><span>${samplesCollected} / ${samplesRequired} collected</span>`;
+            document.getElementById('samplesProgress').className =
+                samplesCollected >= samplesRequired ? 'stat-change positive' : 'stat-change';
+        }
+
+        function updateHistory(history) {
+            const container = document.getElementById('authHistory');
+
+            if (!history || history.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <div>No authentication history yet</div>
+                        <div style="font-size: 14px; margin-top: 8px;">Play games to see authentication attempts</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Update stats
+            document.getElementById('authAttempts').textContent = history.length;
+            const successCount = history.filter(h => h.success).length;
+            const successRate = ((successCount / history.length) * 100).toFixed(0);
+            document.getElementById('authSuccess').innerHTML =
+                `<span>● </span><span>${successRate}% success rate</span>`;
+
+            // Calculate average anomaly score
+            const avgScore = history.reduce((sum, h) => sum + (h.anomalyScore || 0), 0) / history.length;
+            document.getElementById('avgAnomalyScore').textContent = avgScore.toFixed(3);
+            document.getElementById('anomalyTrend').innerHTML =
+                `<span>● </span><span>${avgScore < 0.3 ? 'Low risk' : avgScore < 0.7 ? 'Medium risk' : 'High risk'}</span>`;
+            document.getElementById('anomalyTrend').className =
+                avgScore < 0.3 ? 'stat-change positive' :
+                avgScore < 0.7 ? 'stat-change' : 'stat-change negative';
+
+            // Render history items
+            container.innerHTML = history.slice(0, 10).map(item => {
+                const score = item.anomalyScore || 0;
+                const riskLevel = score < 0.3 ? 'low' : score < 0.7 ? 'medium' : 'high';
+                const icon = item.success ? '✓' : '✗';
+                const iconClass = item.success ? 'success' : score < 0.7 ? 'warning' : 'danger';
+                const time = new Date(item.timestamp).toLocaleString();
+
+                return `
+                    <div class="history-item">
+                        <div class="history-info">
+                            <div class="history-icon ${iconClass}">${icon}</div>
+                            <div class="history-details">
+                                <div class="history-time">${time}</div>
+                                <div class="history-method">${item.method || 'statistical_zscore'}</div>
+                            </div>
+                        </div>
+                        <div class="anomaly-badge ${riskLevel}">
+                            Score: ${score.toFixed(3)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createAnomalyChart(history) {
+            if (!history || history.length === 0) return;
+
+            const ctx = document.getElementById('anomalyChart');
+            if (!ctx) return;
+
+            // Destroy existing chart
+            if (anomalyChart) {
+                anomalyChart.destroy();
+            }
+
+            const scores = history.slice(-20).reverse().map(h => h.anomalyScore || 0);
+            const labels = history.slice(-20).reverse().map((h, i) => `Attempt ${i + 1}`);
+
+            anomalyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Anomaly Score',
+                        data: scores,
+                        borderColor: '#b74dff',
+                        backgroundColor: 'rgba(183, 77, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Medium Risk Threshold',
+                        data: Array(scores.length).fill(0.3),
+                        borderColor: '#fcd34d',
+                        borderDash: [5, 5],
+                        borderWidth: 1,
+                        fill: false
+                    }, {
+                        label: 'High Risk Threshold',
+                        data: Array(scores.length).fill(0.7),
+                        borderColor: '#fca5a5',
+                        borderDash: [5, 5],
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(226, 232, 240, 0.8)'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.0,
+                            ticks: {
+                                color: 'rgba(226, 232, 240, 0.6)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgba(226, 232, 240, 0.6)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createProfileChart(profile) {
+            const ctx = document.getElementById('profileChart');
+            if (!ctx) return;
+
+            // Destroy existing chart
+            if (profileChart) {
+                profileChart.destroy();
+            }
+
+            if (!profile.profile || !profile.profile.dwellTime) {
+                return;
+            }
+
+            const dwellMean = profile.profile.dwellTime?.mean || 0;
+            const flightMean = profile.profile.flightTime?.mean || 0;
+            const burstSpeed = profile.profile.rhythm?.burstSpeed || 0;
+            const pauseFreq = profile.profile.rhythm?.pauseFrequency || 0;
+
+            profileChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Dwell Time (ms)', 'Flight Time (ms)', 'Burst Speed (ms)', 'Pause Freq (%)'],
+                    datasets: [{
+                        label: 'Your Typing Characteristics',
+                        data: [dwellMean, flightMean, burstSpeed, pauseFreq],
+                        backgroundColor: [
+                            'rgba(183, 77, 255, 0.6)',
+                            'rgba(255, 50, 100, 0.6)',
+                            'rgba(34, 197, 94, 0.6)',
+                            'rgba(251, 191, 36, 0.6)'
+                        ],
+                        borderColor: [
+                            '#b74dff',
+                            '#ff3264',
+                            '#22c55e',
+                            '#fbbf24'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(226, 232, 240, 0.8)'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgba(226, 232, 240, 0.6)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgba(226, 232, 240, 0.6)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showNotEnrolled() {
+            document.getElementById('enrollmentStatus').textContent = 'Not Enrolled';
+            document.getElementById('authHistory').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔐</div>
+                    <div>Not enrolled in biometric authentication</div>
+                    <div style="font-size: 14px; margin-top: 8px;">
+                        <a href="/biometric-consent.html" style="color: #b74dff;">Give consent and play 5 games to enroll</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError() {
+            document.getElementById('authHistory').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
+                    <div>Error loading dashboard data</div>
+                    <div style="font-size: 14px; margin-top: 8px;">
+                        <button class="refresh-button" onclick="loadDashboardData()">Try Again</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboardData, 30000);
+    </script>
+</body>
+</html>

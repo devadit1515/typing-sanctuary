@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keystroke Biometric Authentication Research - Typing Sanctuary</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .research-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .research-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .research-header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .research-header .subtitle {
+            font-size: 20px;
+            color: rgba(226, 232, 240, 0.7);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .info-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .info-card h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+        }
+
+        .info-card p, .info-card li {
+            font-size: 16px;
+            color: rgba(226, 232, 240, 0.8);
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+
+        .info-card ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 16px 0;
+        }
+
+        .info-card li {
+            padding-left: 28px;
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .info-card li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #b74dff;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .highlight-box {
+            background: rgba(183, 77, 255, 0.1);
+            border: 2px solid rgba(183, 77, 255, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .highlight-box h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #b74dff;
+            margin-bottom: 12px;
+        }
+
+        .highlight-box p {
+            font-size: 18px;
+            color: rgba(226, 232, 240, 0.9);
+            margin: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            color: white;
+            box-shadow: 0 4px 16px rgba(183, 77, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(183, 77, 255, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(226, 232, 240, 0.9);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .research-header h1 {
+                font-size: 32px;
+            }
+
+            .info-card {
+                padding: 24px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles Background -->
+    <div class="particles" id="particlesContainer"></div>
+
+    <!-- Grid Overlay -->
+    <div class="grid-overlay"></div>
+
+    <!-- Brand Logo Top Left -->
+    <div class="brand-logo">
+        <a href="/" style="text-decoration: none; color: inherit;">
+            <span class="brand-text">Typing Sanctuary</span>
+        </a>
+    </div>
+
+    <div class="research-container">
+        <div class="research-header">
+            <h1>🔐 Keystroke Biometric Authentication <span class="badge">RESEARCH</span></h1>
+            <p class="subtitle">
+                Advanced security through typing pattern recognition - A research project exploring
+                continuous authentication using keystroke dynamics
+            </p>
+        </div>
+
+        <div class="info-card">
+            <h2>🎯 What is This?</h2>
+            <p>
+                This is a <strong>research version</strong> of Typing Sanctuary that implements
+                <strong>keystroke biometric authentication</strong> - a cutting-edge security technology
+                that identifies users based on their unique typing patterns.
+            </p>
+            <p>
+                Just like your fingerprint, the way you type is unique to you. This system analyzes
+                timing patterns between keystrokes to create a "typing fingerprint" that can detect
+                unauthorized access in real-time.
+            </p>
+        </div>
+
+        <div class="highlight-box">
+            <h3>🔬 Research Goals</h3>
+            <p>
+                Study continuous authentication methods • Explore behavioral biometrics •
+                Develop ML models for security • Privacy-preserving authentication
+            </p>
+        </div>
+
+        <div class="info-card">
+            <h2>✨ Key Features</h2>
+            <ul>
+                <li><strong>Continuous Authentication:</strong> Verifies your identity throughout your session, not just at login</li>
+                <li><strong>Keystroke Dynamics:</strong> Analyzes dwell time, flight time, and typing rhythm</li>
+                <li><strong>Machine Learning:</strong> Statistical models detect anomalies in typing patterns</li>
+                <li><strong>Privacy-First:</strong> Only stores timing patterns, never the actual content you type</li>
+                <li><strong>Real-Time Detection:</strong> Flags suspicious activity within 30 seconds</li>
+                <li><strong>Research Platform:</strong> Contribute to academic research on biometric security</li>
+            </ul>
+        </div>
+
+        <div class="info-card">
+            <h2>🎮 How It Works</h2>
+            <p><strong>Step 1:</strong> Give consent for keystroke data collection</p>
+            <p><strong>Step 2:</strong> Play 5 typing games to build your biometric profile</p>
+            <p><strong>Step 3:</strong> Every subsequent game verifies your typing pattern</p>
+            <p><strong>Step 4:</strong> System flags anomalies if someone else uses your account</p>
+        </div>
+
+        <div class="info-card">
+            <h2>🔒 Your Privacy</h2>
+            <p>
+                <strong>We collect:</strong> Timing data (how long you hold keys, time between keystrokes)<br>
+                <strong>We DON'T collect:</strong> The actual words or content you type<br>
+                <strong>You control:</strong> All data with opt-out and deletion options at any time
+            </p>
+        </div>
+
+        <div class="action-buttons">
+            <a href="/biometric-consent.html" class="btn btn-primary">
+                ✓ Give Consent & Start
+            </a>
+            <a href="/biometric-dashboard.html" class="btn btn-secondary">
+                📊 View Dashboard
+            </a>
+            <a href="/typing-dna-visualization.html" class="btn btn-secondary">
+                🧬 View Typing DNA
+            </a>
+            <a href="/" class="btn btn-secondary">
+                ← Back to Main Game
+            </a>
+        </div>
+
+        <p style="text-align: center; margin-top: 40px; font-size: 14px; color: rgba(226, 232, 240, 0.5);">
+            This is a research project. All data is collected ethically with informed consent and
+            follows GDPR/CCPA privacy regulations.
+        </p>
+    </div>
+
+    <script src="particles.js"></script>
+    <script>
+        // Initialize particles
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('particlesContainer');
+            if (container) {
+                for (let i = 0; i < 50; i++) {
+                    createParticle(container);
+                }
+            }
+        });
+
+        function createParticle(container) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            container.appendChild(particle);
+        }
+    </script>
+</body>
+</html>

@@ -1,3 +1,113 @@
+// ── Training Mode ──────────────────────────────────────────────────────────────
+const IS_TRAINING_MODE = new URLSearchParams(window.location.search).get('training') === 'true';
+let biometricKeyDownTimes = {};
+let biometricKeystrokes = [];
+let biometricLastKeyUp = null;
+let biometricPassageText = '';
+let biometricListenersAttached = false;
+
+async function initTrainingMode() {
+    if (!IS_TRAINING_MODE) return;
+    const banner = document.getElementById('trainingBanner');
+    if (!banner) return;
+    banner.classList.remove('hidden');
+    document.body.classList.add('training-active');
+    try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.success && data.user) {
+            const el = document.getElementById('trainingUsername');
+            if (el) el.textContent = data.user.username;
+        }
+    } catch (_) {}
+}
+
+function attachBiometricListeners(inputEl) {
+    if (!IS_TRAINING_MODE || biometricListenersAttached) return;
+    biometricListenersAttached = true;
+
+    inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab' || e.key === 'Enter' || e.key === 'Backspace') return;
+        if (e.key.length !== 1) return;
+        const pos = inputEl.value.length;
+        if (biometricKeyDownTimes[pos] === undefined) {
+            biometricKeyDownTimes[pos] = performance.now();
+        }
+    });
+
+    inputEl.addEventListener('keyup', (e) => {
+        if (e.key === 'Tab' || e.key === 'Enter' || e.key === 'Backspace') return;
+        if (e.key.length !== 1) return;
+        const pos = inputEl.value.length - 1;
+        if (pos < 0) return;
+        const down = biometricKeyDownTimes[pos];
+        if (down === undefined) return;
+        const now = performance.now();
+        const dwell = Math.round(now - down);
+        const flight = biometricLastKeyUp !== null ? Math.round(down - biometricLastKeyUp) : 0;
+        const typed = inputEl.value[pos] || '';
+        const expected = biometricPassageText[pos] || '';
+        biometricKeystrokes.push({
+            char: typed,
+            keyCode: e.code,
+            dwellTime: dwell,
+            flightTime: flight,
+            position: pos,
+            isCorrect: typed === expected,
+            timestamp: now
+        });
+        biometricLastKeyUp = now;
+        delete biometricKeyDownTimes[pos];
+    });
+}
+
+function resetBiometricCapture() {
+    biometricKeyDownTimes = {};
+    biometricKeystrokes = [];
+    biometricLastKeyUp = null;
+}
+
+async function submitBiometricSample(passageText) {
+    if (!IS_TRAINING_MODE || biometricKeystrokes.length < 20) return;
+    const wordCount = passageText.trim().split(/\s+/).length;
+    const passageLength = wordCount <= 10 ? 'short' : 'medium';
+    try {
+        const res = await fetch('/api/keystroke-auth/submit-sample', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                passage: passageText,
+                passageLength,
+                keystrokes: biometricKeystrokes,
+                deviceInfo: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    screenResolution: `${screen.width}x${screen.height}`,
+                    language: navigator.language,
+                    hardwareConcurrency: navigator.hardwareConcurrency || 0,
+                    deviceMemory: navigator.deviceMemory || 0,
+                    colorDepth: screen.colorDepth || 0
+                },
+                source: 'game-training'
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const toast = document.createElement('div');
+            toast.className = 'biometric-toast';
+            toast.textContent = `🧠 Training sample saved! (${data.enrollmentProgress?.current || '?'} total)`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.4s';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+    } catch (_) {}
+    resetBiometricCapture();
+}
+// ── End Training Mode ──────────────────────────────────────────────────────────
+
 // Socket.IO connection with error handling
 const socket = io({
     transports: ['websocket', 'polling'],
@@ -380,6 +490,13 @@ socket.on('gameStart', ({ passage, startTime }) => {
     elements.typingInput.value = '';
     elements.typingInput.disabled = false;
 
+    // Training mode: reset capture and attach listeners for this game
+    if (IS_TRAINING_MODE) {
+        biometricPassageText = passage;
+        resetBiometricCapture();
+        attachBiometricListeners(elements.typingInput);
+    }
+
     showScreen('game');
 
     // Focus input after screen transition
@@ -617,6 +734,8 @@ elements.typingInput.addEventListener('input', () => {
     // Check if finished
     if (typed.length >= gameState.passage.length) {
         elements.typingInput.disabled = true;
+        // Submit biometric sample if in training mode
+        submitBiometricSample(biometricPassageText);
     }
 });
 
@@ -1086,3 +1205,6 @@ function inviteFriendToGame(friendId, friendUsername) {
     // Close modal
     document.getElementById('friendsInviteModal').classList.add('hidden');
 }
+
+// Initialize training mode on page load
+initTrainingMode();

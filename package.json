@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "connect-mongo": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -25,6 +26,8 @@
     "mongodb": "^7.0.0",
     "mongoose": "^9.0.0",
     "nodemailer": "^7.0.11",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "socket.io": "^4.6.1",
     "validator": "^13.15.23"
   },

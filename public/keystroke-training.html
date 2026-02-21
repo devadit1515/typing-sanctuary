@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Mode - Keystroke Authentication</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .training-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .training-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .training-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .progress-info {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .passage-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .passage-display {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .typing-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(183, 77, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+
+        .typing-input:focus {
+            outline: none;
+            border-color: #b74dff;
+            box-shadow: 0 0 20px rgba(183, 77, 255, 0.3);
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #b74dff;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(183, 77, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 16px;
+            border: 2px solid #b74dff;
+            text-align: center;
+            z-index: 10000;
+            display: none;
+        }
+
+        .celebration h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .celebration.show {
+            display: block;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particlesContainer"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-logo">
+        <span class="brand-text">Typing Sanctuary</span>
+    </div>
+
+    <div class="training-container">
+        <div class="training-header">
+            <h1>📚 Training Mode</h1>
+            <p>Type the passage below to train your biometric model</p>
+        </div>
+
+        <div class="progress-info">
+            <h3 id="progressTitle">Loading...</h3>
+            <p id="progressDesc">Fetching your training progress...</p>
+        </div>
+
+        <div class="info-box">
+            <p><strong>💡 Tip:</strong> Type naturally — don't try to type perfectly! Your unique rhythm is what we're capturing.</p>
+            <p><strong>⏱️ Short passages:</strong> You'll see a mix of 1-3 word phrases, short sentences, and medium passages. All contribute equally to your model.</p>
+        </div>
+
+        <div class="passage-card">
+            <h3>Passage to Type:</h3>
+            <div class="passage-display" id="passageDisplay">
+                Loading passage...
+            </div>
+
+            <textarea
+                id="typingInput"
+                class="typing-input"
+                placeholder="Start typing here..."
+                spellcheck="false"
+            ></textarea>
+
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value" id="wpmValue">0</div>
+                    <div class="stat-label">WPM</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracyValue">100%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="progressValue">0%</div>
+                    <div class="stat-label">Progress</div>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="submitBtn" class="btn btn-primary" disabled>
+                    Complete & Submit Sample
+                </button>
+                <button id="newPassageBtn" class="btn btn-secondary">
+                    Get New Passage
+                </button>
+                <button id="trainViaGamesBtn" class="btn btn-secondary">
+                    🎮 Train by Playing Games
+                </button>
+            </div>
+        </div>
+
+        <a href="/keystroke-auth.html" class="back-link">← Back to Dashboard</a>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div id="celebrationModal" class="celebration">
+        <h2>🎉 New Tier Unlocked!</h2>
+        <p id="celebrationText"></p>
+        <button class="btn btn-primary" onclick="closeCelebration()">Continue Training</button>
+    </div>
+
+    <script src="keystroke-training.js"></script>
+</body>
+</html>

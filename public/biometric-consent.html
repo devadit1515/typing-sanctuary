@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biometric Authentication - Speed Typing Battle</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .consent-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .consent-header {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+
+    .consent-header h1 {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .consent-header p {
+      font-size: 18px;
+      color: rgba(226, 232, 240, 0.7);
+      line-height: 1.6;
+    }
+
+    .consent-section {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .consent-section h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .consent-section h2::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      border-radius: 2px;
+    }
+
+    .consent-section p, .consent-section li {
+      font-size: 16px;
+      color: rgba(226, 232, 240, 0.8);
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .consent-section ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 16px 0;
+    }
+
+    .consent-section li {
+      padding-left: 28px;
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .consent-section li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--color-primary);
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .highlight-box {
+      background: rgba(183, 77, 255, 0.1);
+      border: 1px solid rgba(183, 77, 255, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .highlight-box strong {
+      color: var(--color-primary);
+    }
+
+    .checkbox-group {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: var(--color-primary);
+    }
+
+    .checkbox-item label {
+      flex: 1;
+      font-size: 16px;
+      color: rgba(226, 232, 240, 0.9);
+      line-height: 1.6;
+      cursor: pointer;
+    }
+
+    .checkbox-item label strong {
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 32px;
+    }
+
+    .btn {
+      padding: 16px 40px;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: white;
+      box-shadow: 0 4px 16px rgba(183, 77, 255, 0.4);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(183, 77, 255, 0.6);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(226, 232, 240, 0.7);
+      border: 1px solid var(--glass-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+    }
+
+    .info-icon {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: rgba(183, 77, 255, 0.2);
+      border-radius: 50%;
+      text-align: center;
+      line-height: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--color-primary);
+      cursor: help;
+    }
+
+    .success-message {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      color: rgba(134, 239, 172, 0.9);
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      color: rgba(252, 165, 165, 0.9);
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+      .consent-container {
+        padding: 20px 10px;
+      }
+
+      .consent-header {
+        padding: 24px;
+      }
+
+      .consent-header h1 {
+        font-size: 32px;
+      }
+
+      .consent-section {
+        padding: 20px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="consent-container">
+    <div class="consent-header">
+      <h1>🔐 Keystroke Biometric Authentication</h1>
+      <p>Enhanced Security Through Typing Pattern Recognition</p>
+    </div>
+
+    <div class="consent-section">
+      <h2>What is Keystroke Biometric Authentication?</h2>
+      <p>
+        Keystroke biometric authentication is a cutting-edge security technology that identifies you
+        based on your unique typing patterns. Just like your fingerprint, the way you type—including
+        the timing between keystrokes and how long you hold down each key—is unique to you.
+      </p>
+      <div class="highlight-box">
+        <p><strong>How it works:</strong> As you play typing games, our system analyzes your typing rhythm,
+        speed patterns, and keystroke dynamics to create a unique "typing fingerprint." This adds an
+        extra layer of security to your account without requiring any additional effort from you!</p>
+      </div>
+    </div>
+
+    <div class="consent-section">
+      <h2>Benefits</h2>
+      <ul>
+        <li><strong>Enhanced Security:</strong> Protects your account from unauthorized access, even if someone knows your password</li>
+        <li><strong>Continuous Authentication:</strong> Verifies your identity throughout your session, not just at login</li>
+        <li><strong>No Extra Effort:</strong> Works automatically while you play—no additional passwords or codes needed</li>
+        <li><strong>Session Hijacking Prevention:</strong> Detects if someone else tries to use your account mid-session</li>
+        <li><strong>Privacy-Focused:</strong> Only stores statistical patterns, not the actual words you type</li>
+      </ul>
+    </div>
+
+    <div class="consent-section">
+      <h2>What Data is Collected?</h2>
+      <p>We collect the following anonymized data:</p>
+      <ul>
+        <li><strong>Timing Metrics:</strong> Time between keystrokes (flight time) and key press duration (dwell time)</li>
+        <li><strong>Rhythm Patterns:</strong> Your typing speed variations and pause patterns</li>
+        <li><strong>Error Patterns:</strong> How and where you make typing errors</li>
+        <li><strong>Device Information:</strong> Keyboard type and browser to adjust for different devices</li>
+      </ul>
+      <div class="highlight-box">
+        <p><strong>Important:</strong> We do NOT record the actual content of what you type—only the timing patterns.
+        Your privacy is protected!</p>
+      </div>
+    </div>
+
+    <div class="consent-section">
+      <h2>How Your Data is Protected</h2>
+      <ul>
+        <li><strong>Encrypted Storage:</strong> All biometric data is encrypted and stored securely</li>
+        <li><strong>Limited Access:</strong> Only authorized systems can access your biometric profile</li>
+        <li><strong>Anonymized Processing:</strong> Your typing patterns are converted to statistical features</li>
+        <li><strong>Right to Delete:</strong> You can request deletion of all your biometric data at any time</li>
+        <li><strong>No Third-Party Sharing:</strong> Your biometric data is never sold or shared with third parties</li>
+      </ul>
+    </div>
+
+    <div class="consent-section">
+      <h2>Your Rights & Control</h2>
+      <p>You have complete control over your biometric data:</p>
+      <ul>
+        <li>Opt out at any time from your profile settings</li>
+        <li>Request a copy of your biometric profile</li>
+        <li>Delete all your biometric data permanently</li>
+        <li>View your authentication history</li>
+        <li>Update your consent preferences</li>
+      </ul>
+    </div>
+
+    <div class="consent-section">
+      <h2>Consent</h2>
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="requiredConsent" required>
+          <label for="requiredConsent">
+            <strong>I consent to keystroke biometric authentication.</strong><br>
+            I understand that my typing patterns will be collected and analyzed to enhance my account
+            security. I have read and understand the information provided above.
+          </label>
+        </div>
+
+        <div class="checkbox-item">
+          <input type="checkbox" id="researchConsent">
+          <label for="researchConsent">
+            <strong>I consent to anonymized research use (optional).</strong><br>
+            I allow my anonymized biometric data to be used for academic research to improve
+            keystroke authentication technology. No personally identifiable information will be included.
+          </label>
+        </div>
+      </div>
+
+      <div id="message"></div>
+
+      <div class="button-group">
+        <button class="btn btn-secondary" onclick="decline()">
+          Decline
+        </button>
+        <button class="btn btn-primary" id="acceptBtn" onclick="acceptConsent()" disabled>
+          ✓ Accept & Enable
+        </button>
+      </div>
+
+      <p style="text-align: center; margin-top: 24px; font-size: 14px; color: rgba(226, 232, 240, 0.5);">
+        By accepting, you agree to the <a href="/privacy-policy" style="color: var(--color-primary); text-decoration: none;">Privacy Policy</a>
+        and <a href="/terms" style="color: var(--color-primary); text-decoration: none;">Terms of Service</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Enable accept button only when required consent is checked
+    document.getElementById('requiredConsent').addEventListener('change', function() {
+      document.getElementById('acceptBtn').disabled = !this.checked;
+    });
+
+    async function acceptConsent() {
+      const acceptBtn = document.getElementById('acceptBtn');
+      const messageDiv = document.getElementById('message');
+
+      acceptBtn.disabled = true;
+      acceptBtn.classList.add('loading');
+      messageDiv.innerHTML = '';
+
+      try {
+        const researchConsent = document.getElementById('researchConsent').checked;
+
+        const response = await fetch('/api/biometric/consent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            researchConsent: researchConsent
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          messageDiv.innerHTML = `
+            <div class="success-message">
+              ✓ Biometric authentication enabled successfully!<br>
+              <small>You'll be enrolled after playing 5 typing games.</small>
+            </div>
+          `;
+
+          // Redirect to profile or game page after 2 seconds
+          setTimeout(() => {
+            window.location.href = '/profile.html';
+          }, 2000);
+        } else {
+          throw new Error(data.message || 'Failed to save consent');
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
+        messageDiv.innerHTML = `
+          <div class="error-message">
+            ✕ Error: ${error.message}
+          </div>
+        `;
+        acceptBtn.disabled = false;
+        acceptBtn.classList.remove('loading');
+      }
+    }
+
+    function decline() {
+      // Redirect back to profile or home
+      window.location.href = '/profile.html';
+    }
+
+    // Check if user is logged in
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch('/api/auth/session');
+        const data = await response.json();
+
+        if (!data.authenticated) {
+          // Redirect to login if not authenticated
+          window.location.href = '/auth.html?redirect=biometric-consent.html';
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    });
+  </script>
+</body>
+</html>

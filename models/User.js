@@ -32,7 +32,15 @@ const userSchema = new mongoose.Schema({
 
   passwordHash: {
     type: String,
-    required: [true, 'Password is required']
+    required: false,
+    default: null
+  },
+
+  // Google OAuth — set when user signs in via Google
+  googleId: {
+    type: String,
+    sparse: true,
+    default: null
   },
 
   // Profile Information
@@ -143,8 +151,8 @@ const userSchema = new mongoose.Schema({
  * This runs automatically before saving a user
  */
 userSchema.pre('save', async function() {
-  // Only hash the password if it has been modified (or is new)
-  if (!this.isModified('passwordHash')) {
+  // Only hash the password if it has been modified and is not null (Google users have no password)
+  if (!this.isModified('passwordHash') || !this.passwordHash) {
     return;
   }
 

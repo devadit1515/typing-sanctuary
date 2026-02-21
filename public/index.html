@@ -3,8 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Typing Battle - Premium</title>
+    <title>Typing Sanctuary</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .landing-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 60px 40px;
+        }
+
+        .landing-hero {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .landing-hero h1 {
+            font-size: 6.5rem;
+            font-weight: 800;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+        }
+
+        .landing-hero p {
+            font-size: 1.7rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .landing-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            max-width: 1300px;
+            width: 100%;
+        }
+
+        .landing-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            padding: 88px 72px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .landing-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .landing-card.game-card {
+            border-color: rgba(0, 212, 255, 0.25);
+        }
+
+        .landing-card.game-card:hover {
+            border-color: rgba(0, 212, 255, 0.55);
+            box-shadow: 0 16px 48px rgba(0, 212, 255, 0.12);
+        }
+
+        .landing-card.train-card {
+            border-color: rgba(183, 77, 255, 0.25);
+        }
+
+        .landing-card.train-card:hover {
+            border-color: rgba(183, 77, 255, 0.55);
+            box-shadow: 0 16px 48px rgba(183, 77, 255, 0.12);
+        }
+
+        .card-icon {
+            font-size: 6.5rem;
+            display: block;
+            margin-bottom: 24px;
+        }
+
+        .card-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .badge-free {
+            background: rgba(0, 255, 136, 0.12);
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            color: #00ff88;
+        }
+
+        .badge-signin {
+            background: rgba(183, 77, 255, 0.12);
+            border: 1px solid rgba(183, 77, 255, 0.35);
+            color: #b74dff;
+        }
+
+        .landing-card h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: #e2e8f0;
+        }
+
+        .landing-card p {
+            color: rgba(255, 255, 255, 0.58);
+            margin-bottom: 40px;
+            font-size: 1.35rem;
+            line-height: 1.7;
+        }
+
+        .btn-game {
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            color: white;
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-game:hover {
+            box-shadow: 0 8px 24px rgba(0, 180, 216, 0.45);
+            transform: scale(1.04);
+        }
+
+        .btn-train {
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            color: white;
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-train:hover {
+            box-shadow: 0 8px 24px rgba(183, 77, 255, 0.45);
+            transform: scale(1.04);
+        }
+
+        @media (max-width: 900px) {
+            .landing-cards { grid-template-columns: 1fr; max-width: 560px; }
+        }
+        @media (max-width: 640px) {
+            .landing-hero h1 { font-size: 3rem; letter-spacing: -1px; }
+            .landing-hero p { font-size: 1.1rem; }
+            .landing-cards { gap: 20px; }
+            .landing-card { padding: 44px 28px; }
+            .landing-card h2 { font-size: 1.9rem; }
+        }
+    </style>
 </head>
 <body>
     <!-- Floating Particles Background -->
@@ -21,7 +170,7 @@
     <!-- Credit Footer -->
     <div class="credit-footer">Made by Devadit</div>
 
-    <!-- User Profile Display -->
+    <!-- User Profile Display (shown when logged in) -->
     <div id="userProfile" class="user-profile hidden" style="display: none !important;">
         <div class="profile-info">
             <span class="profile-username" id="profileUsername"></span>
@@ -29,252 +178,76 @@
         <button id="logoutBtn" class="btn-logout">Logout</button>
     </div>
 
-    <!-- Login/Register Buttons (for non-logged in users) -->
+    <!-- Login/Register Buttons (shown when not logged in) -->
     <div id="authButtons" class="auth-buttons-corner hidden" style="display: none !important;">
         <a href="/login.html" class="btn btn-outline btn-small">Login</a>
         <a href="/register.html" class="btn btn-outline btn-small">Register</a>
     </div>
 
-    <div class="container">
-        <!-- Welcome Screen - Premium Landing Page -->
-        <div id="welcomeScreen" class="screen active">
-            <div class="hero-section">
-                <h1 class="hero-title">⚡ SPEED TYPING BATTLE <span class="typing-cursor"></span></h1>
-                <p class="subtitle">Where Speed Meets Precision</p>
-            </div>
-
-            <!-- Username Display (for logged in users) -->
-            <div id="loggedInUsername" class="logged-in-username hidden" style="display: none !important;">
-                <p>Welcome back, <strong id="welcomeUsername"></strong>!</p>
-            </div>
-
-            <!-- Username Input (for guest users only) -->
-            <div class="input-group" id="usernameInputGroup">
-                <input type="text" id="playerName" placeholder="Enter your guest username" maxlength="20">
-            </div>
-
-            <!-- Main Mode Selection -->
-            <div class="mode-cards">
-                <button id="soloModeBtn" class="btn btn-secondary btn-large">Play Solo</button>
-                <button id="multiplayerModeBtn" class="btn btn-primary btn-large">Play Multiplayer</button>
-            </div>
-
-                </div>
-
-        <!-- Solo Setup Screen -->
-        <div id="soloSetupScreen" class="screen">
-            <h3 class="section-title">Solo Game Setup</h3>
-
-            <div class="option-group">
-                <label>Passage Length</label>
-                <select id="soloPassageLengthSelect" class="select-input">
-                    <option value="short">Short (~15 words)</option>
-                    <option value="medium" selected>Medium (~30 words)</option>
-                    <option value="long">Long (~60 words)</option>
-                </select>
-            </div>
-
-            <div class="option-group">
-                <label>Difficulty Level</label>
-                <select id="difficultySelect" class="select-input">
-                    <option value="level1">Level 1 (30 WPM)</option>
-                    <option value="level2">Level 2 (40 WPM)</option>
-                    <option value="level3" selected>Level 3 (50 WPM)</option>
-                    <option value="level4">Level 4 (60 WPM)</option>
-                    <option value="level5">Level 5 (70 WPM)</option>
-                </select>
-            </div>
-
-            <button id="createSoloRoomBtn" class="btn btn-success btn-large" style="width: 100%; margin-top: 24px;">Start Solo Game</button>
-            <button id="backFromSoloBtn" class="btn btn-secondary" style="width: 100%; margin-top: 16px;">Back</button>
+    <div class="landing-container">
+        <div class="landing-hero">
+            <h1>⚡ Typing Sanctuary</h1>
+            <p>Where speed meets biometric security</p>
         </div>
 
-        <!-- Multiplayer Setup Screen -->
-        <div id="multiplayerSetupScreen" class="screen">
-            <h3 class="section-title">Multiplayer Mode</h3>
-
-            <div class="button-group" style="margin-bottom: 32px;">
-                <button id="createRoomBtn" class="btn btn-primary">Create Room</button>
-                <button id="joinRoomBtn" class="btn btn-secondary">Join Room</button>
+        <div class="landing-cards">
+            <!-- Train Model Card -->
+            <div class="landing-card train-card">
+                <span class="card-icon">🧠</span>
+                <span class="card-badge badge-signin">Sign-in required</span>
+                <h2>Train My Model</h2>
+                <p>Build your unique keystroke biometric profile. Your typing rhythm becomes your digital fingerprint.</p>
+                <button class="btn btn-large btn-train" id="trainModelBtn" style="width: 100%;">Start Training →</button>
             </div>
 
-            <!-- Create Room Options -->
-            <div id="createRoomOptions" class="hidden">
-                <div class="option-group">
-                    <label>Passage Length</label>
-                    <select id="multiplayerPassageLengthSelect" class="select-input">
-                        <option value="short">Short (~15 words)</option>
-                        <option value="medium" selected>Medium (~30 words)</option>
-                        <option value="long">Long (~60 words)</option>
-                    </select>
-                </div>
-
-                <button id="createMultiplayerRoomBtn" class="btn btn-primary btn-large" style="width: 100%; margin-top: 24px;">Create Multiplayer Room</button>
+            <!-- Play Game Card -->
+            <div class="landing-card game-card">
+                <span class="card-icon">🎮</span>
+                <span class="card-badge badge-free">Free · No sign-in needed</span>
+                <h2>Play Typing Game</h2>
+                <p>Race against friends or an AI opponent in real-time typing battles. Solo and multiplayer modes available.</p>
+                <a href="/game.html" style="display: block;">
+                    <button class="btn btn-large btn-game" style="width: 100%;">Play Now →</button>
+                </a>
             </div>
-
-            <!-- Join Room Input -->
-            <div id="joinRoomInput" class="hidden">
-                <div class="option-group">
-                    <label>Enter Room Code</label>
-                    <input type="text" id="roomCodeInput" placeholder="6-digit code" maxlength="6" style="text-align: center; font-size: 32px; font-family: 'SF Mono', Monaco, monospace; letter-spacing: 8px; height: 72px;">
-                </div>
-                <button id="confirmJoinBtn" class="btn btn-secondary btn-large" style="width: 100%;">Join Room</button>
-            </div>
-
-            <button id="backFromMultiplayerBtn" class="btn btn-secondary" style="width: 100%; margin-top: 24px;">Back</button>
-        </div>
-
-        <!-- Lobby Screen -->
-        <div id="lobbyScreen" class="screen">
-            <h2 style="text-align: center; font-size: 48px; margin-bottom: 32px; color: #e2e8f0;">Game Lobby</h2>
-
-            <div id="roomCodeContainer" class="room-code-display">
-                <span>Room Code:</span>
-                <span id="roomCodeDisplay" class="room-code"></span>
-                <button id="copyCodeBtn" class="btn btn-small">Copy</button>
-            </div>
-
-            <!-- Invite Friends Button (HIDDEN - Guest mode only) -->
-            <div id="inviteFriendsContainer" class="hidden" style="display: none !important; margin: 20px 0; text-align: center;">
-                <button id="inviteFriendsBtn" class="btn btn-secondary" style="width: 100%;">
-                    Invite Friends
-                </button>
-            </div>
-
-            <div class="players-waiting">
-                <h3>Players in Room</h3>
-                <div id="playersList"></div>
-            </div>
-
-            <div id="hostControls" class="hidden" style="margin-top: 32px;">
-                <button id="startGameBtn" class="btn btn-primary btn-large" style="width: 100%;">Start Game</button>
-            </div>
-
-            <div class="waiting-message">
-                <p id="waitingText">Waiting for host to start the game...</p>
-            </div>
-
-            <button id="backFromLobbyBtn" class="btn btn-secondary" style="width: 100%; margin-top: 24px;">Back</button>
-        </div>
-
-        <!-- Countdown Screen -->
-        <div id="countdownScreen" class="screen">
-            <div class="countdown-display">
-                <h2>Get Ready!</h2>
-                <div id="countdownNumber" class="countdown-number">3</div>
-            </div>
-        </div>
-
-        <!-- Game Screen -->
-        <div id="gameScreen" class="screen">
-            <div class="game-header">
-                <div class="timer">Time: <span id="timer">0.0</span>s</div>
-            </div>
-
-            <!-- Hearts Display -->
-            <div class="hearts-container">
-                <span class="heart" id="heart1">❤️</span>
-                <span class="heart" id="heart2">❤️</span>
-                <span class="heart" id="heart3">❤️</span>
-            </div>
-
-            <!-- Leave Game Button -->
-            <div style="text-align: center; margin: 16px 0;">
-                <button id="leaveGameBtn" class="btn btn-secondary btn-small">Leave Game</button>
-            </div>
-
-            <div class="passage-container">
-                <div id="passageDisplay" class="passage"></div>
-            </div>
-
-            <div class="input-container">
-                <input type="text" id="typingInput" class="typing-input" placeholder="Start typing..." disabled>
-            </div>
-
-            <div class="players-progress" id="playersProgress">
-                <h3>Players</h3>
-            </div>
-        </div>
-
-        <!-- Results Screen -->
-        <div id="resultsScreen" class="screen">
-            <h2>🏆 Game Results</h2>
-            <div id="resultsContainer"></div>
-
-            <div id="hostRematchControls" class="hidden" style="margin-top: 32px;">
-                <button id="rematchBtn" class="btn btn-primary btn-large" style="width: 100%;">Rematch</button>
-            </div>
-
-            <button id="backToMenuBtn" class="btn btn-secondary" style="margin-top: 16px;">Back to Menu</button>
         </div>
     </div>
 
-    <!-- Friends Invite Modal (HIDDEN - Guest mode only) -->
-    <div id="friendsInviteModal" class="modal hidden" style="display: none !important;">
-        <div class="modal-content" style="max-width: 500px; max-height: 70vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h2 style="font-size: 28px; color: #e2e8f0;">Invite Friends</h2>
-                <button id="closeFriendsModal" class="btn btn-secondary btn-small">Close</button>
-            </div>
-
-            <div id="onlineFriendsList"></div>
-        </div>
-    </div>
-
-    <!-- Game Invite Notification -->
-    <div id="gameInviteNotification" class="hidden" style="position: fixed; top: 20px; right: 20px; z-index: 10000; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); min-width: 300px;">
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
-            <div style="font-size: 32px;">🎮</div>
-            <div>
-                <div style="font-size: 18px; font-weight: 700; color: #e2e8f0; margin-bottom: 4px;">Game Invite</div>
-                <div id="inviteFromUser" style="font-size: 14px; color: rgba(226, 232, 240, 0.7);"></div>
-            </div>
-        </div>
-        <div style="display: flex; gap: 12px;">
-            <button id="acceptInviteBtn" class="btn btn-primary" style="flex: 1;">Join</button>
-            <button id="declineInviteBtn" class="btn btn-secondary" style="flex: 1;">Decline</button>
-        </div>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="game.js"></script>
     <script src="session-check.js"></script>
     <script>
-        // Create floating particles
+        // Floating particles
         function createParticles() {
             const container = document.getElementById('particlesContainer');
-            const particleCount = 60;
-
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-
-                // Random position
-                particle.style.left = Math.random() * 100 + '%';
-
-                // Random size (2-4px)
+            const count = 60;
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
                 const size = 2 + Math.random() * 2;
-                particle.style.width = size + 'px';
-                particle.style.height = size + 'px';
-
-                // Random opacity (10-30%)
-                const opacity = 0.1 + Math.random() * 0.2;
-                particle.style.setProperty('--particle-opacity', opacity);
-
-                // Random animation duration (10-25 seconds)
-                const duration = 10 + Math.random() * 15;
-                particle.style.animationDuration = duration + 's';
-
-                // Random delay
-                const delay = Math.random() * 5;
-                particle.style.animationDelay = delay + 's';
-
-                container.appendChild(particle);
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.setProperty('--particle-opacity', 0.1 + Math.random() * 0.2);
+                p.style.animationDuration = (10 + Math.random() * 15) + 's';
+                p.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(p);
             }
         }
-
-        // Initialize particles when page loads
         window.addEventListener('DOMContentLoaded', createParticles);
+
+        // Train My Model — auth check before navigation
+        document.getElementById('trainModelBtn').addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/auth/me');
+                const data = await res.json();
+                if (data.success && data.user) {
+                    window.location.href = '/keystroke-auth.html';
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (_) {
+                window.location.href = '/login.html';
+            }
+        });
     </script>
 </body>
 </html>

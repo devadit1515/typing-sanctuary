@@ -4,6 +4,8 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
+const passport = require('passport');
+const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
@@ -67,6 +69,53 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
+
+// Passport middleware (must be after session)
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Google OAuth strategy
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: process.env.GOOGLE_CALLBACK_URL,
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    // Find existing Google user
+    let user = await User.findOne({ googleId: profile.id });
+    if (!user) {
+      // Generate a unique username from Google display name
+      let base = (profile.displayName || 'user')
+        .replace(/[^a-z0-9_]/gi, '').toLowerCase().slice(0, 18);
+      if (base.length < 3) base = 'user' + base;
+      let username = base;
+      let suffix = 1;
+      while (await User.findOne({ username })) {
+        username = base + suffix++;
+      }
+      user = await User.create({
+        googleId: profile.id,
+        username,
+        email: profile.emails?.[0]?.value || '',
+        passwordHash: null,
+        profile: { displayName: profile.displayName || username },
+      });
+    }
+    return done(null, user);
+  } catch (err) {
+    return done(err);
+  }
+}));
+
+passport.serializeUser((user, done) => done(null, user._id.toString()));
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
 
 // Health check endpoint (important for Netlify/deployment monitoring)
 app.get('/health', (req, res) => {

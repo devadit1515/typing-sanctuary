@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keystroke Authentication - Typing Sanctuary</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-hub-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            justify-content: center;
+        }
+
+        .hub-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .hub-header h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hub-header p {
+            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 36px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .mode-card.overall-card {
+            border-color: rgba(183, 77, 255, 0.25);
+        }
+
+        .mode-card.overall-card:hover {
+            border-color: rgba(183, 77, 255, 0.55);
+            box-shadow: 0 16px 48px rgba(183, 77, 255, 0.12);
+        }
+
+        .mode-card.password-card {
+            border-color: rgba(251, 146, 60, 0.25);
+        }
+
+        .mode-card.password-card:hover {
+            border-color: rgba(251, 146, 60, 0.55);
+            box-shadow: 0 16px 48px rgba(251, 146, 60, 0.12);
+        }
+
+        .mode-icon {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .mode-card h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: #e2e8f0;
+        }
+
+        .mode-card p {
+            color: rgba(255, 255, 255, 0.58);
+            margin-bottom: 32px;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-overall {
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            color: white;
+        }
+
+        .btn-overall:hover {
+            transform: scale(1.04);
+            box-shadow: 0 8px 24px rgba(183, 77, 255, 0.45);
+        }
+
+        .btn-password {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+        }
+
+        .btn-password:hover {
+            transform: scale(1.04);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.45);
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.13);
+            color: white;
+            transform: translateX(-4px);
+        }
+
+        .new-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(251, 146, 60, 0.9);
+            background: rgba(251, 146, 60, 0.12);
+            padding: 2px 8px;
+            border-radius: 8px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particlesContainer"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-logo">
+        <span class="brand-text">Typing Sanctuary</span>
+    </div>
+
+    <div class="auth-hub-container">
+        <div class="hub-header">
+            <h1>🔐 Keystroke Authentication</h1>
+            <p>Your typing pattern is as unique as your fingerprint. Choose a training mode below.</p>
+        </div>
+
+        <div class="mode-grid">
+            <!-- Train Overall Card -->
+            <div class="mode-card overall-card">
+                <span class="mode-icon">📚</span>
+                <h2>Train Overall</h2>
+                <p>Type varied passages and short phrases to build a general biometric profile. The more samples you provide, the more accurate your model becomes.</p>
+                <a href="/keystroke-training.html" class="btn btn-overall">Start General Training →</a>
+            </div>
+
+            <!-- Train on Password Card -->
+            <div class="mode-card password-card">
+                <span class="mode-icon">🔑</span>
+                <h2>Train on Password <span class="new-badge">NEW</span></h2>
+                <p>Train on a specific phrase you type repeatedly. The system learns your exact rhythm and can detect impostors even if they know the characters.</p>
+                <a href="/keystroke-password.html" class="btn btn-password">Open Password Mode →</a>
+            </div>
+        </div>
+
+        <a href="/" class="back-link">← Back to Home</a>
+    </div>
+
+    <script>
+        // Auth guard — redirect to login if not signed in
+        fetch('/api/auth/me').then(r => r.json()).then(d => {
+            if (!d.success) window.location.href = '/login.html';
+        }).catch(() => {
+            window.location.href = '/login.html';
+        });
+
+        // Particles
+        function createParticles() {
+            const container = document.getElementById('particlesContainer');
+            for (let i = 0; i < 50; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                const size = 2 + Math.random() * 2;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.setProperty('--particle-opacity', 0.1 + Math.random() * 0.2);
+                p.style.animationDuration = (10 + Math.random() * 15) + 's';
+                p.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(p);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
+</body>
+</html>

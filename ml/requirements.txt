@@ -1,0 +1,27 @@
+# Python Machine Learning Dependencies for Keystroke Biometrics
+# All FREE and open-source
+
+# Core ML Libraries
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Deep Learning (choose one - both are free)
+tensorflow>=2.13.0  # Google's deep learning framework
+# OR
+# torch>=2.0.0  # PyTorch (Facebook's framework)
+
+# Data Processing
+scipy>=1.11.0
+joblib>=1.3.0
+
+# Visualization (for research/debugging)
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Optional but useful
+jupyter>=1.0.0  # For experimentation
+notebook>=7.0.0

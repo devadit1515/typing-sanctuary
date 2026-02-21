@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Your Data - Biometric Research</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .export-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .export-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .export-header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .export-header .subtitle {
+            font-size: 18px;
+            color: rgba(226, 232, 240, 0.7);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .export-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .export-card h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .export-card .icon {
+            font-size: 28px;
+        }
+
+        .export-card p {
+            color: rgba(226, 232, 240, 0.8);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(183, 77, 255, 0.5);
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-option label {
+            flex: 1;
+            cursor: pointer;
+            color: rgba(226, 232, 240, 0.9);
+            font-size: 15px;
+        }
+
+        .checkbox-option .description {
+            font-size: 13px;
+            color: rgba(226, 232, 240, 0.6);
+            margin-top: 4px;
+        }
+
+        .export-button {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .export-button.primary {
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            color: white;
+            box-shadow: 0 4px 16px rgba(183, 77, 255, 0.4);
+        }
+
+        .export-button.primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(183, 77, 255, 0.6);
+        }
+
+        .export-button.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(226, 232, 240, 0.9);
+            border: 1px solid var(--glass-border);
+        }
+
+        .export-button.secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .export-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .info-box.warning {
+            background: rgba(251, 191, 36, 0.1);
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .info-box .title {
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-box.warning .title {
+            color: #fbbf24;
+        }
+
+        .info-box .content {
+            color: rgba(226, 232, 240, 0.8);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(226, 232, 240, 0.9);
+            text-decoration: none;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            margin-bottom: 32px;
+            display: inline-block;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(-4px);
+        }
+
+        @media (max-width: 768px) {
+            .export-header h1 {
+                font-size: 32px;
+            }
+
+            .export-card {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles Background -->
+    <div class="particles" id="particlesContainer"></div>
+
+    <!-- Grid Overlay -->
+    <div class="grid-overlay"></div>
+
+    <!-- Brand Logo Top Left -->
+    <div class="brand-logo">
+        <a href="/" style="text-decoration: none; color: inherit;">
+            <span class="brand-text">Typing Sanctuary Research</span>
+        </a>
+    </div>
+
+    <div class="export-container">
+        <a href="/biometric-dashboard.html" class="back-link">
+            ← Back to Dashboard
+        </a>
+
+        <div class="export-header">
+            <h1>📥 Export Your Data</h1>
+            <p class="subtitle">
+                Download your biometric data in standard formats for personal records,
+                research analysis, or GDPR compliance.
+            </p>
+        </div>
+
+        <!-- CSV Export -->
+        <div class="export-card">
+            <h2><span class="icon">📊</span>CSV Export</h2>
+            <p>
+                Download your keystroke data as a CSV file, compatible with Excel, Google Sheets,
+                and data analysis tools like Python/R.
+            </p>
+
+            <div class="export-options">
+                <div class="checkbox-option">
+                    <input type="checkbox" id="csvIncludeRaw" checked>
+                    <label for="csvIncludeRaw">
+                        <div>Include raw keystroke data</div>
+                        <div class="description">Individual key presses with timing information</div>
+                    </label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="csvAnonymize">
+                    <label for="csvAnonymize">
+                        <div>Anonymize text content</div>
+                        <div class="description">Replace actual characters with asterisks</div>
+                    </label>
+                </div>
+            </div>
+
+            <button class="export-button primary" onclick="exportCSV()">
+                📊 Download CSV File
+            </button>
+        </div>
+
+        <!-- JSON Export -->
+        <div class="export-card">
+            <h2><span class="icon">📄</span>JSON Export</h2>
+            <p>
+                Download complete biometric profile as JSON, including enrollment info,
+                typing patterns, authentication history, and device data.
+            </p>
+
+            <div class="export-options">
+                <div class="checkbox-option">
+                    <input type="checkbox" id="jsonIncludeRaw" checked>
+                    <label for="jsonIncludeRaw">
+                        <div>Include raw keystrokes</div>
+                        <div class="description">Full keystroke sequences from each sample</div>
+                    </label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="jsonIncludeHistory" checked>
+                    <label for="jsonIncludeHistory">
+                        <div>Include authentication history</div>
+                        <div class="description">Timeline of all verification attempts</div>
+                    </label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="jsonAnonymize">
+                    <label for="jsonAnonymize">
+                        <div>Anonymize identifiers</div>
+                        <div class="description">Remove device fingerprints and IDs</div>
+                    </label>
+                </div>
+            </div>
+
+            <button class="export-button primary" onclick="exportJSON()">
+                📄 Download JSON File
+            </button>
+        </div>
+
+        <!-- GDPR Info -->
+        <div class="info-box">
+            <div class="title">
+                🔒 Your Data Rights (GDPR/CCPA)
+            </div>
+            <div class="content">
+                You have the right to access, export, and delete your personal data at any time.
+                Exported data includes all biometric information we've collected. To permanently
+                delete your data, visit your <a href="/profile.html" style="color: #60a5fa;">profile settings</a>.
+            </div>
+        </div>
+
+        <!-- Research Info -->
+        <div class="info-box warning">
+            <div class="title">
+                📚 Research Data Usage
+            </div>
+            <div class="content">
+                If you've consented to research use, your anonymized data may be included in academic
+                publications and datasets. You can revoke research consent at any time from your
+                <a href="/profile.html" style="color: #fbbf24;">profile settings</a>, though previously
+                published anonymized data cannot be retroactively removed.
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 16px; margin-top: 32px;">
+            <button class="export-button secondary" onclick="window.location.href='/biometric-dashboard.html'" style="flex: 1;">
+                ← Back to Dashboard
+            </button>
+            <button class="export-button secondary" onclick="window.location.href='/index-research.html'" style="flex: 1;">
+                Research Home
+            </button>
+        </div>
+    </div>
+
+    <script src="particles.js"></script>
+    <script>
+        // Initialize particles
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('particlesContainer');
+            if (container) {
+                for (let i = 0; i < 50; i++) {
+                    createParticle(container);
+                }
+            }
+        });
+
+        function createParticle(container) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            container.appendChild(particle);
+        }
+
+        // Export as CSV
+        async function exportCSV() {
+            const includeRaw = document.getElementById('csvIncludeRaw').checked;
+            const anonymize = document.getElementById('csvAnonymize').checked;
+
+            const url = `/api/biometric/export/csv?includeRaw=${includeRaw}&anonymize=${anonymize}`;
+
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Export failed');
+                }
+
+                // Trigger download
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `biometric-data-${Date.now()}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                a.remove();
+
+                alert('CSV export successful! Check your downloads folder.');
+
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Export failed: ' + error.message);
+            }
+        }
+
+        // Export as JSON
+        async function exportJSON() {
+            const includeRaw = document.getElementById('jsonIncludeRaw').checked;
+            const includeHistory = document.getElementById('jsonIncludeHistory').checked;
+            const anonymize = document.getElementById('jsonAnonymize').checked;
+
+            const url = `/api/biometric/export/json?includeRaw=${includeRaw}&includeHistory=${includeHistory}&anonymize=${anonymize}`;
+
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Export failed');
+                }
+
+                // Trigger download
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `biometric-data-${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                a.remove();
+
+                alert('JSON export successful! Check your downloads folder.');
+
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Export failed: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

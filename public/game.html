@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Typing Battle - Typing Sanctuary</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Training Mode Banner */
+        .training-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background: linear-gradient(90deg, rgba(183, 77, 255, 0.15), rgba(255, 50, 100, 0.15));
+            border-bottom: 1px solid rgba(183, 77, 255, 0.4);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .training-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #b74dff;
+        }
+
+        .training-warning {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
+        }
+
+        body.training-active {
+            padding-top: 60px;
+        }
+
+        /* Toast for biometric submission */
+        .biometric-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, rgba(183, 77, 255, 0.95), rgba(255, 50, 100, 0.95));
+            color: white;
+            padding: 14px 22px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10001;
+            box-shadow: 0 8px 24px rgba(183, 77, 255, 0.4);
+            animation: slideInUp 0.4s ease;
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Training Mode Banner (shown only when ?training=true) -->
+    <div id="trainingBanner" class="training-banner hidden">
+        <div class="training-title">🧠 Model is being trained for <span id="trainingUsername">you</span></div>
+        <div class="training-warning">⚠️ For maximum accuracy, please don't let anyone else type while training</div>
+    </div>
+
+    <!-- Floating Particles Background -->
+    <div class="particles" id="particlesContainer"></div>
+
+    <!-- Grid Overlay -->
+    <div class="grid-overlay"></div>
+
+    <!-- Brand Logo Top Left -->
+    <div class="brand-logo">
+        <span class="brand-text">Typing Sanctuary</span>
+    </div>
+
+    <!-- Credit Footer -->
+    <div class="credit-footer">Made by Devadit</div>
+
+    <!-- User Profile Display -->
+    <div id="userProfile" class="user-profile hidden" style="display: none !important;">
+        <div class="profile-info">
+            <span class="profile-username" id="profileUsername"></span>
+        </div>
+        <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+
+    <!-- Login/Register Buttons (for non-logged in users) -->
+    <div id="authButtons" class="auth-buttons-corner hidden" style="display: none !important;">
+        <a href="/login.html" class="btn btn-outline btn-small">Login</a>
+        <a href="/register.html" class="btn btn-outline btn-small">Register</a>
+    </div>
+
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="screen active">
+            <div class="hero-section">
+                <h1 class="hero-title">⚡ SPEED TYPING BATTLE <span class="typing-cursor"></span></h1>
+                <p class="subtitle">Where Speed Meets Precision</p>
+            </div>
+
+            <!-- Username Display (for logged in users) -->
+            <div id="loggedInUsername" class="logged-in-username hidden" style="display: none !important;">
+                <p>Welcome back, <strong id="welcomeUsername"></strong>!</p>
+            </div>
+
+            <!-- Username Input (for guest users only) -->
+            <div class="input-group" id="usernameInputGroup">
+                <input type="text" id="playerName" placeholder="Enter your guest username" maxlength="20">
+            </div>
+
+            <!-- Main Mode Selection -->
+            <div class="mode-cards">
+                <button id="soloModeBtn" class="btn btn-secondary btn-large">Play Solo</button>
+                <button id="multiplayerModeBtn" class="btn btn-primary btn-large">Play Multiplayer</button>
+            </div>
+
+            <!-- Back to Home link -->
+            <div style="text-align: center; margin-top: 24px;">
+                <a href="/" style="color: rgba(255,255,255,0.4); font-size: 0.85rem; text-decoration: none;">← Back to Home</a>
+            </div>
+        </div>
+
+        <!-- Solo Setup Screen -->
+        <div id="soloSetupScreen" class="screen">
+            <h3 class="section-title">Solo Game Setup</h3>
+
+            <div class="option-group">
+                <label>Passage Length</label>
+                <select id="soloPassageLengthSelect" class="select-input">
+                    <option value="short">Short (~15 words)</option>
+                    <option value="medium" selected>Medium (~30 words)</option>
+                    <option value="long">Long (~60 words)</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label>Difficulty Level</label>
+                <select id="difficultySelect" class="select-input">
+                    <option value="level1">Level 1 (30 WPM)</option>
+                    <option value="level2">Level 2 (40 WPM)</option>
+                    <option value="level3" selected>Level 3 (50 WPM)</option>
+                    <option value="level4">Level 4 (60 WPM)</option>
+                    <option value="level5">Level 5 (70 WPM)</option>
+                </select>
+            </div>
+
+            <button id="createSoloRoomBtn" class="btn btn-success btn-large" style="width: 100%; margin-top: 24px;">Start Solo Game</button>
+            <button id="backFromSoloBtn" class="btn btn-secondary" style="width: 100%; margin-top: 16px;">Back</button>
+        </div>
+
+        <!-- Multiplayer Setup Screen -->
+        <div id="multiplayerSetupScreen" class="screen">
+            <h3 class="section-title">Multiplayer Mode</h3>
+
+            <div class="button-group" style="margin-bottom: 32px;">
+                <button id="createRoomBtn" class="btn btn-primary">Create Room</button>
+                <button id="joinRoomBtn" class="btn btn-secondary">Join Room</button>
+            </div>
+
+            <!-- Create Room Options -->
+            <div id="createRoomOptions" class="hidden">
+                <div class="option-group">
+                    <label>Passage Length</label>
+                    <select id="multiplayerPassageLengthSelect" class="select-input">
+                        <option value="short">Short (~15 words)</option>
+                        <option value="medium" selected>Medium (~30 words)</option>
+                        <option value="long">Long (~60 words)</option>
+                    </select>
+                </div>
+
+                <button id="createMultiplayerRoomBtn" class="btn btn-primary btn-large" style="width: 100%; margin-top: 24px;">Create Multiplayer Room</button>
+            </div>
+
+            <!-- Join Room Input -->
+            <div id="joinRoomInput" class="hidden">
+                <div class="option-group">
+                    <label>Enter Room Code</label>
+                    <input type="text" id="roomCodeInput" placeholder="6-digit code" maxlength="6" style="text-align: center; font-size: 32px; font-family: 'SF Mono', Monaco, monospace; letter-spacing: 8px; height: 72px;">
+                </div>
+                <button id="confirmJoinBtn" class="btn btn-secondary btn-large" style="width: 100%;">Join Room</button>
+            </div>
+
+            <button id="backFromMultiplayerBtn" class="btn btn-secondary" style="width: 100%; margin-top: 24px;">Back</button>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobbyScreen" class="screen">
+            <h2 style="text-align: center; font-size: 48px; margin-bottom: 32px; color: #e2e8f0;">Game Lobby</h2>
+
+            <div id="roomCodeContainer" class="room-code-display">
+                <span>Room Code:</span>
+                <span id="roomCodeDisplay" class="room-code"></span>
+                <button id="copyCodeBtn" class="btn btn-small">Copy</button>
+            </div>
+
+            <!-- Invite Friends Button -->
+            <div id="inviteFriendsContainer" class="hidden" style="display: none !important; margin: 20px 0; text-align: center;">
+                <button id="inviteFriendsBtn" class="btn btn-secondary" style="width: 100%;">
+                    Invite Friends
+                </button>
+            </div>
+
+            <div class="players-waiting">
+                <h3>Players in Room</h3>
+                <div id="playersList"></div>
+            </div>
+
+            <div id="hostControls" class="hidden" style="margin-top: 32px;">
+                <button id="startGameBtn" class="btn btn-primary btn-large" style="width: 100%;">Start Game</button>
+            </div>
+
+            <div class="waiting-message">
+                <p id="waitingText">Waiting for host to start the game...</p>
+            </div>
+
+            <button id="backFromLobbyBtn" class="btn btn-secondary" style="width: 100%; margin-top: 24px;">Back</button>
+        </div>
+
+        <!-- Countdown Screen -->
+        <div id="countdownScreen" class="screen">
+            <div class="countdown-display">
+                <h2>Get Ready!</h2>
+                <div id="countdownNumber" class="countdown-number">3</div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="game-header">
+                <div class="timer">Time: <span id="timer">0.0</span>s</div>
+            </div>
+
+            <!-- Hearts Display -->
+            <div class="hearts-container">
+                <span class="heart" id="heart1">❤️</span>
+                <span class="heart" id="heart2">❤️</span>
+                <span class="heart" id="heart3">❤️</span>
+            </div>
+
+            <!-- Leave Game Button -->
+            <div style="text-align: center; margin: 16px 0;">
+                <button id="leaveGameBtn" class="btn btn-secondary btn-small">Leave Game</button>
+            </div>
+
+            <div class="passage-container">
+                <div id="passageDisplay" class="passage"></div>
+            </div>
+
+            <div class="input-container">
+                <input type="text" id="typingInput" class="typing-input" placeholder="Start typing..." disabled>
+            </div>
+
+            <div class="players-progress" id="playersProgress">
+                <h3>Players</h3>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="screen">
+            <h2>🏆 Game Results</h2>
+            <div id="resultsContainer"></div>
+
+            <div id="hostRematchControls" class="hidden" style="margin-top: 32px;">
+                <button id="rematchBtn" class="btn btn-primary btn-large" style="width: 100%;">Rematch</button>
+            </div>
+
+            <button id="backToMenuBtn" class="btn btn-secondary" style="margin-top: 16px;">Back to Menu</button>
+        </div>
+    </div>
+
+    <!-- Friends Invite Modal -->
+    <div id="friendsInviteModal" class="modal hidden" style="display: none !important;">
+        <div class="modal-content" style="max-width: 500px; max-height: 70vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="font-size: 28px; color: #e2e8f0;">Invite Friends</h2>
+                <button id="closeFriendsModal" class="btn btn-secondary btn-small">Close</button>
+            </div>
+
+            <div id="onlineFriendsList"></div>
+        </div>
+    </div>
+
+    <!-- Game Invite Notification -->
+    <div id="gameInviteNotification" class="hidden" style="position: fixed; top: 20px; right: 20px; z-index: 10000; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); min-width: 300px;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+            <div style="font-size: 32px;">🎮</div>
+            <div>
+                <div style="font-size: 18px; font-weight: 700; color: #e2e8f0; margin-bottom: 4px;">Game Invite</div>
+                <div id="inviteFromUser" style="font-size: 14px; color: rgba(226, 232, 240, 0.7);"></div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <button id="acceptInviteBtn" class="btn btn-primary" style="flex: 1;">Join</button>
+            <button id="declineInviteBtn" class="btn btn-secondary" style="flex: 1;">Decline</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+    <script src="session-check.js"></script>
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const container = document.getElementById('particlesContainer');
+            const particleCount = 60;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                const size = 2 + Math.random() * 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                const opacity = 0.1 + Math.random() * 0.2;
+                particle.style.setProperty('--particle-opacity', opacity);
+                const duration = 10 + Math.random() * 15;
+                particle.style.animationDuration = duration + 's';
+                const delay = Math.random() * 5;
+                particle.style.animationDelay = delay + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', createParticles);
+    </script>
+</body>
+</html>

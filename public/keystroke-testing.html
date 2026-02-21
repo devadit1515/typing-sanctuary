@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing Mode - Keystroke Authentication</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .testing-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mode-btn:hover {
+            border-color: #b74dff;
+            transform: translateY(-3px);
+        }
+
+        .mode-btn.active {
+            border-color: #b74dff;
+            background: rgba(183, 77, 255, 0.1);
+        }
+
+        .test-section {
+            display: none;
+        }
+
+        .test-section.active {
+            display: block;
+        }
+
+        .test-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .passage-display {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .typing-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(183, 77, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+
+        .typing-input:focus {
+            outline: none;
+            border-color: #b74dff;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-card.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .confidence-meter {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .confidence-bar {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 1s ease, background 0.5s ease;
+            width: 0%;
+        }
+
+        .confidence-bar.risk-low {
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+        }
+
+        .confidence-bar.risk-medium {
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+        }
+
+        .confidence-bar.risk-high {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+
+        .confidence-text {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .risk-level {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .risk-low {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .risk-medium {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+
+        .risk-high {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .challenge-code {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            background: rgba(183, 77, 255, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-table th {
+            background: rgba(183, 77, 255, 0.2);
+            font-weight: 600;
+        }
+
+        .fooled-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .fooled-yes {
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+
+        .fooled-no {
+            background: rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(183, 77, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particlesContainer"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="brand-logo">
+        <span class="brand-text">Typing Sanctuary</span>
+    </div>
+
+    <div class="testing-container">
+        <h1 style="text-align: center; margin-bottom: 10px;">🎯 Testing Mode</h1>
+        <p style="text-align: center; color: rgba(255, 255, 255, 0.7); margin-bottom: 30px;">
+            Test your model's accuracy or challenge friends to fool it!
+        </p>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <div class="mode-btn active" onclick="switchMode('self-test')" id="selfTestBtn">
+                <h3>🔍 Self-Test Mode</h3>
+                <p>Verify your own identity</p>
+            </div>
+            <div class="mode-btn" onclick="switchMode('impostor')" id="impostorBtn">
+                <h3>🎮 Impostor Challenge</h3>
+                <p>Challenge friends to fool your model</p>
+            </div>
+        </div>
+
+        <!-- Self-Test Section -->
+        <div id="selfTestSection" class="test-section active">
+            <div class="test-card">
+                <h3>Type this passage to verify your identity:</h3>
+                <div class="passage-display" id="testPassage">
+                    Loading passage...
+                </div>
+
+                <textarea
+                    id="testInput"
+                    class="typing-input"
+                    placeholder="Start typing here..."
+                    spellcheck="false"
+                ></textarea>
+
+                <div class="button-row">
+                    <button id="verifyBtn" class="btn btn-primary" style="flex: 1;">
+                        Verify Identity
+                    </button>
+                    <button id="newTestPassageBtn" class="btn btn-secondary">
+                        New Passage
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result Display -->
+            <div id="resultCard" class="result-card">
+                <h3>Verification Result</h3>
+                <div class="confidence-meter">
+                    <div class="confidence-bar" id="confidenceBar"></div>
+                </div>
+                <p class="confidence-text" id="confidenceText">--% confident</p>
+                <div class="risk-level" id="riskLevel">Risk Level: --</div>
+                <p style="text-align: center; color: rgba(255, 255, 255, 0.7);" id="resultMessage"></p>
+            </div>
+        </div>
+
+        <!-- Impostor Challenge Section -->
+        <div id="impostorSection" class="test-section">
+            <div class="test-card">
+                <h3>🎮 Challenge Your Friends</h3>
+                <p>Share this code with a friend and see if they can fool your biometric model!</p>
+
+                <div class="challenge-code" id="challengeCode">
+                    Click "Create Challenge" to generate
+                </div>
+
+                <div class="button-row">
+                    <button id="createChallengeBtn" class="btn btn-primary" style="flex: 1;">
+                        Create New Challenge
+                    </button>
+                    <button id="copyChallengeBtn" class="btn btn-secondary" disabled>
+                        Copy Code
+                    </button>
+                </div>
+
+                <div id="leaderboardCard" style="margin-top: 30px; display: none;">
+                    <h3>Impostor Attempts Leaderboard</h3>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Confidence Score</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody">
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 20px;">
+                                    No attempts yet
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <a href="/keystroke-auth.html" class="back-link" style="display: inline-block; margin-top: 20px;">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <script src="keystroke-testing.js"></script>
+</body>
+</html>

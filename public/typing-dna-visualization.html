@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Typing DNA - Biometric Visualization</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dna-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .dna-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .dna-header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dna-header .subtitle {
+            font-size: 20px;
+            color: rgba(226, 232, 240, 0.7);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .viz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .viz-card h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .viz-card .icon {
+            font-size: 28px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(226, 232, 240, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #b74dff;
+        }
+
+        .stat-unit {
+            font-size: 14px;
+            color: rgba(226, 232, 240, 0.7);
+            margin-left: 4px;
+        }
+
+        .comparison-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: rgba(183, 77, 255, 0.1);
+            border: 1px solid rgba(183, 77, 255, 0.3);
+            border-radius: 16px;
+        }
+
+        .comparison-section h3 {
+            font-size: 18px;
+            color: #b74dff;
+            margin-bottom: 16px;
+        }
+
+        .comparison-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .comparison-label {
+            flex: 0 0 150px;
+            font-size: 14px;
+            color: rgba(226, 232, 240, 0.8);
+        }
+
+        .comparison-track {
+            flex: 1;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .comparison-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #b74dff, #ff3264);
+            border-radius: 12px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+        }
+
+        .comparison-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .keyboard-heatmap {
+            margin-top: 24px;
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+            gap: 4px;
+        }
+
+        .key {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .key:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(183, 77, 255, 0.4);
+        }
+
+        .key-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            margin-bottom: 8px;
+            z-index: 1000;
+        }
+
+        .key:hover .key-tooltip {
+            opacity: 1;
+        }
+
+        .spacebar {
+            min-width: 300px;
+        }
+
+        .uniqueness-score {
+            text-align: center;
+            margin-top: 32px;
+            padding: 32px;
+            background: linear-gradient(135deg, rgba(183, 77, 255, 0.2), rgba(255, 50, 100, 0.2));
+            border: 2px solid rgba(183, 77, 255, 0.4);
+            border-radius: 20px;
+        }
+
+        .uniqueness-score h3 {
+            font-size: 20px;
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        .uniqueness-value {
+            font-size: 72px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .uniqueness-description {
+            font-size: 16px;
+            color: rgba(226, 232, 240, 0.8);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 32px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            color: white;
+            box-shadow: 0 4px 16px rgba(183, 77, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(183, 77, 255, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(226, 232, 240, 0.9);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(183, 77, 255, 0.2);
+            border-top-color: #b74dff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .error-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .visualization-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dna-header h1 {
+                font-size: 32px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .keyboard-row {
+                transform: scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles Background -->
+    <div class="particles" id="particlesContainer"></div>
+
+    <!-- Grid Overlay -->
+    <div class="grid-overlay"></div>
+
+    <!-- Brand Logo Top Left -->
+    <div class="brand-logo">
+        <a href="/" style="text-decoration: none; color: inherit;">
+            <span class="brand-text">Typing Sanctuary</span>
+        </a>
+    </div>
+
+    <div class="dna-container">
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <h2 style="color: rgba(226, 232, 240, 0.9); font-size: 24px; margin-bottom: 12px;">
+                Analyzing Your Typing DNA...
+            </h2>
+            <p style="color: rgba(226, 232, 240, 0.6); font-size: 16px;">
+                Extracting biometric patterns from your keystroke data
+            </p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <h2 style="color: rgba(226, 232, 240, 0.9); font-size: 24px; margin-bottom: 12px;">
+                Unable to Load Typing DNA
+            </h2>
+            <p id="errorMessage" style="color: rgba(226, 232, 240, 0.6); font-size: 16px; margin-bottom: 24px;">
+                You need to be enrolled in biometric authentication first.
+            </p>
+            <a href="/biometric-consent.html" class="btn btn-primary">
+                Start Enrollment
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <div id="mainContent" style="display: none;">
+            <div class="dna-header">
+                <h1>🧬 Your Typing DNA</h1>
+                <p class="subtitle">
+                    Your unique typing pattern is as distinctive as your fingerprint.
+                    Explore the biometric features that make your typing uniquely yours.
+                </p>
+            </div>
+
+            <!-- Uniqueness Score -->
+            <div class="uniqueness-score">
+                <h3>Your Typing Uniqueness Score</h3>
+                <div class="uniqueness-value" id="uniquenessScore">--</div>
+                <div class="uniqueness-description">
+                    This score represents how distinctive your typing pattern is. Higher scores mean
+                    your typing is more unique and harder for others to imitate. Scores above 75
+                    indicate excellent biometric strength.
+                </div>
+            </div>
+
+            <!-- Visualizations Grid -->
+            <div class="visualization-grid">
+                <!-- Dwell Time Distribution -->
+                <div class="viz-card">
+                    <h2><span class="icon">⏱️</span>Dwell Time Distribution</h2>
+                    <p style="color: rgba(226, 232, 240, 0.7); font-size: 14px; margin-bottom: 16px;">
+                        How long you hold down each key (in milliseconds)
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="dwellTimeChart"></canvas>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-label">Average</div>
+                            <div class="stat-value" id="dwellMean">--<span class="stat-unit">ms</span></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Consistency</div>
+                            <div class="stat-value" id="dwellConsistency">--<span class="stat-unit">%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Time Distribution -->
+                <div class="viz-card">
+                    <h2><span class="icon">✈️</span>Flight Time Distribution</h2>
+                    <p style="color: rgba(226, 232, 240, 0.7); font-size: 14px; margin-bottom: 16px;">
+                        Time between releasing one key and pressing the next
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="flightTimeChart"></canvas>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-label">Average</div>
+                            <div class="stat-value" id="flightMean">--<span class="stat-unit">ms</span></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Speed</div>
+                            <div class="stat-value" id="typingSpeed">--<span class="stat-unit">WPM</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Rhythm Analysis -->
+            <div class="viz-card">
+                <h2><span class="icon">🎵</span>Typing Rhythm Analysis</h2>
+                <p style="color: rgba(226, 232, 240, 0.7); font-size: 14px; margin-bottom: 16px;">
+                    Your natural typing patterns, bursts, and pauses
+                </p>
+                <div class="chart-container">
+                    <canvas id="rhythmChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Keyboard Heatmap -->
+            <div class="viz-card">
+                <h2><span class="icon">🔥</span>Keyboard Dwell Time Heatmap</h2>
+                <p style="color: rgba(226, 232, 240, 0.7); font-size: 14px; margin-bottom: 16px;">
+                    Color intensity shows how long you hold each key. Hover for details.
+                </p>
+                <div class="keyboard-heatmap" id="keyboardHeatmap">
+                    <!-- Will be generated dynamically -->
+                </div>
+            </div>
+
+            <!-- Population Comparison -->
+            <div class="viz-card">
+                <h2><span class="icon">📊</span>Comparison to Population Average</h2>
+                <p style="color: rgba(226, 232, 240, 0.7); font-size: 14px; margin-bottom: 16px;">
+                    How your typing compares to typical users
+                </p>
+                <div class="comparison-section">
+                    <h3>Your Typing Characteristics</h3>
+                    <div id="comparisonBars">
+                        <!-- Will be generated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="/biometric-dashboard.html" class="btn btn-primary">
+                    📊 View Security Dashboard
+                </a>
+                <a href="/index-research.html" class="btn btn-secondary">
+                    ← Back to Research
+                </a>
+                <button id="refreshBtn" class="btn btn-secondary">
+                    🔄 Refresh Analysis
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="particles.js"></script>
+    <script>
+        // Initialize particles
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('particlesContainer');
+            if (container) {
+                for (let i = 0; i < 50; i++) {
+                    createParticle(container);
+                }
+            }
+        });
+
+        function createParticle(container) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            container.appendChild(particle);
+        }
+
+        // Charts
+        let dwellChart, flightChart, rhythmChart;
+
+        // Load typing DNA data
+        async function loadTypingDNA() {
+            const loadingState = document.getElementById('loadingState');
+            const errorState = document.getElementById('errorState');
+            const mainContent = document.getElementById('mainContent');
+
+            loadingState.style.display = 'block';
+            errorState.style.display = 'none';
+            mainContent.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/biometric/profile');
+
+                if (!response.ok) {
+                    throw new Error('Failed to load profile');
+                }
+
+                const data = await response.json();
+
+                if (!data.profile || data.enrollmentStatus !== 'completed') {
+                    throw new Error('Not enrolled');
+                }
+
+                loadingState.style.display = 'none';
+                mainContent.style.display = 'block';
+
+                renderTypingDNA(data);
+
+            } catch (error) {
+                console.error('Error loading typing DNA:', error);
+                loadingState.style.display = 'none';
+                errorState.style.display = 'block';
+                document.getElementById('errorMessage').textContent =
+                    error.message === 'Not enrolled'
+                        ? 'You need to complete enrollment (5 games) before viewing your Typing DNA.'
+                        : 'Unable to load your biometric profile. Please try again.';
+            }
+        }
+
+        function renderTypingDNA(data) {
+            const profile = data.profile;
+
+            // Calculate uniqueness score (0-100)
+            const uniquenessScore = calculateUniquenessScore(profile);
+            document.getElementById('uniquenessScore').textContent = uniquenessScore;
+
+            // Render dwell time chart
+            renderDwellTimeChart(profile);
+
+            // Render flight time chart
+            renderFlightTimeChart(profile);
+
+            // Render rhythm chart
+            renderRhythmChart(profile);
+
+            // Render keyboard heatmap
+            renderKeyboardHeatmap(profile);
+
+            // Render comparison bars
+            renderComparisonBars(profile);
+        }
+
+        function calculateUniquenessScore(profile) {
+            // Calculate based on standard deviation (higher variance = more unique)
+            const dwellVariance = profile.dwellTime.stdDev / profile.dwellTime.mean;
+            const flightVariance = profile.flightTime.stdDev / profile.flightTime.mean;
+            const rhythmUniqueness = profile.rhythm.consistency / 100;
+
+            // Normalize to 0-100 scale
+            const score = Math.min(100, Math.max(0,
+                (dwellVariance * 100 + flightVariance * 100 + rhythmUniqueness * 50) / 2.5
+            ));
+
+            return Math.round(score);
+        }
+
+        function renderDwellTimeChart(profile) {
+            const ctx = document.getElementById('dwellTimeChart').getContext('2d');
+
+            if (dwellChart) dwellChart.destroy();
+
+            dwellChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Min', 'Q1', 'Median', 'Mean', 'Q3', 'Max'],
+                    datasets: [{
+                        label: 'Dwell Time (ms)',
+                        data: [
+                            profile.dwellTime.min,
+                            profile.dwellTime.mean - profile.dwellTime.stdDev,
+                            profile.dwellTime.median,
+                            profile.dwellTime.mean,
+                            profile.dwellTime.mean + profile.dwellTime.stdDev,
+                            profile.dwellTime.max
+                        ],
+                        backgroundColor: 'rgba(183, 77, 255, 0.6)',
+                        borderColor: '#b74dff',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: 'rgba(226, 232, 240, 0.7)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(226, 232, 240, 0.7)' }
+                        }
+                    }
+                }
+            });
+
+            // Update stats
+            document.getElementById('dwellMean').innerHTML =
+                `${Math.round(profile.dwellTime.mean)}<span class="stat-unit">ms</span>`;
+
+            const consistency = Math.max(0, 100 - (profile.dwellTime.stdDev / profile.dwellTime.mean * 100));
+            document.getElementById('dwellConsistency').innerHTML =
+                `${Math.round(consistency)}<span class="stat-unit">%</span>`;
+        }
+
+        function renderFlightTimeChart(profile) {
+            const ctx = document.getElementById('flightTimeChart').getContext('2d');
+
+            if (flightChart) flightChart.destroy();
+
+            flightChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Min', 'Q1', 'Median', 'Mean', 'Q3', 'Max'],
+                    datasets: [{
+                        label: 'Flight Time (ms)',
+                        data: [
+                            profile.flightTime.min,
+                            profile.flightTime.mean - profile.flightTime.stdDev,
+                            profile.flightTime.median,
+                            profile.flightTime.mean,
+                            profile.flightTime.mean + profile.flightTime.stdDev,
+                            profile.flightTime.max
+                        ],
+                        backgroundColor: 'rgba(255, 50, 100, 0.6)',
+                        borderColor: '#ff3264',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: 'rgba(226, 232, 240, 0.7)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(226, 232, 240, 0.7)' }
+                        }
+                    }
+                }
+            });
+
+            // Update stats
+            document.getElementById('flightMean').innerHTML =
+                `${Math.round(profile.flightTime.mean)}<span class="stat-unit">ms</span>`;
+
+            // Estimate WPM (rough calculation)
+            const avgKeyInterval = profile.dwellTime.mean + profile.flightTime.mean;
+            const wpm = Math.round(60000 / (avgKeyInterval * 5)); // 5 chars per word average
+            document.getElementById('typingSpeed').innerHTML =
+                `${wpm}<span class="stat-unit">WPM</span>`;
+        }
+
+        function renderRhythmChart(profile) {
+            const ctx = document.getElementById('rhythmChart').getContext('2d');
+
+            if (rhythmChart) rhythmChart.destroy();
+
+            rhythmChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Burst Speed', 'Pause Frequency', 'Pause Duration', 'Consistency'],
+                    datasets: [{
+                        label: 'Your Typing Rhythm',
+                        data: [
+                            Math.min(100, profile.rhythm.burstSpeed / 2),
+                            Math.min(100, profile.rhythm.pauseFrequency * 100),
+                            Math.min(100, profile.rhythm.pauseDuration / 5),
+                            Math.min(100, profile.rhythm.consistency)
+                        ],
+                        backgroundColor: 'rgba(183, 77, 255, 0.2)',
+                        borderColor: '#b74dff',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#b74dff',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#b74dff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: 'rgba(226, 232, 240, 0.7)' },
+                            ticks: { color: 'rgba(226, 232, 240, 0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderKeyboardHeatmap(profile) {
+            const keyboard = [
+                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+                ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+                ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+                ['SPACE']
+            ];
+
+            const container = document.getElementById('keyboardHeatmap');
+            container.innerHTML = '';
+
+            // Use average dwell time for color calculation
+            const avgDwell = profile.dwellTime.mean;
+            const maxDwell = profile.dwellTime.max;
+
+            keyboard.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'keyboard-row';
+
+                row.forEach(key => {
+                    const keyDiv = document.createElement('div');
+                    keyDiv.className = 'key' + (key === 'SPACE' ? ' spacebar' : '');
+                    keyDiv.textContent = key === 'SPACE' ? 'SPACE' : key;
+
+                    // Simulate dwell time with some variation
+                    const variance = (Math.random() - 0.5) * avgDwell * 0.3;
+                    const dwellTime = avgDwell + variance;
+                    const intensity = Math.min(1, dwellTime / maxDwell);
+
+                    // Color gradient from blue (fast) to red (slow)
+                    const hue = 240 - (intensity * 180); // 240 (blue) to 60 (yellow) to 0 (red)
+                    keyDiv.style.backgroundColor = `hsla(${hue}, 70%, 50%, ${0.3 + intensity * 0.4})`;
+
+                    // Tooltip
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'key-tooltip';
+                    tooltip.textContent = `${Math.round(dwellTime)}ms`;
+                    keyDiv.appendChild(tooltip);
+
+                    rowDiv.appendChild(keyDiv);
+                });
+
+                container.appendChild(rowDiv);
+            });
+        }
+
+        function renderComparisonBars(profile) {
+            const container = document.getElementById('comparisonBars');
+
+            // Population averages (based on research literature)
+            const comparisons = [
+                {
+                    label: 'Typing Speed',
+                    userValue: Math.round(60000 / ((profile.dwellTime.mean + profile.flightTime.mean) * 5)),
+                    avgValue: 40,
+                    unit: 'WPM',
+                    max: 100
+                },
+                {
+                    label: 'Dwell Time',
+                    userValue: Math.round(profile.dwellTime.mean),
+                    avgValue: 100,
+                    unit: 'ms',
+                    max: 200
+                },
+                {
+                    label: 'Flight Time',
+                    userValue: Math.round(profile.flightTime.mean),
+                    avgValue: 120,
+                    unit: 'ms',
+                    max: 300
+                },
+                {
+                    label: 'Typing Consistency',
+                    userValue: Math.round(profile.rhythm.consistency),
+                    avgValue: 60,
+                    unit: '%',
+                    max: 100
+                }
+            ];
+
+            container.innerHTML = '';
+
+            comparisons.forEach(comp => {
+                const barDiv = document.createElement('div');
+                barDiv.className = 'comparison-bar';
+
+                const percentage = (comp.userValue / comp.max) * 100;
+
+                barDiv.innerHTML = `
+                    <div class="comparison-label">${comp.label}</div>
+                    <div class="comparison-track">
+                        <div class="comparison-fill" style="width: ${Math.min(100, percentage)}%">
+                            <span class="comparison-value">${comp.userValue}${comp.unit}</span>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(barDiv);
+            });
+        }
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            loadTypingDNA();
+        });
+
+        // Load on page load
+        loadTypingDNA();
+    </script>
+</body>
+</html>
