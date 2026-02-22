@@ -15,10 +15,10 @@ exports.register = async (req, res) => {
     const { username, email, password, confirmPassword } = req.body;
 
     // Validation
-    if (!username || !password) {
+    if (!username || !password || !email) {
       return res.status(400).json({
         success: false,
-        message: 'Username and password are required'
+        message: 'Username, email, and password are required'
       });
     }
 
@@ -53,8 +53,8 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Validate email if provided
-    if (email && !validator.isEmail(email)) {
+    // Validate email format
+    if (!validator.isEmail(email)) {
       return res.status(400).json({
         success: false,
         message: 'Please enter a valid email address'
@@ -73,24 +73,22 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Check if email already exists (if provided)
-    if (email) {
-      const existingEmail = await User.findOne({
-        email: email.toLowerCase()
-      });
+    // Check if email already exists
+    const existingEmail = await User.findOne({
+      email: email.toLowerCase()
+    });
 
-      if (existingEmail) {
-        return res.status(409).json({
-          success: false,
-          message: 'Email already registered'
-        });
-      }
+    if (existingEmail) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already registered'
+      });
     }
 
     // Create new user
     const user = new User({
       username: username.toLowerCase(),
-      email: email ? email.toLowerCase() : undefined,
+      email: email.toLowerCase(),
       passwordHash: password // Will be hashed by pre-save middleware
     });
 
