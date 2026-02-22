@@ -116,7 +116,7 @@ const resetPassword = async (req, res) => {
     }
 
     // Update password (will be hashed by pre-save middleware)
-    user.password = newPassword;
+    user.passwordHash = newPassword;
     await user.save();
 
     // Delete all password reset requests for this user

@@ -21,9 +21,9 @@
         }
 
         .landing-hero h1 {
-            font-size: 6.5rem;
+            font-size: 72px;
             font-weight: 800;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             background: linear-gradient(135deg, #b74dff, #ff3264);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -32,8 +32,9 @@
         }
 
         .landing-hero p {
-            font-size: 1.7rem;
+            font-size: 24px;
             color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0;
         }
 
         .landing-cards {
@@ -48,7 +49,7 @@
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 28px;
-            padding: 88px 72px;
+            padding: 60px 48px;
             text-align: center;
             backdrop-filter: blur(10px);
             transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
@@ -77,9 +78,9 @@
         }
 
         .card-icon {
-            font-size: 3.5rem;
+            font-size: 2.6rem;
             display: block;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .card-badge {
@@ -106,17 +107,17 @@
         }
 
         .landing-card h2 {
-            font-size: 3rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             color: #e2e8f0;
         }
 
         .landing-card p {
             color: rgba(255, 255, 255, 0.58);
-            margin-bottom: 40px;
-            font-size: 1.35rem;
-            line-height: 1.7;
+            margin-bottom: 36px;
+            font-size: 1.15rem;
+            line-height: 1.65;
         }
 
         .btn-game {
@@ -143,15 +144,50 @@
             transform: scale(1.04);
         }
 
+        /* Colorful Auth Buttons */
+        .btn-auth-login {
+            display: inline-block;
+            padding: 13px 26px;
+            border: 2px solid rgba(0, 217, 255, 0.7);
+            border-radius: 12px;
+            color: #00d9ff;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            background: rgba(0, 217, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        .btn-auth-login:hover {
+            background: rgba(0, 217, 255, 0.2);
+            border-color: #00d9ff;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.35);
+        }
+        .btn-auth-signup {
+            display: inline-block;
+            padding: 13px 26px;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            transition: all 0.2s ease;
+        }
+        .btn-auth-signup:hover {
+            box-shadow: 0 4px 22px rgba(183, 77, 255, 0.55);
+            transform: translateY(-1px);
+        }
+
         @media (max-width: 900px) {
             .landing-cards { grid-template-columns: 1fr; max-width: 560px; }
         }
         @media (max-width: 640px) {
-            .landing-hero h1 { font-size: 3rem; letter-spacing: -1px; }
+            .landing-hero h1 { font-size: 2.4rem; letter-spacing: -1px; }
             .landing-hero p { font-size: 1.1rem; }
             .landing-cards { gap: 20px; }
-            .landing-card { padding: 44px 28px; }
-            .landing-card h2 { font-size: 1.9rem; }
+            .landing-card { padding: 40px 28px; }
+            .landing-card h2 { font-size: 1.6rem; }
         }
     </style>
 </head>
@@ -180,8 +216,8 @@
 
     <!-- Login/Register Buttons (shown when not logged in) -->
     <div id="authButtons" class="auth-buttons-corner hidden">
-        <a href="/login.html" class="btn btn-outline btn-small">Login</a>
-        <a href="/register.html" class="btn btn-outline btn-small">Register</a>
+        <a href="/login.html" class="btn-auth-login">Login</a>
+        <a href="/register.html" class="btn-auth-signup">Sign Up</a>
     </div>
 
     <div class="landing-container">
