@@ -55,7 +55,10 @@ async function checkUsernameAvailability(username) {
       const response = await fetch(`/api/auth/check-username/${username}`);
       const data = await response.json();
 
-      if (data.available) {
+      if (!response.ok) {
+        // Server error — don't mislead the user
+        availabilityDiv.textContent = '';
+      } else if (data.available) {
         availabilityDiv.textContent = '✓ Username available';
         availabilityDiv.className = 'availability-message available';
       } else {

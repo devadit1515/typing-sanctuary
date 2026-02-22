@@ -83,24 +83,36 @@ passport.use(new GoogleStrategy({
   try {
     // Find existing Google user
     let user = await User.findOne({ googleId: profile.id });
-    if (!user) {
-      // Generate a unique username from Google display name
-      let base = (profile.displayName || 'user')
-        .replace(/[^a-z0-9_]/gi, '').toLowerCase().slice(0, 18);
-      if (base.length < 3) base = 'user' + base;
-      let username = base;
-      let suffix = 1;
-      while (await User.findOne({ username })) {
-        username = base + suffix++;
+    if (user) return done(null, user);
+
+    // Check if a user with this email already exists (link accounts instead of duplicating)
+    const googleEmail = profile.emails?.[0]?.value || null;
+    if (googleEmail) {
+      const existingEmailUser = await User.findOne({ email: googleEmail.toLowerCase() });
+      if (existingEmailUser) {
+        // Link Google ID to the existing account
+        existingEmailUser.googleId = profile.id;
+        await existingEmailUser.save();
+        return done(null, existingEmailUser);
       }
-      user = await User.create({
-        googleId: profile.id,
-        username,
-        email: profile.emails?.[0]?.value || '',
-        passwordHash: null,
-        profile: { displayName: profile.displayName || username },
-      });
     }
+
+    // New user — generate unique username from Google display name
+    let base = (profile.displayName || 'user')
+      .replace(/[^a-z0-9_]/gi, '').toLowerCase().slice(0, 18);
+    if (base.length < 3) base = 'user' + base;
+    let username = base;
+    let suffix = 1;
+    while (await User.findOne({ username })) {
+      username = base + suffix++;
+    }
+    user = await User.create({
+      googleId: profile.id,
+      username,
+      email: googleEmail,
+      passwordHash: null,
+      profile: { displayName: profile.displayName || username },
+    });
     return done(null, user);
   } catch (err) {
     return done(err);
