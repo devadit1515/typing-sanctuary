@@ -61,10 +61,7 @@ app.use(session({
   saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI,
-    touchAfter: 24 * 3600,
-    crypto: {
-      secret: process.env.SESSION_SECRET || 'your-secret-key-change-this'
-    }
+    touchAfter: 24 * 3600
   }),
   cookie: {
     maxAge: parseInt(process.env.SESSION_MAX_AGE) || 86400000, // 24 hours
