@@ -36,18 +36,19 @@ router.get('/google/callback', (req, res, next) => {
     if (!user) {
       return res.redirect('/login.html?error=auth_failed');
     }
-    req.logIn(user, (loginErr) => {
-      if (loginErr) {
-        console.error('Google OAuth logIn error:', loginErr);
-        return res.redirect('/login.html?error=login_failed');
+    // Set session directly (req.logIn can fail in passport v0.7 custom-callback mode)
+    if (!req.session.passport) req.session.passport = {};
+    req.session.passport.user = user._id.toString();
+    req.session.userId = user._id.toString();
+    req.session.username = user.username;
+    req.session.lastLogin = new Date();
+    req.user = user;
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error('Session save error after Google OAuth:', saveErr);
+        return res.redirect('/login.html?error=session_error');
       }
-      req.session.userId = user._id.toString();
-      req.session.username = user.username;
-      req.session.lastLogin = new Date();
-      req.session.save((saveErr) => {
-        if (saveErr) console.error('Session save error after Google OAuth:', saveErr);
-        res.redirect('/');
-      });
+      res.redirect('/');
     });
   })(req, res, next);
 });
