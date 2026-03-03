@@ -8,14 +8,14 @@
  * Verifies that a valid session exists
  */
 exports.requireAuth = (req, res, next) => {
-  if (!req.session || !req.session.userId) {
-    return res.status(401).json({
-      success: false,
-      message: 'Authentication required. Please log in.'
-    });
+  // Accept either session userId (regular login / Google OAuth) or passport req.user (deserialized session)
+  if ((req.session && req.session.userId) || (req.user && req.user._id)) {
+    return next();
   }
-
-  next();
+  return res.status(401).json({
+    success: false,
+    message: 'Authentication required. Please log in.'
+  });
 };
 
 /**
