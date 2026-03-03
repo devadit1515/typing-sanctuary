@@ -235,3 +235,17 @@ if (registerForm) {
     }
   });
 }
+
+// Show any error passed back via URL from Google OAuth redirects
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('error');
+  if (error) {
+    const messages = {
+      oauth_error: 'Google sign-in failed. Please try again.',
+      auth_failed: 'Google sign-in was cancelled or denied.',
+      session_error: 'Session could not be saved. Please clear cookies and try again.'
+    };
+    showError(messages[error] || 'Something went wrong. Please try again.');
+  }
+})();

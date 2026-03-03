@@ -212,14 +212,17 @@ exports.logout = async (req, res) => {
  */
 exports.getCurrentUser = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    // Check session userId (set by regular login and Google OAuth callback)
+    // Fall back to req.user set by passport.session() deserialization
+    const userId = req.session.userId || (req.user && req.user._id);
+    if (!userId) {
       return res.status(401).json({
         success: false,
         message: 'Not authenticated'
       });
     }
 
-    const user = await User.findById(req.session.userId);
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({
