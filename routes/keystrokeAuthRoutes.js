@@ -12,17 +12,7 @@
 const express = require('express');
 const router = express.Router();
 const keystrokeAuthController = require('../controllers/keystrokeAuthController');
-
-// Middleware to require authentication for all routes
-const requireAuth = (req, res, next) => {
-    if (!req.session || !req.session.userId) {
-        return res.status(401).json({
-            success: false,
-            message: 'Authentication required'
-        });
-    }
-    next();
-};
+const { requireAuth } = require('../middleware/authMiddleware');
 
 // Apply auth middleware to all routes
 router.use(requireAuth);
