@@ -35,6 +35,24 @@ const connectDB = async () => {
     console.log(`📦 Database: ${mongoose.connection.name}`);
     console.log(`🌐 Host: ${mongoose.connection.host}`);
 
+    // Warm up NeonDB immediately — free tier goes cold after 5 min of inactivity.
+    // FerretDB wakes NeonDB during startup, but this confirms the path is live.
+    try {
+      await mongoose.connection.db.command({ ping: 1 });
+      console.log('🔥 NeonDB warm and ready');
+    } catch (e) {
+      console.warn('⚠️  NeonDB warm-up ping failed:', e.message);
+    }
+
+    // Keep NeonDB awake: ping every 4 minutes so logins never hit a cold database
+    setInterval(async () => {
+      try {
+        await mongoose.connection.db.command({ ping: 1 });
+      } catch (err) {
+        console.error('❌ Keep-alive ping failed:', err.message);
+      }
+    }, 4 * 60 * 1000);
+
   } catch (error) {
     console.error('❌ MongoDB Connection Error:', error.message);
     console.error('⚠️  Server will continue running without database connection');
