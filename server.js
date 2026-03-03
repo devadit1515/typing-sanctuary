@@ -7,6 +7,7 @@ const MongoStore = require('connect-mongo').default;
 const passport = require('passport');
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 const app = express();
+app.set('trust proxy', 1); // Required: Render.com sits behind a reverse proxy
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
