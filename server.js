@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
-const MongoStore = require('connect-mongo').default;
+
 const passport = require('passport');
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 const app = express();
@@ -54,15 +54,11 @@ app.use(cors({
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Session configuration with MongoDB store
+// Session configuration — MemoryStore (fast, no external DB dependency for sessions)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    touchAfter: 24 * 3600
-  }),
   cookie: {
     maxAge: parseInt(process.env.SESSION_MAX_AGE) || 86400000, // 24 hours
     httpOnly: true,
