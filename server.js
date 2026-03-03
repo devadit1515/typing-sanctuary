@@ -127,9 +127,11 @@ passport.serializeUser((user, done) => done(null, user._id.toString()));
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
-    done(null, user);
+    done(null, user || false);
   } catch (err) {
-    done(err);
+    // Don't crash the page — treat as unauthenticated instead of 500
+    console.error('deserializeUser error (treating as unauthenticated):', err.message);
+    done(null, false);
   }
 });
 
@@ -163,6 +165,17 @@ app.get('*', (req, res, next) => {
   }
   // Serve index.html for client-side routing
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Global error handler — prevents raw "Internal Server Error" from reaching users
+app.use((err, req, res, next) => {
+  console.error('Unhandled server error:', err.stack || err.message || err);
+  if (res.headersSent) return next(err);
+  // For API routes return JSON, for page routes redirect to home
+  if (req.path.startsWith('/api')) {
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+  res.redirect('/');
 });
 
 // Game rooms storage
