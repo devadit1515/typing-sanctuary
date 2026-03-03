@@ -13,7 +13,7 @@ async function initTrainingMode() {
     banner.classList.remove('hidden');
     document.body.classList.add('training-active');
     try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch('/api/auth/me', { headers: window.authHeaders ? window.authHeaders() : {} });
         const data = await res.json();
         if (data.success && data.user) {
             const el = document.getElementById('trainingUsername');
@@ -118,9 +118,62 @@ const socket = io({
     timeout: 20000
 });
 
+// ── URL param handling: ?join=CODE or ?challenge=FRIEND_ID ────────────────────
+const _urlParams = new URLSearchParams(window.location.search);
+const _autoJoinCode = _urlParams.get('join');
+const _autoChallengeFriendId = _urlParams.get('challenge');
+const _autoChallengePassageLength = _urlParams.get('passageLength') || 'medium';
+const _autoChallengeDifficulty = _urlParams.get('difficulty') || 'level3';
+
+// Clear challenge/join params from URL without reloading
+if (_autoJoinCode || _autoChallengeFriendId) {
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+}
+
+function _handleUrlAction() {
+    const playerName = (elements.playerNameInput && elements.playerNameInput.value.trim()) || 'Player';
+
+    if (_autoJoinCode) {
+        // Auto-join a specific room (e.g. from social.js challenge accept)
+        gameState.playerName = playerName;
+        gameState.gameMode = 'multiplayer';
+        socket.emit('joinRoom', { roomCode: _autoJoinCode, playerName });
+        return;
+    }
+
+    if (_autoChallengeFriendId) {
+        // Create a multiplayer room then invite the friend
+        gameState.playerName = playerName;
+        gameState.gameMode = 'multiplayer';
+        gameState.passageLength = _autoChallengePassageLength;
+        gameState.difficulty = _autoChallengeDifficulty;
+        gameState.pendingChallengeFriendId = _autoChallengeFriendId;
+        socket.emit('createRoom', {
+            playerName,
+            gameMode: 'multiplayer',
+            difficulty: _autoChallengeDifficulty,
+            passageLength: _autoChallengePassageLength
+        });
+    }
+}
+
+function _waitAndHandleUrl(attempts) {
+    if (!_autoJoinCode && !_autoChallengeFriendId) return;
+    if (attempts > 20) return; // give up after 4 seconds
+    const name = elements.playerNameInput && elements.playerNameInput.value.trim();
+    if (name) {
+        _handleUrlAction();
+    } else {
+        setTimeout(() => _waitAndHandleUrl(attempts + 1), 200);
+    }
+}
+
 // Connection event handlers
 socket.on('connect', () => {
     console.log('✅ Connected to server');
+    // Trigger auto-join / challenge after player name is available
+    _waitAndHandleUrl(0);
 });
 
 socket.on('connect_error', (error) => {
@@ -416,6 +469,12 @@ socket.on('roomCreated', ({ roomCode, isHost, players, gameMode }) => {
     gameState.roomCode = roomCode;
     gameState.isHost = isHost;
     gameState.gameMode = gameMode;
+
+    // If this room was created from a challenge (social page), send invite now
+    if (gameState.pendingChallengeFriendId) {
+        socket.emit('inviteFriend', { friendId: gameState.pendingChallengeFriendId, roomCode });
+        gameState.pendingChallengeFriendId = null;
+    }
 
     // Hide room code for solo mode
     if (gameMode === 'solo') {
@@ -878,13 +937,14 @@ function displayResults(results, earlyEnd = false) {
 // Check friend status and display appropriate button
 async function checkFriendStatus(username, playerId, container) {
     try {
+        const _gh = window.authHeaders ? window.authHeaders() : {};
         // Get friends list
-        const friendsResponse = await fetch('/api/friends/list');
+        const friendsResponse = await fetch('/api/friends/list', { headers: _gh });
         const friendsData = await friendsResponse.json();
         const friends = friendsData.friends || [];
 
         // Get pending requests
-        const requestsResponse = await fetch('/api/friends/pending');
+        const requestsResponse = await fetch('/api/friends/pending', { headers: _gh });
         const requestsData = await requestsResponse.json();
         const receivedRequests = requestsData.received || [];
         const sentRequests = requestsData.sent || [];
@@ -925,7 +985,7 @@ async function sendFriendRequestInGame(username, playerId) {
     try {
         const response = await fetch('/api/friends/request', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...(window.authHeaders ? window.authHeaders() : {}), 'Content-Type': 'application/json' },
             body: JSON.stringify({ username })
         });
 
@@ -958,7 +1018,8 @@ async function sendFriendRequestInGame(username, playerId) {
 async function acceptFriendRequestInGame(requestId, playerId) {
     try {
         const response = await fetch(`/api/friends/accept/${requestId}`, {
-            method: 'POST'
+            method: 'POST',
+            headers: window.authHeaders ? window.authHeaders() : {}
         });
 
         if (response.ok) {
@@ -976,7 +1037,8 @@ async function acceptFriendRequestInGame(requestId, playerId) {
 async function rejectFriendRequestInGame(requestId, playerId) {
     try {
         const response = await fetch(`/api/friends/reject/${requestId}`, {
-            method: 'POST'
+            method: 'POST',
+            headers: window.authHeaders ? window.authHeaders() : {}
         });
 
         if (response.ok) {
@@ -1129,7 +1191,7 @@ document.getElementById('declineInviteBtn')?.addEventListener('click', () => {
 // Open friends invite modal
 document.getElementById('inviteFriendsBtn')?.addEventListener('click', async () => {
     try {
-        const response = await fetch('/api/friends/online');
+        const response = await fetch('/api/friends/online', { headers: window.authHeaders ? window.authHeaders() : {} });
         const data = await response.json();
 
         const onlineFriends = data.onlineFriends || [];

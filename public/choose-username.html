@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose Your Username - Typing Sanctuary</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .choose-username-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .choose-username-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 48px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+
+    .welcome-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .welcome-title {
+      font-size: 32px;
+      font-weight: 800;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .welcome-subtitle {
+      font-size: 16px;
+      color: rgba(226, 232, 240, 0.6);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .username-input-group {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .username-input-group input {
+      width: 100%;
+      padding: 14px 48px 14px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: var(--color-text);
+      font-size: 18px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    .username-input-group input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .username-input-group input.valid {
+      border-color: var(--color-success, #4ade80);
+    }
+
+    .username-input-group input.invalid {
+      border-color: var(--color-error, #f87171);
+    }
+
+    .username-status {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+    }
+
+    .username-message {
+      font-size: 13px;
+      min-height: 20px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .username-message.success {
+      color: var(--color-success, #4ade80);
+    }
+
+    .username-message.error {
+      color: var(--color-error, #f87171);
+    }
+
+    .username-rules {
+      font-size: 12px;
+      color: rgba(226, 232, 240, 0.4);
+      text-align: left;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .btn-set-username {
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .btn-set-username:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div id="particlesContainer"></div>
+
+  <div class="choose-username-container">
+    <div class="choose-username-card">
+      <span class="welcome-icon">👋</span>
+      <div class="welcome-title">Welcome!</div>
+      <p class="welcome-subtitle">
+        You signed in with Google. Choose a username to complete your account setup.
+      </p>
+
+      <div class="username-input-group">
+        <input
+          type="text"
+          id="usernameInput"
+          placeholder="Enter username"
+          maxlength="20"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+        >
+        <span class="username-status" id="usernameStatus"></span>
+      </div>
+      <div class="username-message" id="usernameMessage"></div>
+      <div class="username-rules">
+        3–20 characters &nbsp;•&nbsp; Letters, numbers, underscores only &nbsp;•&nbsp; No spaces
+      </div>
+
+      <button class="btn btn-primary btn-set-username" id="setUsernameBtn" disabled>
+        Continue
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Create particles
+    (function() {
+      const container = document.getElementById('particlesContainer');
+      for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        const size = 2 + Math.random() * 2;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.setProperty('--particle-opacity', 0.1 + Math.random() * 0.2);
+        p.style.animationDuration = (10 + Math.random() * 15) + 's';
+        p.style.animationDelay = (Math.random() * 5) + 's';
+        container.appendChild(p);
+      }
+    })();
+
+    // Pick up token from URL (same pattern as session-check.js)
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (token) {
+        localStorage.setItem('authToken', token);
+        params.delete('token');
+        const newSearch = params.toString();
+        const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+        window.history.replaceState({}, document.title, newUrl);
+      } else if (!localStorage.getItem('authToken')) {
+        // No token at all — redirect to login
+        window.location.href = '/login.html';
+      }
+    })();
+
+    function authHeaders() {
+      const token = localStorage.getItem('authToken');
+      return token ? { 'Authorization': 'Bearer ' + token } : {};
+    }
+
+    const input = document.getElementById('usernameInput');
+    const statusEl = document.getElementById('usernameStatus');
+    const messageEl = document.getElementById('usernameMessage');
+    const btn = document.getElementById('setUsernameBtn');
+
+    let checkTimeout = null;
+    let isAvailable = false;
+
+    function validate(value) {
+      if (!value) return { valid: false, msg: '' };
+      if (value.length < 3) return { valid: false, msg: 'Too short (min 3 characters)' };
+      if (value.length > 20) return { valid: false, msg: 'Too long (max 20 characters)' };
+      if (!/^[a-zA-Z0-9_]+$/.test(value)) return { valid: false, msg: 'Only letters, numbers, and underscores allowed' };
+      return { valid: true, msg: '' };
+    }
+
+    input.addEventListener('input', () => {
+      const val = input.value.trim();
+      const { valid, msg } = validate(val);
+
+      clearTimeout(checkTimeout);
+      isAvailable = false;
+      btn.disabled = true;
+
+      if (!valid) {
+        input.className = val ? 'invalid' : '';
+        statusEl.textContent = val ? '✗' : '';
+        statusEl.style.color = 'var(--color-error, #f87171)';
+        messageEl.textContent = msg;
+        messageEl.className = 'username-message error';
+        return;
+      }
+
+      input.className = '';
+      statusEl.textContent = '...';
+      statusEl.style.color = 'rgba(226,232,240,0.4)';
+      messageEl.textContent = 'Checking availability...';
+      messageEl.className = 'username-message';
+
+      checkTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/auth/check-username/${encodeURIComponent(val)}`);
+          const data = await res.json();
+
+          if (data.available) {
+            input.className = 'valid';
+            statusEl.textContent = '✓';
+            statusEl.style.color = 'var(--color-success, #4ade80)';
+            messageEl.textContent = 'Username is available!';
+            messageEl.className = 'username-message success';
+            isAvailable = true;
+            btn.disabled = false;
+          } else {
+            input.className = 'invalid';
+            statusEl.textContent = '✗';
+            statusEl.style.color = 'var(--color-error, #f87171)';
+            messageEl.textContent = 'Username is already taken';
+            messageEl.className = 'username-message error';
+            isAvailable = false;
+          }
+        } catch {
+          messageEl.textContent = 'Could not check availability. Try again.';
+          messageEl.className = 'username-message error';
+        }
+      }, 400);
+    });
+
+    btn.addEventListener('click', async () => {
+      if (!isAvailable) return;
+      const username = input.value.trim();
+
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const res = await fetch('/api/auth/set-username', {
+          method: 'POST',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          // Save new JWT (has updated username embedded)
+          if (data.token) localStorage.setItem('authToken', data.token);
+          window.location.href = '/';
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Continue';
+          messageEl.textContent = data.message || 'Failed to set username. Try another.';
+          messageEl.className = 'username-message error';
+          input.className = 'invalid';
+          statusEl.textContent = '✗';
+        }
+      } catch {
+        btn.disabled = false;
+        btn.textContent = 'Continue';
+        messageEl.textContent = 'Server error. Please try again.';
+        messageEl.className = 'username-message error';
+      }
+    });
+
+    // Allow pressing Enter to submit
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !btn.disabled) btn.click();
+    });
+  </script>
+</body>
+</html>

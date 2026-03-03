@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const passport = require('passport');
+const { requireAuth } = require('../middleware/authMiddleware');
 
 /**
  * Authentication Routes
@@ -22,6 +23,9 @@ router.get('/me', authController.getCurrentUser);
 
 // Check if username is available
 router.get('/check-username/:username', authController.checkUsername);
+
+// Set username (for new Google OAuth users who got an auto-generated one)
+router.post('/set-username', requireAuth, authController.setUsername);
 
 // Google OAuth — initiate login
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -47,6 +51,11 @@ router.get('/google/callback', (req, res, next) => {
     req.session.username = user.username;
     req.user = user;
     req.session.save(() => {});
+
+    // New Google OAuth users must choose their username before playing
+    if (user.isNewUser) {
+      return res.redirect('/choose-username.html?token=' + encodeURIComponent(token));
+    }
 
     // Pass token to client via URL — session-check.js picks it up and stores in localStorage
     res.redirect('/?token=' + encodeURIComponent(token));
