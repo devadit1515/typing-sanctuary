@@ -20,15 +20,15 @@ exports.sendFriendRequest = async (req, res) => {
     }
 
     // Can't send friend request to yourself
-    if (recipient._id.toString() === req.session.userId) {
+    if (recipient._id.toString() === req.userId) {
       return res.status(400).json({ message: 'Cannot send friend request to yourself' });
     }
 
     // Check if friend request already exists (in either direction)
     const existingRequest = await Friend.findOne({
       $or: [
-        { requester: req.session.userId, recipient: recipient._id },
-        { requester: recipient._id, recipient: req.session.userId }
+        { requester: req.userId, recipient: recipient._id },
+        { requester: recipient._id, recipient: req.userId }
       ]
     });
 
@@ -42,7 +42,7 @@ exports.sendFriendRequest = async (req, res) => {
 
     // Create new friend request
     const friendRequest = new Friend({
-      requester: req.session.userId,
+      requester: req.userId,
       recipient: recipient._id,
       status: 'pending'
     });
@@ -82,7 +82,7 @@ exports.acceptFriendRequest = async (req, res) => {
     }
 
     // Verify the current user is the recipient
-    if (friendRequest.recipient.toString() !== req.session.userId) {
+    if (friendRequest.recipient.toString() !== req.userId) {
       return res.status(403).json({ message: 'Not authorized to accept this request' });
     }
 
@@ -122,7 +122,7 @@ exports.rejectFriendRequest = async (req, res) => {
     }
 
     // Verify the current user is the recipient
-    if (friendRequest.recipient.toString() !== req.session.userId) {
+    if (friendRequest.recipient.toString() !== req.userId) {
       return res.status(403).json({ message: 'Not authorized to reject this request' });
     }
 
@@ -147,8 +147,8 @@ exports.getFriends = async (req, res) => {
   try {
     const friends = await Friend.find({
       $or: [
-        { requester: req.session.userId },
-        { recipient: req.session.userId }
+        { requester: req.userId },
+        { recipient: req.userId }
       ],
       status: 'accepted'
     })
@@ -157,7 +157,7 @@ exports.getFriends = async (req, res) => {
 
     // Map to get the other person in the friendship
     const friendsList = friends.map(friend => {
-      const isRequester = friend.requester._id.toString() === req.session.userId;
+      const isRequester = friend.requester._id.toString() === req.userId;
       const friendUser = isRequester ? friend.recipient : friend.requester;
 
       return {
@@ -183,13 +183,13 @@ exports.getPendingRequests = async (req, res) => {
   try {
     // Requests sent to current user
     const receivedRequests = await Friend.find({
-      recipient: req.session.userId,
+      recipient: req.userId,
       status: 'pending'
     }).populate('requester', 'username profile.displayName');
 
     // Requests sent by current user
     const sentRequests = await Friend.find({
-      requester: req.session.userId,
+      requester: req.userId,
       status: 'pending'
     }).populate('recipient', 'username profile.displayName');
 
@@ -228,8 +228,8 @@ exports.removeFriend = async (req, res) => {
 
     const friendship = await Friend.findOne({
       $or: [
-        { requester: req.session.userId, recipient: friendId },
-        { requester: friendId, recipient: req.session.userId }
+        { requester: req.userId, recipient: friendId },
+        { requester: friendId, recipient: req.userId }
       ],
       status: 'accepted'
     });
@@ -254,8 +254,8 @@ exports.getOnlineFriends = async (req, res) => {
   try {
     const friends = await Friend.find({
       $or: [
-        { requester: req.session.userId },
-        { recipient: req.session.userId }
+        { requester: req.userId },
+        { recipient: req.userId }
       ],
       status: 'accepted'
     })
@@ -265,7 +265,7 @@ exports.getOnlineFriends = async (req, res) => {
     // Filter for online friends only
     const onlineFriends = friends
       .map(friend => {
-        const isRequester = friend.requester._id.toString() === req.session.userId;
+        const isRequester = friend.requester._id.toString() === req.userId;
         const friendUser = isRequester ? friend.recipient : friend.requester;
 
         return {
@@ -299,7 +299,7 @@ exports.searchUsers = async (req, res) => {
     // Search for users whose username starts with the query (case-insensitive)
     const users = await User.find({
       username: { $regex: `^${query.toLowerCase()}`, $options: 'i' },
-      _id: { $ne: req.session.userId } // Exclude current user
+      _id: { $ne: req.userId } // Exclude current user
     })
     .select('username profile.displayName')
     .limit(10);

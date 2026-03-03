@@ -47,7 +47,7 @@ exports.getProfile = async (req, res) => {
  */
 exports.updateProfile = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Not authenticated'
@@ -56,7 +56,7 @@ exports.updateProfile = async (req, res) => {
 
     const { displayName, bio, email, avatar } = req.body;
 
-    const user = await User.findById(req.session.userId);
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({
@@ -122,7 +122,7 @@ exports.updateProfile = async (req, res) => {
  */
 exports.getGameHistory = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Not authenticated'
@@ -132,9 +132,9 @@ exports.getGameHistory = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = parseInt(req.query.skip) || 0;
 
-    const games = await GameHistory.getUserHistory(req.session.userId, limit, skip);
+    const games = await GameHistory.getUserHistory(req.userId, limit, skip);
     const totalGames = await GameHistory.countDocuments({
-      'players.userId': req.session.userId
+      'players.userId': req.userId
     });
 
     res.status(200).json({
@@ -160,14 +160,14 @@ exports.getGameHistory = async (req, res) => {
  */
 exports.getStats = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Not authenticated'
       });
     }
 
-    const user = await User.findById(req.session.userId);
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({
@@ -177,7 +177,7 @@ exports.getStats = async (req, res) => {
     }
 
     // Get detailed stats from game history
-    const detailedStats = await GameHistory.getUserStats(req.session.userId);
+    const detailedStats = await GameHistory.getUserStats(req.userId);
 
     res.status(200).json({
       success: true,
@@ -202,14 +202,14 @@ exports.getStats = async (req, res) => {
  */
 exports.resetStats = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Not authenticated'
       });
     }
 
-    const user = await User.findById(req.session.userId);
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({
@@ -232,7 +232,7 @@ exports.resetStats = async (req, res) => {
     await user.save();
 
     // Delete all game history for this user
-    await GameHistory.deleteMany({ 'players.userId': req.session.userId });
+    await GameHistory.deleteMany({ 'players.userId': req.userId });
 
     res.status(200).json({
       success: true,
@@ -255,7 +255,7 @@ exports.resetStats = async (req, res) => {
  */
 exports.updateBio = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Not authenticated'
@@ -271,7 +271,7 @@ exports.updateBio = async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.session.userId);
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({

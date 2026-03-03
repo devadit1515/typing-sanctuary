@@ -203,5 +203,65 @@ exports.checkUsername = async (req, res) => {
   }
 };
 
+/**
+ * Set username (for new Google OAuth users)
+ * POST /api/auth/set-username
+ */
+exports.setUsername = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    const { username } = req.body;
+
+    if (!username) {
+      return res.status(400).json({ success: false, message: 'Username is required' });
+    }
+
+    if (username.length < 3 || username.length > 20) {
+      return res.status(400).json({ success: false, message: 'Username must be between 3 and 20 characters' });
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return res.status(400).json({ success: false, message: 'Username can only contain letters, numbers, and underscores' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Check if taken by another user
+    const existing = await User.findOne({ username: username.toLowerCase(), _id: { $ne: user._id } });
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'Username already taken' });
+    }
+
+    user.username = username.toLowerCase();
+    user.usernameSet = true;
+    if (!user.profile) user.profile = {};
+    if (!user.profile.displayName || user.profile.displayName === user.username) {
+      user.profile.displayName = username.toLowerCase();
+    }
+    await user.save();
+
+    // Issue a fresh JWT with the new username embedded
+    const token = signToken(user);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Username set successfully',
+      token,
+      user: user.toSafeObject()
+    });
+
+  } catch (error) {
+    console.error('Set username error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // Export for use in authRoutes (Google OAuth callback)
 exports.signToken = signToken;

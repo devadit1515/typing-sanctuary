@@ -133,6 +133,12 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  // Set to true once the user has chosen their own username (Google OAuth users start with auto-generated one)
+  usernameSet: {
+    type: Boolean,
+    default: false
+  },
+
   // Metadata
   createdAt: {
     type: Date,

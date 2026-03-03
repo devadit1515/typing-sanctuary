@@ -550,9 +550,10 @@
   <div class="credit-footer">Made by Devadit</div>
 
   <div class="profile-container">
-    <a href="/" class="back-button">
-      ← Back to Game
-    </a>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:24px;">
+      <a href="/" class="back-button" style="margin-bottom:0;">← Back to Game</a>
+      <a href="/social.html" class="back-button" style="margin-bottom:0;">👥 Friends</a>
+    </div>
 
     <div id="profileContent">
       <div class="loading">Loading profile...</div>
@@ -616,6 +617,8 @@
 
     window.addEventListener('DOMContentLoaded', createParticles);
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="session-check.js"></script>
   <script src="profile.js"></script>
 </body>
 </html>

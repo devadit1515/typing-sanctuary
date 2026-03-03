@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Friends - Typing Sanctuary</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .social-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .social-title {
+      font-size: 36px;
+      font-weight: 800;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .social-subtitle {
+      color: rgba(226, 232, 240, 0.6);
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 6px;
+      margin-bottom: 24px;
+      width: fit-content;
+    }
+
+    .tab-btn {
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: rgba(226, 232, 240, 0.6);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      font-family: inherit;
+    }
+
+    .tab-btn.active {
+      background: var(--color-primary, #7c3aed);
+      color: white;
+    }
+
+    .tab-btn .badge {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      background: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 1px 5px;
+      min-width: 16px;
+      text-align: center;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-amount));
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Friend item */
+    .friend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .friend-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .friend-item:first-child {
+      padding-top: 0;
+    }
+
+    .friend-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .friend-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .friend-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .friend-username {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .friend-status {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-dot.online {
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade80;
+    }
+
+    .status-dot.offline {
+      background: rgba(226, 232, 240, 0.3);
+    }
+
+    .online-text { color: #4ade80; }
+    .offline-text { color: rgba(226, 232, 240, 0.4); }
+
+    .friend-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-sm {
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-challenge {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+    }
+
+    .btn-challenge:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-remove {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-remove:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-accept {
+      background: rgba(74, 222, 128, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+    }
+
+    .btn-accept:hover {
+      background: rgba(74, 222, 128, 0.25);
+    }
+
+    .btn-decline {
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(226, 232, 240, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-decline:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-add {
+      background: rgba(124, 58, 237, 0.15);
+      color: #a78bfa;
+      border: 1px solid rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-add:hover {
+      background: rgba(124, 58, 237, 0.25);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: rgba(226, 232, 240, 0.4);
+      font-size: 15px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    /* Search */
+    .search-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .search-group input {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: var(--color-text);
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    .search-group input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .search-results {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(226, 232, 240, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 20px 0 12px;
+    }
+
+    .section-label:first-child {
+      margin-top: 0;
+    }
+
+    /* Challenge modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal-box {
+      background: #1a1a2e;
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 32px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+
+    .modal-box h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--color-text);
+    }
+
+    .modal-box .form-group {
+      margin-bottom: 16px;
+    }
+
+    .modal-box label {
+      display: block;
+      font-size: 13px;
+      color: rgba(226, 232, 240, 0.6);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .modal-box select {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: var(--color-text);
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .modal-box select:focus { outline: none; border-color: var(--color-primary); }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .modal-footer button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-modal-primary {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255,255,255,0.06);
+      color: rgba(226, 232, 240, 0.7);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="particlesContainer"></div>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <a href="/" class="brand-logo">Typing Sanctuary</a>
+    <div class="nav-links">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/game.html" class="nav-link">Play</a>
+      <a href="/leaderboard.html" class="nav-link">Leaderboard</a>
+      <a href="/social.html" class="nav-link active">Friends</a>
+    </div>
+    <div id="userProfile" class="hidden">
+      <div class="profile-info">
+        <span id="profileUsername"></span>
+      </div>
+      <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+    </div>
+    <div id="authButtons" class="hidden">
+      <a href="/login.html" class="btn btn-secondary btn-small">Login</a>
+      <a href="/register.html" class="btn btn-primary btn-small">Sign Up</a>
+    </div>
+  </nav>
+
+  <div class="social-container">
+    <div class="social-title">Friends &amp; Social</div>
+    <p class="social-subtitle">Manage your friends, accept requests, and challenge players to a typing battle.</p>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="friends">Friends</button>
+      <button class="tab-btn" data-tab="requests">Requests <span class="badge hidden" id="requestsBadge">0</span></button>
+      <button class="tab-btn" data-tab="find">Find Players</button>
+    </div>
+
+    <!-- Friends tab -->
+    <div class="tab-content active" id="tab-friends">
+      <div class="card">
+        <div class="card-title">Your Friends</div>
+        <div id="friendsList">
+          <div class="empty-state"><span class="empty-icon">⏳</span>Loading friends...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requests tab -->
+    <div class="tab-content" id="tab-requests">
+      <div class="card">
+        <div class="card-title">Received Requests</div>
+        <div id="receivedRequests">
+          <div class="empty-state"><span class="empty-icon">⏳</span>Loading...</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sent Requests</div>
+        <div id="sentRequests">
+          <div class="empty-state"><span class="empty-icon">⏳</span>Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Find Players tab -->
+    <div class="tab-content" id="tab-find">
+      <div class="card">
+        <div class="card-title">Search Players</div>
+        <div class="search-group">
+          <input type="text" id="searchInput" placeholder="Search by username (min 3 chars)" maxlength="20" autocomplete="off">
+        </div>
+        <div id="searchResults" class="search-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Challenge modal -->
+  <div class="modal-overlay hidden" id="challengeModal">
+    <div class="modal-box">
+      <h3>Challenge <span id="challengeTarget"></span></h3>
+      <div class="form-group">
+        <label>Passage Length</label>
+        <select id="challengePassageLength">
+          <option value="short">Short (~50 words)</option>
+          <option value="medium" selected>Medium (~100 words)</option>
+          <option value="long">Long (~200 words)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Difficulty</label>
+        <select id="challengeDifficulty">
+          <option value="level1">Level 1 – Beginner</option>
+          <option value="level2">Level 2 – Easy</option>
+          <option value="level3" selected>Level 3 – Medium</option>
+          <option value="level4">Level 4 – Hard</option>
+          <option value="level5">Level 5 – Expert</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" id="cancelChallenge">Cancel</button>
+        <button class="btn-modal-primary" id="confirmChallenge">Send Challenge</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="session-check.js"></script>
+  <script src="social.js"></script>
+</body>
+</html>

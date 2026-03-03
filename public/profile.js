@@ -5,6 +5,11 @@
 
 let currentUser = null;
 
+// Auth header helper — uses JWT from localStorage (set by session-check.js)
+function authH(extra = {}) {
+  return { ...(window.authHeaders ? window.authHeaders() : {}), ...extra };
+}
+
 // Load profile on page load
 document.addEventListener('DOMContentLoaded', async () => {
   await loadProfile();
@@ -15,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadProfile() {
   try {
     // Check if user is logged in
-    const meResponse = await fetch('/api/auth/me');
+    const meResponse = await fetch('/api/auth/me', { headers: authH() });
     const meData = await meResponse.json();
 
     if (!meData.success) {
@@ -27,13 +32,15 @@ async function loadProfile() {
     currentUser = meData.user;
 
     // Load game history
-    const historyResponse = await fetch('/api/profile/games?limit=20');
+    const historyResponse = await fetch('/api/profile/games?limit=20', { headers: authH() });
     const historyData = await historyResponse.json();
 
     console.log('Game history response:', historyData);
     console.log('Current user:', currentUser);
 
-    displayProfile(currentUser, historyData.games || []);
+    const games = historyData.games || [];
+    displayProfile(currentUser, games);
+    renderWpmChart(games, currentUser.username);
 
     // Show reset button
     document.getElementById('resetStatsContainer').classList.remove('hidden');
@@ -152,8 +159,19 @@ function displayProfile(user, gameHistory) {
       </div>
     </div>
 
+    <!-- WPM Progression Chart -->
+    ${gameHistory.length >= 2 ? `
+    <h2 class="section-title" style="margin-top: 40px;">WPM Progression</h2>
+    <div style="background: var(--glass-bg); backdrop-filter: blur(var(--blur-amount)); border: 1px solid var(--glass-border); border-radius: 20px; padding: 28px; margin-bottom: 32px;">
+      <canvas id="wpmChart" style="max-height: 260px; width: 100%;"></canvas>
+    </div>
+    ` : ''}
+
     <!-- Game History -->
     <h2 class="section-title">Recent Games</h2>
+    <div style="color:rgba(226,232,240,0.5);font-size:13px;margin-bottom:16px;">
+      ${user.stats.gamesPlayed} games played &nbsp;•&nbsp; ${user.stats.averageAccuracy}% avg accuracy &nbsp;•&nbsp; Best ${user.stats.bestWPM} WPM
+    </div>
     <div class="history-grid" id="historyGrid">
       ${gameHistory.length > 0 ? '' : '<div class="no-history"><div class="no-history-icon">🎮</div><div>No games played yet. Start playing to build your history!</div></div>'}
     </div>
@@ -297,9 +315,7 @@ function setupResetButton() {
     try {
       const response = await fetch('/api/profile/reset-stats', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: authH({ 'Content-Type': 'application/json' })
       });
 
       const data = await response.json();
@@ -363,7 +379,7 @@ function setupBioEditing() {
     try {
       const response = await fetch('/api/profile/update-bio', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authH({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ bio: newBio })
       });
 
@@ -390,11 +406,11 @@ function setupBioEditing() {
 async function loadFriends() {
   try {
     // Load friends list
-    const friendsResponse = await fetch('/api/friends/list');
+    const friendsResponse = await fetch('/api/friends/list', { headers: authH() });
     const friendsData = await friendsResponse.json();
 
     // Load pending requests
-    const requestsResponse = await fetch('/api/friends/pending');
+    const requestsResponse = await fetch('/api/friends/pending', { headers: authH() });
     const requestsData = await requestsResponse.json();
 
     displayFriends(friendsData.friends || []);
@@ -520,7 +536,7 @@ usernameInput.addEventListener('input', async (e) => {
   // Debounce the search
   autocompleteTimeout = setTimeout(async () => {
     try {
-      const response = await fetch(`/api/friends/search?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`/api/friends/search?query=${encodeURIComponent(query)}`, { headers: authH() });
       const data = await response.json();
 
       if (response.ok && data.users && data.users.length > 0) {
@@ -579,7 +595,7 @@ document.getElementById('sendFriendRequestBtn').addEventListener('click', async 
   try {
     const response = await fetch('/api/friends/request', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authH({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ username })
     });
 
@@ -616,7 +632,8 @@ document.getElementById('sendFriendRequestBtn').addEventListener('click', async 
 async function acceptFriendRequest(requestId) {
   try {
     const response = await fetch(`/api/friends/accept/${requestId}`, {
-      method: 'POST'
+      method: 'POST',
+      headers: authH()
     });
 
     if (response.ok) {
@@ -631,7 +648,8 @@ async function acceptFriendRequest(requestId) {
 async function rejectFriendRequest(requestId) {
   try {
     const response = await fetch(`/api/friends/reject/${requestId}`, {
-      method: 'POST'
+      method: 'POST',
+      headers: authH()
     });
 
     if (response.ok) {
@@ -650,7 +668,8 @@ async function removeFriend(friendId, username) {
 
   try {
     const response = await fetch(`/api/friends/remove/${friendId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: authH()
     });
 
     if (response.ok) {
@@ -713,11 +732,11 @@ async function showGamePlayers(gameId) {
 // Check friend status for a player
 async function checkPlayerFriendStatus(username) {
   try {
-    const friendsResponse = await fetch('/api/friends/list');
+    const friendsResponse = await fetch('/api/friends/list', { headers: authH() });
     const friendsData = await friendsResponse.json();
     const friends = friendsData.friends || [];
 
-    const requestsResponse = await fetch('/api/friends/pending');
+    const requestsResponse = await fetch('/api/friends/pending', { headers: authH() });
     const requestsData = await requestsResponse.json();
     const receivedRequests = requestsData.received || [];
     const sentRequests = requestsData.sent || [];
@@ -761,7 +780,7 @@ async function sendPlayerFriendRequest(username) {
   try {
     const response = await fetch('/api/friends/request', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authH({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ username })
     });
 
@@ -793,7 +812,8 @@ async function sendPlayerFriendRequest(username) {
 async function acceptPlayerFriendRequest(requestId, username) {
   try {
     const response = await fetch(`/api/friends/accept/${requestId}`, {
-      method: 'POST'
+      method: 'POST',
+      headers: authH()
     });
 
     if (response.ok) {
@@ -812,7 +832,8 @@ async function acceptPlayerFriendRequest(requestId, username) {
 async function rejectPlayerFriendRequest(requestId, username) {
   try {
     const response = await fetch(`/api/friends/reject/${requestId}`, {
-      method: 'POST'
+      method: 'POST',
+      headers: authH()
     });
 
     if (response.ok) {
@@ -837,4 +858,95 @@ document.getElementById('gamePlayersModal')?.addEventListener('click', (e) => {
     document.getElementById('gamePlayersModal').classList.add('hidden');
   }
 });
+
+// ── WPM Progression Chart ─────────────────────────────────────────────────────
+let wpmChartInstance = null;
+
+function renderWpmChart(games, username) {
+  const canvas = document.getElementById('wpmChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  // Collect data points: games sorted oldest → newest with current user's WPM
+  const points = games
+    .slice() // don't mutate
+    .reverse() // games come newest-first from API, flip to oldest-first
+    .map(game => {
+      const player = game.players.find(p =>
+        p.username && p.username.toLowerCase() === username.toLowerCase()
+      );
+      if (!player) return null;
+      return {
+        x: new Date(game.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        y: player.finalWPM || 0,
+        mode: game.gameMode
+      };
+    })
+    .filter(Boolean);
+
+  if (points.length < 2) return; // not enough data for a meaningful chart
+
+  const ctx = canvas.getContext('2d');
+
+  // Gradient fill
+  const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+  gradient.addColorStop(0, 'rgba(124, 58, 237, 0.35)');
+  gradient.addColorStop(1, 'rgba(124, 58, 237, 0.0)');
+
+  if (wpmChartInstance) wpmChartInstance.destroy();
+
+  wpmChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: points.map(p => p.x),
+      datasets: [{
+        label: 'WPM',
+        data: points.map(p => p.y),
+        borderColor: '#a78bfa',
+        backgroundColor: gradient,
+        borderWidth: 2.5,
+        pointBackgroundColor: '#a78bfa',
+        pointBorderColor: '#1e1b4b',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        fill: true,
+        tension: 0.35
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => points[items[0].dataIndex].x,
+            label: (item) => {
+              const pt = points[item.dataIndex];
+              return `${pt.y} WPM  (${pt.mode === 'solo' ? 'Solo' : 'Multiplayer'})`;
+            }
+          },
+          backgroundColor: 'rgba(15,12,41,0.9)',
+          borderColor: 'rgba(124,58,237,0.4)',
+          borderWidth: 1,
+          titleColor: '#e2e8f0',
+          bodyColor: '#a78bfa',
+          padding: 10
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: 'rgba(226,232,240,0.5)', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          beginAtZero: false,
+          ticks: { color: 'rgba(226,232,240,0.5)', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: 'WPM', color: 'rgba(226,232,240,0.4)', font: { size: 12 } }
+        }
+      }
+    }
+  });
+}
 

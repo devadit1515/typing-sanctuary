@@ -120,6 +120,7 @@ passport.use(new GoogleStrategy({
       passwordHash: null,
       profile: { displayName: profile.displayName || username },
     });
+    user.isNewUser = true; // flag so the OAuth callback can redirect to choose-username
     return done(null, user);
   } catch (err) {
     return done(err);
