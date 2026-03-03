@@ -1,27 +1,47 @@
 /**
  * Session Check and User Profile Management
- * Checks if user is logged in and displays their profile
+ * Uses JWT stored in localStorage — no cookie/session dependency.
  */
 
 let currentUser = null;
 
+/**
+ * Return auth headers for every fetch call that needs authentication.
+ * Usage: fetch('/api/...', { headers: authHeaders() })
+ */
+function authHeaders() {
+  const token = localStorage.getItem('authToken');
+  return token ? { 'Authorization': 'Bearer ' + token } : {};
+}
+
+// If Google OAuth passed a token back in the URL (?token=...), save it now
+// and remove it from the address bar so it never lingers.
+(function pickUpOAuthToken() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  if (token) {
+    localStorage.setItem('authToken', token);
+    params.delete('token');
+    const newSearch = params.toString();
+    const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+    window.history.replaceState({}, document.title, newUrl);
+  }
+})();
+
 // Check authentication status on page load
 async function checkAuthStatus() {
   try {
-    const response = await fetch('/api/auth/me');
+    const response = await fetch('/api/auth/me', { headers: authHeaders() });
     const data = await response.json();
 
     if (data.success && data.user) {
-      // User is logged in
       currentUser = data.user;
       handleLoggedInUser(data.user);
     } else {
-      // User is not logged in
       currentUser = null;
       handleGuestUser();
     }
   } catch (error) {
-    // Not authenticated or error
     currentUser = null;
     handleGuestUser();
   }
@@ -29,7 +49,6 @@ async function checkAuthStatus() {
 
 // Handle logged-in user
 function handleLoggedInUser(user) {
-  // Show user profile in top corner
   const userProfile = document.getElementById('userProfile');
   const profileUsername = document.getElementById('profileUsername');
 
@@ -39,7 +58,6 @@ function handleLoggedInUser(user) {
     profileUsername.textContent = firstName.charAt(0).toUpperCase() + firstName.slice(1);
     userProfile.classList.remove('hidden');
 
-    // Make profile info clickable to go to profile page
     const profileInfo = userProfile.querySelector('.profile-info');
     if (profileInfo) {
       profileInfo.style.cursor = 'pointer';
@@ -49,7 +67,6 @@ function handleLoggedInUser(user) {
     }
   }
 
-  // Show welcome message
   const loggedInUsername = document.getElementById('loggedInUsername');
   const welcomeUsername = document.getElementById('welcomeUsername');
   if (loggedInUsername && welcomeUsername) {
@@ -57,78 +74,46 @@ function handleLoggedInUser(user) {
     loggedInUsername.classList.remove('hidden');
   }
 
-  // Hide username input and auth buttons
   const usernameInputGroup = document.getElementById('usernameInputGroup');
   const authButtons = document.getElementById('authButtons');
-  if (usernameInputGroup) {
-    usernameInputGroup.classList.add('hidden');
-  }
-  if (authButtons) {
-    authButtons.classList.add('hidden');
-  }
+  if (usernameInputGroup) usernameInputGroup.classList.add('hidden');
+  if (authButtons) authButtons.classList.add('hidden');
 
-  // Pre-fill player name with username
   const playerNameInput = document.getElementById('playerName');
-  if (playerNameInput) {
-    playerNameInput.value = user.username;
-  }
+  if (playerNameInput) playerNameInput.value = user.username;
 }
 
 // Handle guest user (not logged in)
 function handleGuestUser() {
-  // Hide user profile
   const userProfile = document.getElementById('userProfile');
-  if (userProfile) {
-    userProfile.classList.add('hidden');
-  }
+  if (userProfile) userProfile.classList.add('hidden');
 
-  // Hide welcome message
   const loggedInUsername = document.getElementById('loggedInUsername');
-  if (loggedInUsername) {
-    loggedInUsername.classList.add('hidden');
-  }
+  if (loggedInUsername) loggedInUsername.classList.add('hidden');
 
-  // Show username input and auth buttons
   const usernameInputGroup = document.getElementById('usernameInputGroup');
   const authButtons = document.getElementById('authButtons');
-  if (usernameInputGroup) {
-    usernameInputGroup.classList.remove('hidden');
-  }
-  if (authButtons) {
-    authButtons.classList.remove('hidden');
-  }
+  if (usernameInputGroup) usernameInputGroup.classList.remove('hidden');
+  if (authButtons) authButtons.classList.remove('hidden');
 }
 
-// Logout handler
+// Logout — remove JWT, call server, reload
 async function handleLogout() {
+  localStorage.removeItem('authToken');
   try {
-    const response = await fetch('/api/auth/logout', {
-      method: 'POST'
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      // Logout successful, reload page
-      window.location.reload();
-    } else {
-      alert('Logout failed. Please try again.');
-    }
-  } catch (error) {
-    alert('Network error. Please try again.');
-  }
+    await fetch('/api/auth/logout', { method: 'POST', headers: authHeaders() });
+  } catch (_) {}
+  window.location.reload();
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthStatus();
 
-  // Setup logout button
   const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', handleLogout);
-  }
+  if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
 });
 
-// Export currentUser for use in game.js
+// Export for use in game.js and other scripts
 window.getCurrentUser = () => currentUser;
+window.authHeaders = authHeaders;

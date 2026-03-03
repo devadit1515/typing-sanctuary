@@ -107,7 +107,8 @@ if (loginForm) {
       const data = await response.json();
 
       if (data.success) {
-        // Login successful
+        // Save JWT so session-check.js can authenticate all future requests
+        if (data.token) localStorage.setItem('authToken', data.token);
         loginBtn.textContent = 'Success!';
         setTimeout(() => {
           window.location.href = '/';
@@ -215,7 +216,8 @@ if (registerForm) {
       const data = await response.json();
 
       if (data.success) {
-        // Registration successful
+        // Save JWT so session-check.js can authenticate all future requests
+        if (data.token) localStorage.setItem('authToken', data.token);
         registerBtn.textContent = 'Success!';
         setTimeout(() => {
           window.location.href = '/';
