@@ -171,11 +171,11 @@ app.get('*', (req, res, next) => {
 app.use((err, req, res, next) => {
   console.error('Unhandled server error:', err.stack || err.message || err);
   if (res.headersSent) return next(err);
-  // For API routes return JSON, for page routes redirect to home
+  // Always return a proper response — never redirect (causes redirect loops)
   if (req.path.startsWith('/api')) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
-  res.redirect('/');
+  res.status(500).send('Something went wrong. <a href="/">Go home</a>');
 });
 
 // Game rooms storage
