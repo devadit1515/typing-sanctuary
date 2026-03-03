@@ -94,16 +94,22 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    // Create session
+    // Create session and explicitly save before responding
     req.session.userId = user._id;
     req.session.username = user.username;
 
-    // Return safe user object
-    res.status(201).json({
-      success: true,
-      message: 'Registration successful',
-      user: user.toSafeObject()
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error('Session save error during register:', saveErr);
+        return res.status(500).json({ success: false, message: 'Session error during registration' });
+      }
+      res.status(201).json({
+        success: true,
+        message: 'Registration successful',
+        user: user.toSafeObject()
+      });
     });
+    return;
 
   } catch (error) {
     console.error('Registration error:', error);
@@ -156,16 +162,22 @@ exports.login = async (req, res) => {
     user.lastLogin = Date.now();
     await user.save();
 
-    // Create session
+    // Create session and explicitly save before responding
     req.session.userId = user._id;
     req.session.username = user.username;
 
-    // Return safe user object
-    res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      user: user.toSafeObject()
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error('Session save error during login:', saveErr);
+        return res.status(500).json({ success: false, message: 'Session error during login' });
+      }
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        user: user.toSafeObject()
+      });
     });
+    return;
 
   } catch (error) {
     console.error('Login error:', error);
