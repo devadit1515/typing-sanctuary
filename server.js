@@ -76,7 +76,17 @@ app.use(session({
 
 // Passport middleware (must be after session)
 app.use(passport.initialize());
-app.use(passport.session());
+// Wrap passport.session() so any deserialization error is caught and treated as unauthenticated
+// instead of propagating to the global error handler and breaking the page
+app.use((req, res, next) => {
+  passport.session()(req, res, (err) => {
+    if (err) {
+      console.error('Passport session error (treating as unauthenticated):', err.message);
+      return next(); // Continue as guest — don't crash
+    }
+    next();
+  });
+});
 
 // Google OAuth strategy
 passport.use(new GoogleStrategy({
@@ -167,15 +177,18 @@ app.get('*', (req, res, next) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Global error handler — prevents raw "Internal Server Error" from reaching users
+// Global error handler — clears bad session cookie automatically so users never get stuck
 app.use((err, req, res, next) => {
   console.error('Unhandled server error:', err.stack || err.message || err);
   if (res.headersSent) return next(err);
-  // Always return a proper response — never redirect (causes redirect loops)
   if (req.path.startsWith('/api')) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
-  res.status(500).send('Something went wrong. <a href="/">Go home</a>');
+  // Clear the bad session cookie — browser will delete it and the next visit works fine
+  // Users never need to manually delete cookies
+  res.clearCookie('connect.sid');
+  if (req.session) req.session.destroy(() => {});
+  res.redirect('/');
 });
 
 // Game rooms storage
