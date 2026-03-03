@@ -34,7 +34,9 @@ function handleLoggedInUser(user) {
   const profileUsername = document.getElementById('profileUsername');
 
   if (userProfile && profileUsername) {
-    profileUsername.textContent = user.username;
+    const displayName = user.profile?.displayName || user.username;
+    const firstName = displayName.split(' ')[0];
+    profileUsername.textContent = firstName.charAt(0).toUpperCase() + firstName.slice(1);
     userProfile.classList.remove('hidden');
 
     // Make profile info clickable to go to profile page

@@ -33,6 +33,9 @@ const profileRoutes = require('./routes/profileRoutes');
 const gameRoutes = require('./routes/gameRoutes');
 const passwordResetRoutes = require('./routes/passwordResetRoutes');
 const friendsRoutes = require('./routes/friendsRoutes');
+const biometricRoutes = require('./routes/biometricRoutes');
+const keystrokeAuthRoutes = require('./routes/keystrokeAuthRoutes');
+const leaderboardRoutes = require('./routes/leaderboardRoutes');
 
 // Connect to database
 connectDB();
@@ -144,6 +147,9 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/biometric', biometricRoutes);
+app.use('/api/keystroke-auth', keystrokeAuthRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 // Serve static files from public directory
 app.use(express.static('public'));
