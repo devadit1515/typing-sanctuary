@@ -8,7 +8,7 @@ ferretdb \
   &
 
 # Wait for FerretDB to initialise
-sleep 3
+sleep 8
 
 echo "Starting Node.js server..."
 exec node server.js
