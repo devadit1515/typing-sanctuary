@@ -28,7 +28,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 
 // Google OAuth — callback after Google consent screen
 router.get('/google/callback', (req, res, next) => {
-  passport.authenticate('google', (err, user, info) => {
+  passport.authenticate('google', (err, user) => {
     if (err) {
       console.error('Google OAuth error:', err);
       return res.redirect('/login.html?error=oauth_error');
@@ -36,20 +36,20 @@ router.get('/google/callback', (req, res, next) => {
     if (!user) {
       return res.redirect('/login.html?error=auth_failed');
     }
-    // Set session directly (req.logIn can fail in passport v0.7 custom-callback mode)
+
+    // Sign a JWT — client will store it in localStorage
+    const token = authController.signToken(user);
+
+    // Also set session for backward compat
     if (!req.session.passport) req.session.passport = {};
     req.session.passport.user = user._id.toString();
     req.session.userId = user._id.toString();
     req.session.username = user.username;
-    req.session.lastLogin = new Date();
     req.user = user;
-    req.session.save((saveErr) => {
-      if (saveErr) {
-        console.error('Session save error after Google OAuth:', saveErr);
-        return res.redirect('/login.html?error=session_error');
-      }
-      res.redirect('/');
-    });
+    req.session.save(() => {});
+
+    // Pass token to client via URL — session-check.js picks it up and stores in localStorage
+    res.redirect('/?token=' + encodeURIComponent(token));
   })(req, res, next);
 });
 
