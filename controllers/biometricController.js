@@ -1,6 +1,6 @@
 const KeystrokeBiometrics = require('../models/KeystrokeBiometrics');
-const biometricService = require('../services/biometricService');
-const authenticationService = require('../services/authenticationService');
+const { extractFeatureVector, extractLegacyFeatures } = require('../services/featureEngineering');
+const { verifyKeystrokeSample } = require('../services/verificationPipeline');
 const adaptiveLearningService = require('../services/adaptiveLearningService');
 const deviceFingerprintService = require('../services/deviceFingerprintService');
 const dataExportService = require('../services/dataExportService');
@@ -65,29 +65,18 @@ exports.submitSample = async (req, res) => {
       deviceFingerprint.keyboardSignature = deviceFingerprintService.detectKeyboardHardware(keystrokes);
     }
 
-    // Extract features from keystroke data
-    const features = biometricService.extractFeatures(keystrokes);
+    // Extract features using v2 pipeline
+    const featureData = extractFeatureVector(keystrokes);
 
-    if (!features) {
+    if (!featureData) {
       return res.status(400).json({
         success: false,
         message: 'Could not extract features from keystroke data'
       });
     }
 
-    // Calculate typing metrics
-    const totalTime = keystrokes[keystrokes.length - 1].timestamp;
-    const typingMetrics = biometricService.calculateTypingMetrics(keystrokes, totalTime);
-
-    // Add WPM and accuracy to features
-    features.wpm = {
-      mean: typingMetrics.wpm,
-      stdDev: 0
-    };
-    features.accuracy = {
-      mean: typingMetrics.accuracy,
-      stdDev: 0
-    };
+    // Also get legacy features for v1 backward compat
+    const features = extractLegacyFeatures(keystrokes) || {};
 
     // Create sample data with device fingerprint
     const sampleData = {
@@ -113,54 +102,48 @@ exports.submitSample = async (req, res) => {
     // Add sample to biometric record
     await biometric.addSample(sampleData);
 
-    // Update profile with new features
-    const updatedProfile = biometricService.updateProfile(
-      biometric.profile,
-      features,
-      0.3 // Alpha for exponential weighted average
-    );
+    // Update v1 profile for backward compat
+    await biometric.updateProfile(features);
 
-    await biometric.updateProfile(updatedProfile);
-
-    // If enrolled, verify the sample for continuous authentication
+    // Build/update v2 profile if we have enough samples
     let verificationResult = null;
-    if (biometric.enrollmentStatus === 'completed' && biometric.samples.length > 1) {
-      verificationResult = authenticationService.verifyKeystrokeSample(
-        biometric.profile,
-        features
-      );
+    const sampleCount = biometric.samples?.length || 0;
 
-      // Record authentication attempt
-      await biometric.recordAuthAttempt({
-        success: verificationResult.authenticated,
-        anomalyScore: verificationResult.anomalyScore,
-        method: 'statistical_zscore',
-        context: {
-          device: deviceInfo?.platform || 'unknown',
-          timeOfDay: new Date().getHours(),
-          sessionId: req.sessionID
-        }
-      });
-
-      // Adaptive Learning: Update profile with new verified sample
-      if (verificationResult.authenticated) {
-        try {
-          const learningResult = await adaptiveLearningService.updateProfile(
+    if (sampleCount >= adaptiveLearningService.MIN_SAMPLES_FOR_PROFILE) {
+      try {
+        if (biometric.profileVersion !== 2) {
+          // First-time v2 profile build
+          await adaptiveLearningService.buildProfile(req.session.userId);
+        } else {
+          // Incremental v2 update
+          await adaptiveLearningService.updateProfile(
             req.session.userId,
-            {
-              features: features,
-              deviceInfo: deviceInfo
-            },
-            true // verified = true
+            { keystrokes },
+            true
           );
-
-          // Include learning info in verification result
-          verificationResult.adaptiveLearning = learningResult;
-
-        } catch (learningError) {
-          console.error('Error in adaptive learning:', learningError);
-          // Don't fail the request if adaptive learning fails
         }
+
+        // Reload biometric
+        biometric = await KeystrokeBiometrics.findOne({ userId: req.session.userId });
+
+        // Verify using v2 pipeline if enrolled
+        if (biometric.profileVersion === 2 && biometric.v2Profile?.enrollmentComplete) {
+          verificationResult = verifyKeystrokeSample(biometric.v2Profile, keystrokes);
+
+          // Record authentication attempt
+          await biometric.recordAuthAttempt({
+            success: verificationResult.authenticated,
+            anomalyScore: verificationResult.fusedScore,
+            method: 'ml_ensemble',
+            context: {
+              device: deviceInfo?.platform || 'unknown',
+              timeOfDay: new Date().getHours(),
+              sessionId: req.sessionID
+            }
+          });
+        }
+      } catch (learningError) {
+        console.error('Error in v2 adaptive learning:', learningError);
       }
     }
 
@@ -349,27 +332,35 @@ exports.verify = async (req, res) => {
       });
     }
 
-    // Extract features from keystroke sample
-    const features = biometricService.extractFeatures(keystrokes);
-
-    if (!features) {
-      return res.status(400).json({
-        success: false,
-        message: 'Could not extract features from keystroke data'
-      });
+    // Auto-migrate to v2 if needed
+    if (biometric.profileVersion !== 2 && biometric.samples?.length >= 10) {
+      try {
+        await adaptiveLearningService.buildProfile(req.session.userId);
+        biometric = await KeystrokeBiometrics.findOne({ userId: req.session.userId });
+      } catch (e) {
+        console.error('V2 migration failed:', e.message);
+      }
     }
 
-    // Verify against profile
-    const result = authenticationService.verifyKeystrokeSample(
-      biometric.profile,
-      features
-    );
+    // Verify using v2 pipeline
+    let result;
+    if (biometric.profileVersion === 2 && biometric.v2Profile?.enrollmentComplete) {
+      result = verifyKeystrokeSample(biometric.v2Profile, keystrokes);
+    } else {
+      result = {
+        authenticated: false,
+        confidence: 0,
+        riskLevel: 'HIGH',
+        fusedScore: 0,
+        error: 'V2 profile not available'
+      };
+    }
 
     // Record authentication attempt
     await biometric.recordAuthAttempt({
       success: result.authenticated,
-      anomalyScore: result.anomalyScore,
-      method: 'statistical_zscore',
+      anomalyScore: result.fusedScore || 0,
+      method: 'ml_ensemble',
       context: {
         device: req.body.deviceInfo?.platform || 'unknown',
         timeOfDay: new Date().getHours(),
@@ -377,16 +368,9 @@ exports.verify = async (req, res) => {
       }
     });
 
-    // Determine action based on result
-    const action = authenticationService.determineAction(
-      result.anomalyScore,
-      result.riskLevel
-    );
-
     res.json({
       success: true,
-      verification: result,
-      action: action
+      verification: result
     });
 
   } catch (error) {
