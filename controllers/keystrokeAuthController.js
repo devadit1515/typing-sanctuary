@@ -10,8 +10,8 @@
 
 const KeystrokeBiometrics = require('../models/KeystrokeBiometrics');
 const Passage = require('../models/Passage');
-const biometricService = require('../services/biometricService');
-const advancedBiometricML = require('../services/advancedBiometricML');
+const { extractFeatureVector, extractLegacyFeatures } = require('../services/featureEngineering');
+const { verifyKeystrokeSample } = require('../services/verificationPipeline');
 const adaptiveLearningService = require('../services/adaptiveLearningService');
 const bcrypt = require('bcryptjs');
 
@@ -116,23 +116,20 @@ exports.submitSample = async (req, res) => {
 
         console.log(`[BIOMETRIC] Processing sample for user ${userId}: ${keystrokes.length} keystrokes from ${source || 'manual'}`);
 
-        // Extract features using biometric service
-        const features = biometricService.extractFeatures(keystrokes);
+        // Extract 200-dimensional feature vector (v2 pipeline)
+        const featureData = extractFeatureVector(keystrokes);
+        if (!featureData) {
+            return res.status(400).json({
+                success: false,
+                message: 'Could not extract features from keystroke data'
+            });
+        }
 
-        // Add trigraph analysis
-        const trigraphs = biometricService.extractTrigraphTimings(keystrokes);
-        features.trigraphTimings = trigraphs;
+        // Also extract legacy features for v1 profile backward compat
+        const features = extractLegacyFeatures(keystrokes) || {};
 
-        // Add temporal analysis using advanced ML
-        const temporalPatterns = advancedBiometricML.analyzeTemporalPatterns(keystrokes);
-        features.temporalPatterns = temporalPatterns;
-
-        console.log(`[BIOMETRIC] Features extracted:`, {
-            dwellTimeMean: features.dwellTime?.mean?.toFixed(2),
-            flightTimeMean: features.flightTime?.mean?.toFixed(2),
-            rhythm: features.rhythm?.consistency?.toFixed(3),
-            trigraphCount: Object.keys(features.trigraphTimings || {}).length
-        });
+        console.log(`[BIOMETRIC] V2 features extracted: ${featureData.metadata.keystrokeCount} keystrokes, ` +
+            `${featureData.metadata.digraphsCovered} digraphs, ${featureData.metadata.trigraphsCovered} trigraphs`);
 
         // Get or create biometric record
         let biometric = await KeystrokeBiometrics.findOne({ userId });
@@ -159,11 +156,11 @@ exports.submitSample = async (req, res) => {
             keystrokes: keystrokes.map(k => ({
                 char: k.char,
                 keyCode: k.keyCode,
+                timestamp: k.timestamp,  // Needed for DD interval computation in v2
                 dwellTime: k.dwellTime,
                 flightTime: k.flightTime,
                 position: k.position,
                 isCorrect: k.isCorrect
-                // Don't store exact timestamps for privacy
             })),
             features: features,
             deviceInfo: deviceInfo,
@@ -179,18 +176,26 @@ exports.submitSample = async (req, res) => {
             biometric.samples = biometric.samples.slice(-100);
         }
 
-        // Update profile using adaptive learning
+        // Update profile using v2 adaptive learning pipeline
         if (biometric.samples.length === 1) {
-            // First sample - initialize profile
-            console.log('[BIOMETRIC] First sample - initializing profile');
+            // First sample — store v1 profile for backward compat
+            console.log('[BIOMETRIC] First sample — initializing profile');
             biometric.profile = features;
-        } else {
-            // Update profile with EWMA (Exponential Weighted Moving Average)
-            console.log('[BIOMETRIC] Updating profile with adaptive learning');
-            await adaptiveLearningService.updateProfile(userId, { features }, true);
-
-            // Reload biometric to get updated profile
-            biometric = await KeystrokeBiometrics.findOne({ userId });
+        } else if (biometric.samples.length >= adaptiveLearningService.MIN_SAMPLES_FOR_PROFILE) {
+            // Build or update v2 profile
+            console.log('[BIOMETRIC] Updating v2 profile with adaptive learning');
+            try {
+                if (biometric.profileVersion !== 2) {
+                    // First time building v2 profile
+                    await adaptiveLearningService.buildProfile(userId);
+                } else {
+                    await adaptiveLearningService.updateProfile(userId, { keystrokes }, true);
+                }
+                // Reload biometric to get updated profile
+                biometric = await KeystrokeBiometrics.findOne({ userId });
+            } catch (learningError) {
+                console.error('[BIOMETRIC] Adaptive learning error (non-fatal):', learningError.message);
+            }
         }
 
         const currentCount = biometric.samples.length;
@@ -219,12 +224,9 @@ exports.submitSample = async (req, res) => {
 
         await biometric.save();
 
-        // Calibrate adaptive threshold after reaching initial tier
-        if (currentCount >= 10) {
-            const threshold = advancedBiometricML.calibrateThreshold(userId, biometric.profile);
-            biometric.customThreshold = threshold.threshold;
-            await biometric.save();
-            console.log(`[BIOMETRIC] Calibrated threshold: ${threshold.threshold.toFixed(3)}`);
+        // V2 threshold is calibrated automatically during profile build/update
+        if (biometric.v2Profile?.threshold) {
+            console.log(`[BIOMETRIC] V2 threshold: ${biometric.v2Profile.threshold.toFixed(3)} (${biometric.v2Profile.thresholdConfidence})`);
         }
 
         // Determine next tier threshold
@@ -284,58 +286,52 @@ exports.verifyTest = async (req, res) => {
 
         console.log(`[BIOMETRIC] Verifying identity for user ${userId} (mode: ${mode})`);
 
-        // Extract features from test sample
-        const testFeatures = biometricService.extractFeatures(keystrokes);
-        testFeatures.trigraphTimings = biometricService.extractTrigraphTimings(keystrokes);
-        testFeatures.temporalPatterns = advancedBiometricML.analyzeTemporalPatterns(keystrokes);
-
-        // Calculate Mahalanobis distance
-        const distance = advancedBiometricML.calculateMahalanobisDistance(
-            testFeatures,
-            biometric.profile
-        );
-
-        // Calculate ensemble score
-        const ensembleScore = advancedBiometricML.calculateEnsembleScore(
-            testFeatures,
-            biometric.profile
-        );
-
-        // Get threshold and calculate confidence
-        const threshold = biometric.customThreshold || 1.5;
-        const confidence = advancedBiometricML.calculateConfidenceScore(distance, threshold);
-
-        console.log(`[BIOMETRIC] Verification result: ${confidence}% confidence (distance: ${distance.toFixed(3)}, threshold: ${threshold.toFixed(3)})`);
-
-        // Determine risk level and authentication decision
-        let riskLevel, authenticated;
-        if (confidence >= 85) {
-            riskLevel = 'LOW';
-            authenticated = true;
-        } else if (confidence >= 60) {
-            riskLevel = 'MEDIUM';
-            authenticated = false;
-        } else {
-            riskLevel = 'HIGH';
-            authenticated = false;
+        // Auto-migrate to v2 if needed
+        if (biometric.profileVersion !== 2 && biometric.samples.length >= 10) {
+            try {
+                await adaptiveLearningService.buildProfile(userId);
+                // Reload after build
+                const updated = await KeystrokeBiometrics.findOne({ userId });
+                if (updated) Object.assign(biometric, updated.toObject());
+            } catch (e) {
+                console.error('[BIOMETRIC] V2 migration failed:', e.message);
+            }
         }
+
+        // Use v2 pipeline if available, otherwise fall back gracefully
+        let result;
+        if (biometric.profileVersion === 2 && biometric.v2Profile?.enrollmentComplete) {
+            result = verifyKeystrokeSample(biometric.v2Profile, keystrokes);
+        } else {
+            // Fallback for profiles not yet migrated
+            result = {
+                authenticated: false,
+                confidence: 0,
+                riskLevel: 'HIGH',
+                fusedScore: 0,
+                threshold: 0,
+                error: 'V2 profile not available — submit more training samples',
+                method: 'multi_classifier_ensemble_v2'
+            };
+        }
+
+        const { authenticated, confidence, riskLevel, fusedScore, threshold, perClassifierScores } = result;
+
+        console.log(`[BIOMETRIC] V2 verification: ${confidence}% confidence (fused: ${fusedScore}, threshold: ${threshold})`);
 
         // Record test result
-        if (!biometric.testingHistory) {
-            biometric.testingHistory = [];
-        }
+        if (!biometric.testingHistory) biometric.testingHistory = [];
 
         biometric.testingHistory.push({
             timestamp: new Date(),
             mode: mode || 'self-test',
-            confidence: confidence,
-            riskLevel: riskLevel,
-            authenticated: authenticated,
-            distance: distance,
-            ensembleScore: ensembleScore
+            confidence,
+            riskLevel,
+            authenticated,
+            distance: fusedScore,
+            ensembleScore: fusedScore
         });
 
-        // Keep last 50 test results
         if (biometric.testingHistory.length > 50) {
             biometric.testingHistory = biometric.testingHistory.slice(-50);
         }
@@ -344,14 +340,15 @@ exports.verifyTest = async (req, res) => {
 
         res.json({
             success: true,
-            confidence: confidence,
-            riskLevel: riskLevel,
-            authenticated: authenticated,
+            confidence,
+            riskLevel,
+            authenticated,
             details: {
-                mahalanobisDistance: distance.toFixed(3),
-                ensembleScore: ensembleScore.toFixed(3),
-                threshold: threshold.toFixed(3),
-                samplesUsed: biometric.samples.length
+                fusedScore: fusedScore?.toFixed?.(4) || '0',
+                threshold: threshold?.toFixed?.(4) || '0',
+                perClassifierScores: perClassifierScores || {},
+                samplesUsed: biometric.v2Profile?.samplesUsed || biometric.samples.length,
+                method: 'multi_classifier_ensemble_v2'
             }
         });
 
@@ -496,21 +493,20 @@ exports.submitImpostorAttempt = async (req, res) => {
 
         console.log(`[IMPOSTOR] Attempt by "${playerName}" on challenge ${challengeCode}`);
 
-        // Extract features from impostor attempt
-        const attemptFeatures = biometricService.extractFeatures(keystrokes);
-        attemptFeatures.trigraphTimings = biometricService.extractTrigraphTimings(keystrokes);
-        attemptFeatures.temporalPatterns = advancedBiometricML.analyzeTemporalPatterns(keystrokes);
+        // Use v2 pipeline if available
+        let confidence, fooledSystem, fusedScore;
 
-        // Verify against owner's profile
-        const distance = advancedBiometricML.calculateMahalanobisDistance(
-            attemptFeatures,
-            biometric.profile
-        );
-
-        const threshold = biometric.customThreshold || 1.5;
-        const confidence = advancedBiometricML.calculateConfidenceScore(distance, threshold);
-
-        const fooledSystem = confidence >= 85;
+        if (biometric.profileVersion === 2 && biometric.v2Profile?.enrollmentComplete) {
+            const result = verifyKeystrokeSample(biometric.v2Profile, keystrokes);
+            confidence = result.confidence;
+            fusedScore = result.fusedScore;
+            fooledSystem = confidence >= 85;
+        } else {
+            // Fallback: cannot verify without v2 profile
+            confidence = 0;
+            fusedScore = 999;
+            fooledSystem = false;
+        }
 
         console.log(`[IMPOSTOR] Result: ${confidence}% confidence - ${fooledSystem ? 'FOOLED' : 'DETECTED'}`);
 
@@ -520,7 +516,7 @@ exports.submitImpostorAttempt = async (req, res) => {
             timestamp: new Date(),
             confidence: confidence,
             fooledSystem: fooledSystem,
-            distance: distance
+            distance: fusedScore
         });
 
         await challenge.save();

@@ -314,6 +314,73 @@ const keystrokeBiometricsSchema = new mongoose.Schema({
     ensembleScore: Number
   }],
 
+  // ===== V2 BIOMETRIC PROFILE (Multi-Classifier Ensemble) =====
+
+  profileVersion: {
+    type: Number,
+    default: 1  // 1 = legacy, 2 = new multi-classifier ensemble
+  },
+
+  // V2: Selected feature configuration (50-80 features from 200-dimensional space)
+  v2Profile: {
+    selectedFeatures: [Number],       // Indices into the 200-feature space
+    featureNames: [String],           // Human-readable names for selected features
+    featureQualityScores: [Number],   // Quality score per selected feature
+
+    // Per-feature statistics (flat arrays, length = selectedFeatures.length)
+    means: [Number],
+    medians: [Number],
+    stdDevs: [Number],
+    mads: [Number],                   // Mean Absolute Deviation from mean
+    madMedians: [Number],             // MAD from median
+
+    // Raw feature vectors for KNN and profile recomputation
+    rawVectors: [[Number]],           // Up to 50 vectors, each of selectedFeatures.length
+
+    // Covariance data for Mahalanobis classifier (Ledoit-Wolf shrunk)
+    covarianceMatrix: [[Number]],     // p x p shrunk covariance
+    covarianceInverse: [[Number]],    // Pre-computed inverse
+    shrinkageAlpha: Number,           // Ledoit-Wolf shrinkage intensity
+
+    // One-class boundary radius
+    boundaryRadius: Number,
+
+    // Per-classifier calibration from leave-one-out cross-validation
+    calibration: {
+      scaledManhattan: { trainScores: [Number], min: Number, max: Number },
+      scaledEuclidean: { trainScores: [Number], min: Number, max: Number },
+      mahalanobis: { trainScores: [Number], min: Number, max: Number },
+      manhattanFiltered: { trainScores: [Number], min: Number, max: Number },
+      knn: { trainScores: [Number], min: Number, max: Number },
+      oneClass: { trainScores: [Number], min: Number, max: Number }
+    },
+
+    // Score fusion configuration
+    fusionWeights: [Number],          // One weight per classifier (6 total)
+    fusionMethod: {
+      type: String,
+      enum: ['mean', 'median', 'weighted'],
+      default: 'mean'
+    },
+
+    // Adaptive threshold
+    threshold: Number,
+    thresholdConfidence: {
+      type: String,
+      enum: ['low', 'medium', 'high']
+    },
+
+    // Profile metadata
+    samplesUsed: Number,
+    enrollmentComplete: Boolean,
+    lastUpdated: Date,
+    lastCalibration: Date,
+    samplesSinceLastCalibration: {
+      type: Number,
+      default: 0
+    }
+  },
+
   // Password-specific keystroke profile
   passwordProfile: {
     passwordHash: String,       // bcrypt hash of the phrase
@@ -366,8 +433,8 @@ keystrokeBiometricsSchema.index({ optOut: 1 });
 
 // Add a new keystroke sample
 keystrokeBiometricsSchema.methods.addSample = async function(sampleData) {
-  // Limit stored samples to most recent 50 (for storage efficiency)
-  if (this.samples.length >= 50) {
+  // Limit stored samples to most recent 100 (raw keystrokes for re-extraction)
+  if (this.samples.length >= 100) {
     this.samples.shift(); // Remove oldest
   }
 

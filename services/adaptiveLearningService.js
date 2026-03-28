@@ -1,495 +1,502 @@
 /**
- * Adaptive Learning Service for Keystroke Biometrics
+ * Adaptive Learning Service (V2)
  *
- * Handles continuous model updates as user typing patterns evolve over time.
- * Detects concept drift (gradual changes) vs. sudden anomalies (potential attacks).
+ * Manages biometric profile building and incremental updates using the
+ * new multi-classifier ensemble pipeline.
  *
- * Key Features:
- * - Exponential Weighted Moving Average (EWMA) for profile updates
- * - Concept drift detection (gradual changes over time)
- * - Sudden change detection (potential account takeover)
- * - Profile versioning and rollback capabilities
- * - Context-aware learning (different devices, time of day)
+ * Key changes from V1:
+ *   - Full recomputation from stored feature vectors (not EWMA)
+ *   - Ledoit-Wolf covariance estimation
+ *   - Leave-one-out calibration for all 6 classifiers
+ *   - Drift detection via scaled Manhattan distance
+ *   - Poisoning prevention: only verified samples enter profile
  */
 
 const KeystrokeBiometrics = require('../models/KeystrokeBiometrics');
+const { extractFeatureVector, selectSubset } = require('./featureEngineering');
+const { selectFeatures } = require('./featureSelection');
+const { computeProfileStats, computeBoundaryRadius, scaledManhattan } = require('./classifierEngine');
+const { leaveOneOutCalibration } = require('./scoreFusion');
+const { ledoitWolfShrinkage } = require('./linearAlgebra');
+
+// ── Constants ──────────────────────────────────────────────────────
+
+const DRIFT_THRESHOLD = 2.0;           // Scaled Manhattan distance for drift detection
+const SUDDEN_CHANGE_THRESHOLD = 3.5;   // Block update if distance exceeds this
+const PROFILE_VERSION_LIMIT = 10;      // Keep last 10 profile snapshots
+const MAX_RAW_VECTORS = 50;            // Store up to 50 feature vectors
+const MIN_SAMPLES_FOR_PROFILE = 10;    // Need 10 samples to build initial profile
+const RECALIBRATION_INTERVAL = 5;      // Re-run LOO calibration every N samples
+const MIN_CONFIDENCE_FOR_UPDATE = 60;  // Only add verified samples (confidence >= 60%)
+
+// ── Profile Building (Initial Enrollment) ──────────────────────────
 
 /**
- * Configuration constants
- */
-const LEARNING_RATE = 0.1; // Weight given to new samples (0-1)
-const DRIFT_THRESHOLD = 2.0; // Standard deviations before flagging drift
-const SUDDEN_CHANGE_THRESHOLD = 3.0; // Standard deviations for sudden changes
-const MINIMUM_SAMPLES_FOR_UPDATE = 3; // Minimum verified samples before updating
-const PROFILE_VERSION_LIMIT = 10; // Keep last 10 profile versions
-
-/**
- * Update user's biometric profile using adaptive learning
+ * Build or rebuild a v2 profile from stored raw keystroke samples.
+ * Called when:
+ *   - User reaches 10 samples for the first time
+ *   - Migration from v1 to v2 profile
+ *   - Manual profile rebuild
  *
- * @param {string} userId - User ID
- * @param {Object} newSample - New keystroke sample with features
- * @param {boolean} verified - Whether the sample was successfully authenticated
- * @returns {Object} Update result with drift detection info
+ * @param {string} userId
+ * @returns {object} Build result
+ */
+async function buildProfile(userId) {
+  const biometric = await KeystrokeBiometrics.findOne({ userId });
+  if (!biometric) throw new Error('User not found');
+
+  const samples = biometric.samples;
+  if (!samples || samples.length < MIN_SAMPLES_FOR_PROFILE) {
+    return { built: false, reason: `Need ${MIN_SAMPLES_FOR_PROFILE} samples, have ${samples?.length || 0}` };
+  }
+
+  // 1. Extract feature vectors from all stored raw keystroke samples
+  const featureVectors = [];
+  const observedArrays = [];
+
+  for (const sample of samples) {
+    if (!sample.keystrokes || sample.keystrokes.length < 5) continue;
+    const result = extractFeatureVector(sample.keystrokes);
+    if (result) {
+      featureVectors.push(result.vector);
+      observedArrays.push(result.observed);
+    }
+  }
+
+  if (featureVectors.length < MIN_SAMPLES_FOR_PROFILE) {
+    return { built: false, reason: `Only ${featureVectors.length} valid feature vectors from ${samples.length} samples` };
+  }
+
+  // 2. Run feature selection (choose 50-80 best features)
+  const { selectedIndices, qualityScores } = selectFeatures(featureVectors, observedArrays);
+
+  // 3. Project vectors to selected feature subspace
+  const rawVectors = featureVectors.map(v => selectedIndices.map(i => v[i]));
+
+  // Keep only the most recent MAX_RAW_VECTORS
+  const trimmedVectors = rawVectors.slice(-MAX_RAW_VECTORS);
+
+  // 4. Compute profile statistics
+  const stats = computeProfileStats(trimmedVectors);
+
+  // 5. Compute Ledoit-Wolf shrunk covariance + inverse
+  let covarianceMatrix = null;
+  let covarianceInverse = null;
+  let shrinkageAlpha = null;
+
+  if (trimmedVectors.length >= 10) {
+    const covResult = ledoitWolfShrinkage(trimmedVectors);
+    covarianceMatrix = covResult.shrunkCov;
+    covarianceInverse = covResult.inverse;
+    shrinkageAlpha = covResult.alpha;
+  }
+
+  // 6. Compute one-class boundary radius
+  const boundaryRadius = computeBoundaryRadius(trimmedVectors, stats);
+
+  // 7. Run leave-one-out calibration for all 6 classifiers
+  const calResult = leaveOneOutCalibration(trimmedVectors, selectedIndices);
+
+  // 8. Build feature names
+  const { buildFeatureNames } = require('./featureEngineering');
+  const allNames = buildFeatureNames();
+  const featureNames = selectedIndices.map(i => allNames[i]);
+
+  // 9. Store v2 profile
+  biometric.v2Profile = {
+    selectedFeatures: selectedIndices,
+    featureNames,
+    featureQualityScores: qualityScores,
+    means: stats.means,
+    medians: stats.medians,
+    stdDevs: stats.stdDevs,
+    mads: stats.mads,
+    madMedians: stats.madMedians,
+    rawVectors: trimmedVectors,
+    covarianceMatrix: covarianceMatrix || [],
+    covarianceInverse: covarianceInverse || [],
+    shrinkageAlpha: shrinkageAlpha || 0,
+    boundaryRadius,
+    calibration: calResult.calibration,
+    fusionWeights: calResult.fusionWeights,
+    fusionMethod: calResult.fusionMethod,
+    threshold: calResult.threshold,
+    thresholdConfidence: calResult.thresholdConfidence,
+    samplesUsed: trimmedVectors.length,
+    enrollmentComplete: true,
+    lastUpdated: new Date(),
+    lastCalibration: new Date(),
+    samplesSinceLastCalibration: 0
+  };
+
+  biometric.profileVersion = 2;
+  biometric.updatedAt = new Date();
+
+  if (!biometric.metadata) biometric.metadata = {};
+  biometric.metadata.profileUpdates = (biometric.metadata.profileUpdates || 0) + 1;
+  biometric.metadata.lastProfileUpdate = new Date();
+
+  await biometric.save();
+
+  return {
+    built: true,
+    featuresSelected: selectedIndices.length,
+    samplesUsed: trimmedVectors.length,
+    threshold: calResult.threshold,
+    thresholdConfidence: calResult.thresholdConfidence,
+    fusionMethod: calResult.fusionMethod
+  };
+}
+
+// ── Incremental Profile Update ─────────────────────────────────────
+
+/**
+ * Update user's biometric profile with a new sample.
+ *
+ * @param {string} userId
+ * @param {object} newSample - { keystrokes, features (optional), deviceInfo }
+ * @param {boolean} verified - Whether the sample was verified (confidence >= 60%)
+ * @returns {object} Update result
  */
 async function updateProfile(userId, newSample, verified) {
-    try {
-        const biometric = await KeystrokeBiometrics.findOne({ userId });
+  const biometric = await KeystrokeBiometrics.findOne({ userId });
+  if (!biometric) throw new Error('User not found');
 
-        if (!biometric || !biometric.isEnrolled()) {
-            throw new Error('User not enrolled in biometric authentication');
-        }
+  // Only update with verified samples (prevent poisoning)
+  if (!verified) {
+    return {
+      updated: false,
+      reason: 'Sample not verified — skipping profile update',
+      driftDetected: false
+    };
+  }
 
-        // Only update with verified samples (prevent poisoning from impostors)
-        if (!verified) {
-            return {
-                updated: false,
-                reason: 'Sample not verified - skipping profile update',
-                driftDetected: false
-            };
-        }
-
-        const currentProfile = biometric.profile;
-        const newFeatures = newSample.features;
-
-        // Calculate distance from current profile
-        const distance = calculateMahalanobisDistance(newFeatures, currentProfile);
-
-        // Detect sudden changes (potential attack)
-        if (distance > SUDDEN_CHANGE_THRESHOLD) {
-            await logSuddenChange(userId, distance, newFeatures);
-            return {
-                updated: false,
-                reason: 'Sudden change detected - profile update blocked',
-                suddenChange: true,
-                distance: distance,
-                flagged: true
-            };
-        }
-
-        // Detect gradual drift
-        const driftDetected = distance > DRIFT_THRESHOLD;
-
-        // Archive current profile version
-        archiveProfileVersion(biometric);
-
-        // Update profile using EWMA
-        const updatedProfile = updateWithEWMA(currentProfile, newFeatures, LEARNING_RATE);
-
-        // Update context-specific profiles if available
-        if (newSample.deviceInfo) {
-            updateContextProfile(biometric, newSample.deviceInfo, newFeatures);
-        }
-
-        // Save updated profile
-        biometric.profile = updatedProfile;
-        biometric.lastUpdated = new Date();
-
-        // Track update in metadata
-        if (!biometric.metadata) {
-            biometric.metadata = {};
-        }
-        biometric.metadata.profileUpdates = (biometric.metadata.profileUpdates || 0) + 1;
-        biometric.metadata.lastProfileUpdate = new Date();
-
-        await biometric.save();
-
-        return {
-            updated: true,
-            driftDetected,
-            distance,
-            learningRate: LEARNING_RATE,
-            profileVersion: biometric.profileVersions ? biometric.profileVersions.length : 0
-        };
-
-    } catch (error) {
-        console.error('Error in adaptive learning:', error);
-        throw error;
+  // If no v2 profile yet, try to build one
+  if (biometric.profileVersion !== 2 || !biometric.v2Profile?.enrollmentComplete) {
+    const sampleCount = biometric.samples?.length || 0;
+    if (sampleCount >= MIN_SAMPLES_FOR_PROFILE) {
+      const buildResult = await buildProfile(userId);
+      return { updated: buildResult.built, ...buildResult, driftDetected: false };
     }
+    return { updated: false, reason: 'Not enough samples for v2 profile yet', driftDetected: false };
+  }
+
+  const profile = biometric.v2Profile;
+
+  // Extract feature vector from new sample
+  const featureData = extractFeatureVector(newSample.keystrokes || newSample.features?.keystrokes);
+  if (!featureData) {
+    return { updated: false, reason: 'Could not extract features from sample', driftDetected: false };
+  }
+
+  // Project to selected feature subspace
+  const newVector = selectSubset(featureData.vector, profile.selectedFeatures);
+
+  // Check distance from current profile (drift/sudden change detection)
+  const distance = scaledManhattan(newVector, {
+    means: profile.means,
+    mads: profile.mads
+  });
+
+  // Block sudden changes (potential attack)
+  if (distance > SUDDEN_CHANGE_THRESHOLD) {
+    console.warn(`[SECURITY] Sudden change blocked for user ${userId}, distance: ${distance.toFixed(2)}`);
+    return {
+      updated: false,
+      reason: 'Sudden change detected — profile update blocked',
+      suddenChange: true,
+      distance,
+      driftDetected: false
+    };
+  }
+
+  const driftDetected = distance > DRIFT_THRESHOLD;
+  if (driftDetected) {
+    console.warn(`[DRIFT] Gradual drift detected for user ${userId}, distance: ${distance.toFixed(2)}`);
+  }
+
+  // Archive current profile version
+  archiveProfileVersion(biometric);
+
+  // Add new vector to rawVectors
+  const rawVectors = [...(profile.rawVectors || []), newVector];
+  const trimmedVectors = rawVectors.slice(-MAX_RAW_VECTORS);
+
+  // Full recomputation from stored vectors
+  const stats = computeProfileStats(trimmedVectors);
+
+  // Recompute covariance if enough samples
+  let covarianceMatrix = profile.covarianceMatrix;
+  let covarianceInverse = profile.covarianceInverse;
+  let shrinkageAlpha = profile.shrinkageAlpha;
+
+  if (trimmedVectors.length >= 10) {
+    const covResult = ledoitWolfShrinkage(trimmedVectors);
+    covarianceMatrix = covResult.shrunkCov;
+    covarianceInverse = covResult.inverse;
+    shrinkageAlpha = covResult.alpha;
+  }
+
+  // Update boundary radius
+  const boundaryRadius = computeBoundaryRadius(trimmedVectors, stats);
+
+  // Recalibrate periodically
+  const samplesSinceCal = (profile.samplesSinceLastCalibration || 0) + 1;
+  let calibration = profile.calibration;
+  let fusionWeights = profile.fusionWeights;
+  let fusionMethod = profile.fusionMethod;
+  let threshold = profile.threshold;
+  let thresholdConfidence = profile.thresholdConfidence;
+  let lastCalibration = profile.lastCalibration;
+
+  if (samplesSinceCal >= RECALIBRATION_INTERVAL) {
+    const calResult = leaveOneOutCalibration(trimmedVectors, profile.selectedFeatures);
+    calibration = calResult.calibration;
+    fusionWeights = calResult.fusionWeights;
+    fusionMethod = calResult.fusionMethod;
+    threshold = calResult.threshold;
+    thresholdConfidence = calResult.thresholdConfidence;
+    lastCalibration = new Date();
+  }
+
+  // Update v2 profile
+  biometric.v2Profile = {
+    ...profile,
+    means: stats.means,
+    medians: stats.medians,
+    stdDevs: stats.stdDevs,
+    mads: stats.mads,
+    madMedians: stats.madMedians,
+    rawVectors: trimmedVectors,
+    covarianceMatrix: covarianceMatrix || [],
+    covarianceInverse: covarianceInverse || [],
+    shrinkageAlpha: shrinkageAlpha || 0,
+    boundaryRadius,
+    calibration,
+    fusionWeights,
+    fusionMethod,
+    threshold,
+    thresholdConfidence,
+    samplesUsed: trimmedVectors.length,
+    lastUpdated: new Date(),
+    lastCalibration,
+    samplesSinceLastCalibration: samplesSinceCal >= RECALIBRATION_INTERVAL ? 0 : samplesSinceCal
+  };
+
+  biometric.updatedAt = new Date();
+  if (!biometric.metadata) biometric.metadata = {};
+  biometric.metadata.profileUpdates = (biometric.metadata.profileUpdates || 0) + 1;
+  biometric.metadata.lastProfileUpdate = new Date();
+
+  await biometric.save();
+
+  return {
+    updated: true,
+    driftDetected,
+    distance,
+    samplesUsed: trimmedVectors.length,
+    recalibrated: samplesSinceCal >= RECALIBRATION_INTERVAL,
+    profileVersion: biometric.profileVersions?.length || 0
+  };
 }
 
+// ── Migration: V1 → V2 ────────────────────────────────────────────
+
 /**
- * Update profile features using Exponential Weighted Moving Average
+ * Migrate a v1 profile to v2 by re-extracting features from stored samples.
  *
- * New_Mean = (1 - α) * Old_Mean + α * New_Value
- * where α is the learning rate
- *
- * @param {Object} currentProfile - Current biometric profile
- * @param {Object} newFeatures - New feature values
- * @param {number} alpha - Learning rate (0-1)
- * @returns {Object} Updated profile
+ * @param {string} userId
+ * @returns {object}
  */
-function updateWithEWMA(currentProfile, newFeatures, alpha) {
-    const updatedProfile = JSON.parse(JSON.stringify(currentProfile)); // Deep copy
+async function migrateToV2(userId) {
+  const biometric = await KeystrokeBiometrics.findOne({ userId });
+  if (!biometric) throw new Error('User not found');
 
-    // Update dwell time statistics
-    updatedProfile.dwellTime.mean = ewmaUpdate(
-        currentProfile.dwellTime.mean,
-        newFeatures.dwellTime.mean,
-        alpha
-    );
-    updatedProfile.dwellTime.stdDev = ewmaUpdate(
-        currentProfile.dwellTime.stdDev,
-        newFeatures.dwellTime.stdDev,
-        alpha
-    );
-    updatedProfile.dwellTime.median = ewmaUpdate(
-        currentProfile.dwellTime.median,
-        newFeatures.dwellTime.median,
-        alpha
-    );
-    updatedProfile.dwellTime.min = Math.min(
-        currentProfile.dwellTime.min,
-        newFeatures.dwellTime.min
-    );
-    updatedProfile.dwellTime.max = Math.max(
-        currentProfile.dwellTime.max,
-        newFeatures.dwellTime.max
-    );
+  if (biometric.profileVersion === 2) {
+    return { migrated: false, reason: 'Already on v2' };
+  }
 
-    // Update flight time statistics
-    updatedProfile.flightTime.mean = ewmaUpdate(
-        currentProfile.flightTime.mean,
-        newFeatures.flightTime.mean,
-        alpha
-    );
-    updatedProfile.flightTime.stdDev = ewmaUpdate(
-        currentProfile.flightTime.stdDev,
-        newFeatures.flightTime.stdDev,
-        alpha
-    );
-    updatedProfile.flightTime.median = ewmaUpdate(
-        currentProfile.flightTime.median,
-        newFeatures.flightTime.median,
-        alpha
-    );
-    updatedProfile.flightTime.min = Math.min(
-        currentProfile.flightTime.min,
-        newFeatures.flightTime.min
-    );
-    updatedProfile.flightTime.max = Math.max(
-        currentProfile.flightTime.max,
-        newFeatures.flightTime.max
-    );
+  const sampleCount = biometric.samples?.length || 0;
+  if (sampleCount < MIN_SAMPLES_FOR_PROFILE) {
+    return { migrated: false, reason: `Need ${MIN_SAMPLES_FOR_PROFILE} samples, have ${sampleCount}` };
+  }
 
-    // Update rhythm features
-    updatedProfile.rhythm.burstSpeed = ewmaUpdate(
-        currentProfile.rhythm.burstSpeed,
-        newFeatures.rhythm.burstSpeed,
-        alpha
-    );
-    updatedProfile.rhythm.pauseFrequency = ewmaUpdate(
-        currentProfile.rhythm.pauseFrequency,
-        newFeatures.rhythm.pauseFrequency,
-        alpha
-    );
-    updatedProfile.rhythm.pauseDuration = ewmaUpdate(
-        currentProfile.rhythm.pauseDuration,
-        newFeatures.rhythm.pauseDuration,
-        alpha
-    );
-    updatedProfile.rhythm.consistency = ewmaUpdate(
-        currentProfile.rhythm.consistency,
-        newFeatures.rhythm.consistency,
-        alpha
-    );
-
-    // Update error features
-    updatedProfile.errors.errorRate = ewmaUpdate(
-        currentProfile.errors.errorRate,
-        newFeatures.errors.errorRate,
-        alpha
-    );
-    updatedProfile.errors.avgTimingDiff = ewmaUpdate(
-        currentProfile.errors.avgTimingDiff,
-        newFeatures.errors.avgTimingDiff,
-        alpha
-    );
-
-    // Update digraph timings (if available)
-    if (currentProfile.digraphs && newFeatures.digraphs) {
-        updatedProfile.digraphs = {};
-        for (let digraph in currentProfile.digraphs) {
-            if (newFeatures.digraphs[digraph] !== undefined) {
-                updatedProfile.digraphs[digraph] = ewmaUpdate(
-                    currentProfile.digraphs[digraph],
-                    newFeatures.digraphs[digraph],
-                    alpha
-                );
-            } else {
-                updatedProfile.digraphs[digraph] = currentProfile.digraphs[digraph];
-            }
-        }
-    }
-
-    return updatedProfile;
+  const result = await buildProfile(userId);
+  return { migrated: result.built, ...result };
 }
 
-/**
- * EWMA calculation helper
- *
- * @param {number} oldValue - Previous value
- * @param {number} newValue - New observation
- * @param {number} alpha - Learning rate (0-1)
- * @returns {number} Updated value
- */
-function ewmaUpdate(oldValue, newValue, alpha) {
-    return (1 - alpha) * oldValue + alpha * newValue;
-}
+// ── Drift Detection ────────────────────────────────────────────────
 
 /**
- * Calculate Mahalanobis distance between new sample and profile
- * (Simplified version using normalized Euclidean distance)
+ * Detect concept drift by comparing oldest vs newest stored vectors.
  *
- * @param {Object} newFeatures - New feature values
- * @param {Object} profile - Current profile
- * @returns {number} Distance metric
- */
-function calculateMahalanobisDistance(newFeatures, profile) {
-    let sumSquaredDeviations = 0;
-    let featureCount = 0;
-
-    // Dwell time features
-    sumSquaredDeviations += Math.pow(
-        (newFeatures.dwellTime.mean - profile.dwellTime.mean) / (profile.dwellTime.stdDev + 0.001),
-        2
-    );
-    featureCount++;
-
-    // Flight time features
-    sumSquaredDeviations += Math.pow(
-        (newFeatures.flightTime.mean - profile.flightTime.mean) / (profile.flightTime.stdDev + 0.001),
-        2
-    );
-    featureCount++;
-
-    // Rhythm features
-    sumSquaredDeviations += Math.pow(
-        (newFeatures.rhythm.burstSpeed - profile.rhythm.burstSpeed) / (profile.rhythm.burstSpeed * 0.3 + 0.001),
-        2
-    );
-    sumSquaredDeviations += Math.pow(
-        (newFeatures.rhythm.consistency - profile.rhythm.consistency) / 30,
-        2
-    );
-    featureCount += 2;
-
-    // Calculate normalized distance
-    const distance = Math.sqrt(sumSquaredDeviations / featureCount);
-
-    return distance;
-}
-
-/**
- * Archive current profile version for rollback capability
- *
- * @param {Object} biometric - KeystrokeBiometrics document
- */
-function archiveProfileVersion(biometric) {
-    if (!biometric.profileVersions) {
-        biometric.profileVersions = [];
-    }
-
-    // Add current profile to version history
-    biometric.profileVersions.push({
-        version: biometric.profileVersions.length + 1,
-        profile: JSON.parse(JSON.stringify(biometric.profile)),
-        timestamp: new Date(),
-        samplesAtVersion: biometric.enrollmentProgress.samplesCollected
-    });
-
-    // Keep only last N versions
-    if (biometric.profileVersions.length > PROFILE_VERSION_LIMIT) {
-        biometric.profileVersions = biometric.profileVersions.slice(-PROFILE_VERSION_LIMIT);
-    }
-}
-
-/**
- * Update context-specific profiles (e.g., per device)
- *
- * @param {Object} biometric - KeystrokeBiometrics document
- * @param {Object} deviceInfo - Device context information
- * @param {Object} newFeatures - New feature values
- */
-function updateContextProfile(biometric, deviceInfo, newFeatures) {
-    if (!biometric.contextProfiles) {
-        biometric.contextProfiles = {};
-    }
-
-    const deviceId = deviceInfo.deviceType || 'unknown';
-
-    if (!biometric.contextProfiles[deviceId]) {
-        // Create new context profile
-        biometric.contextProfiles[deviceId] = {
-            deviceType: deviceId,
-            profile: newFeatures,
-            sampleCount: 1,
-            lastUpdated: new Date()
-        };
-    } else {
-        // Update existing context profile
-        const contextProfile = biometric.contextProfiles[deviceId];
-        contextProfile.profile = updateWithEWMA(
-            contextProfile.profile,
-            newFeatures,
-            LEARNING_RATE
-        );
-        contextProfile.sampleCount++;
-        contextProfile.lastUpdated = new Date();
-    }
-}
-
-/**
- * Log sudden change detection for security monitoring
- *
- * @param {string} userId - User ID
- * @param {number} distance - Distance metric
- * @param {Object} newFeatures - Features that triggered the alert
- */
-async function logSuddenChange(userId, distance, newFeatures) {
-    console.warn(`[SECURITY ALERT] Sudden change detected for user ${userId}`);
-    console.warn(`  Distance from profile: ${distance.toFixed(2)} (threshold: ${SUDDEN_CHANGE_THRESHOLD})`);
-    console.warn(`  New features:`, JSON.stringify(newFeatures, null, 2));
-
-    // TODO: Send alert to security monitoring system
-    // TODO: Notify user of unusual activity
-    // TODO: Require additional verification
-}
-
-/**
- * Detect concept drift over multiple samples
- *
- * @param {string} userId - User ID
- * @returns {Object} Drift analysis
+ * @param {string} userId
+ * @returns {object}
  */
 async function detectConceptDrift(userId) {
-    try {
-        const biometric = await KeystrokeBiometrics.findOne({ userId });
+  const biometric = await KeystrokeBiometrics.findOne({ userId });
+  if (!biometric || !biometric.v2Profile?.rawVectors || biometric.v2Profile.rawVectors.length < 20) {
+    return { driftDetected: false, reason: 'Insufficient data for drift detection' };
+  }
 
-        if (!biometric || !biometric.profileVersions || biometric.profileVersions.length < 2) {
-            return {
-                driftDetected: false,
-                reason: 'Insufficient profile history'
-            };
-        }
+  const vectors = biometric.v2Profile.rawVectors;
+  const n = vectors.length;
+  const oldSlice = vectors.slice(0, 10);
+  const newSlice = vectors.slice(n - 10);
 
-        const versions = biometric.profileVersions;
-        const firstVersion = versions[0].profile;
-        const latestVersion = versions[versions.length - 1].profile;
+  // Compute mean of each slice
+  const p = vectors[0].length;
+  const oldMean = new Array(p).fill(0);
+  const newMean = new Array(p).fill(0);
 
-        // Calculate drift between first and latest versions
-        const drift = calculateMahalanobisDistance(latestVersion, firstVersion);
-
-        return {
-            driftDetected: drift > DRIFT_THRESHOLD,
-            driftMagnitude: drift,
-            threshold: DRIFT_THRESHOLD,
-            versionCount: versions.length,
-            timeSpan: new Date() - versions[0].timestamp
-        };
-
-    } catch (error) {
-        console.error('Error detecting concept drift:', error);
-        throw error;
+  for (let i = 0; i < 10; i++) {
+    for (let f = 0; f < p; f++) {
+      oldMean[f] += oldSlice[i][f] / 10;
+      newMean[f] += newSlice[i][f] / 10;
     }
+  }
+
+  // Compute MAD from the full profile
+  const mads = biometric.v2Profile.mads;
+
+  // Scaled Manhattan distance between old and new means
+  let sum = 0;
+  let count = 0;
+  for (let f = 0; f < p; f++) {
+    if (mads[f] < 1e-10) continue;
+    sum += Math.abs(newMean[f] - oldMean[f]) / mads[f];
+    count++;
+  }
+  const driftMagnitude = count > 0 ? sum / count : 0;
+
+  return {
+    driftDetected: driftMagnitude > DRIFT_THRESHOLD,
+    driftMagnitude,
+    threshold: DRIFT_THRESHOLD,
+    vectorCount: n
+  };
 }
 
+// ── Profile Rollback ───────────────────────────────────────────────
+
 /**
- * Rollback profile to a previous version
+ * Rollback profile to a previous version.
  *
- * @param {string} userId - User ID
- * @param {number} version - Version number to rollback to (default: previous version)
- * @returns {Object} Rollback result
+ * @param {string} userId
+ * @param {number|null} version - Version number (null = latest archived)
+ * @returns {object}
  */
 async function rollbackProfile(userId, version = null) {
-    try {
-        const biometric = await KeystrokeBiometrics.findOne({ userId });
+  const biometric = await KeystrokeBiometrics.findOne({ userId });
+  if (!biometric || !biometric.profileVersions?.length) {
+    throw new Error('No profile versions available for rollback');
+  }
 
-        if (!biometric || !biometric.profileVersions || biometric.profileVersions.length === 0) {
-            throw new Error('No profile versions available for rollback');
-        }
+  let targetVersion;
+  if (version === null) {
+    targetVersion = biometric.profileVersions[biometric.profileVersions.length - 1];
+  } else {
+    targetVersion = biometric.profileVersions.find(v => v.version === version);
+    if (!targetVersion) throw new Error(`Version ${version} not found`);
+  }
 
-        let targetVersion;
-        if (version === null) {
-            // Rollback to previous version
-            targetVersion = biometric.profileVersions[biometric.profileVersions.length - 1];
-        } else {
-            // Rollback to specific version
-            targetVersion = biometric.profileVersions.find(v => v.version === version);
-            if (!targetVersion) {
-                throw new Error(`Version ${version} not found`);
-            }
-        }
+  // Restore v1 profile (for backward compat)
+  if (targetVersion.profile) {
+    biometric.profile = targetVersion.profile;
+  }
 
-        // Restore profile
-        biometric.profile = targetVersion.profile;
-        biometric.lastUpdated = new Date();
+  // If the archived version has v2 data, restore that too
+  if (targetVersion.v2Profile) {
+    biometric.v2Profile = targetVersion.v2Profile;
+  }
 
-        // Log rollback
-        if (!biometric.metadata) {
-            biometric.metadata = {};
-        }
-        biometric.metadata.lastRollback = {
-            timestamp: new Date(),
-            toVersion: targetVersion.version,
-            reason: 'Manual rollback'
-        };
+  biometric.updatedAt = new Date();
+  if (!biometric.metadata) biometric.metadata = {};
+  biometric.metadata.lastRollback = {
+    timestamp: new Date(),
+    toVersion: targetVersion.version,
+    reason: 'Manual rollback'
+  };
 
-        await biometric.save();
+  await biometric.save();
 
-        return {
-            success: true,
-            restoredVersion: targetVersion.version,
-            timestamp: targetVersion.timestamp
-        };
-
-    } catch (error) {
-        console.error('Error rolling back profile:', error);
-        throw error;
-    }
+  return {
+    success: true,
+    restoredVersion: targetVersion.version,
+    timestamp: targetVersion.timestamp
+  };
 }
 
+// ── Learning Stats ─────────────────────────────────────────────────
+
 /**
- * Get adaptive learning statistics for a user
+ * Get adaptive learning statistics for a user.
  *
- * @param {string} userId - User ID
- * @returns {Object} Learning statistics
+ * @param {string} userId
+ * @returns {object}
  */
 async function getLearningStats(userId) {
-    try {
-        const biometric = await KeystrokeBiometrics.findOne({ userId });
+  const biometric = await KeystrokeBiometrics.findOne({ userId });
+  if (!biometric) throw new Error('User not found');
 
-        if (!biometric) {
-            throw new Error('User not found');
-        }
+  const driftAnalysis = await detectConceptDrift(userId);
+  const isV2 = biometric.profileVersion === 2;
 
-        const driftAnalysis = await detectConceptDrift(userId);
+  return {
+    enrolled: biometric.isEnrolled(),
+    profileVersion: isV2 ? 2 : 1,
+    totalSamples: biometric.enrollmentProgress?.samplesCollected || 0,
+    profileUpdates: biometric.metadata?.profileUpdates || 0,
+    lastUpdate: biometric.metadata?.lastProfileUpdate || biometric.updatedAt,
+    profileVersions: biometric.profileVersions?.length || 0,
+    driftDetected: driftAnalysis.driftDetected,
+    driftMagnitude: driftAnalysis.driftMagnitude,
+    lastRollback: biometric.metadata?.lastRollback || null,
+    // V2-specific stats
+    v2: isV2 ? {
+      featuresSelected: biometric.v2Profile?.selectedFeatures?.length || 0,
+      rawVectors: biometric.v2Profile?.rawVectors?.length || 0,
+      threshold: biometric.v2Profile?.threshold,
+      thresholdConfidence: biometric.v2Profile?.thresholdConfidence,
+      fusionMethod: biometric.v2Profile?.fusionMethod,
+      lastCalibration: biometric.v2Profile?.lastCalibration
+    } : null
+  };
+}
 
-        return {
-            enrolled: biometric.isEnrolled(),
-            totalSamples: biometric.enrollmentProgress.samplesCollected,
-            profileUpdates: biometric.metadata?.profileUpdates || 0,
-            lastUpdate: biometric.metadata?.lastProfileUpdate || biometric.lastUpdated,
-            profileVersions: biometric.profileVersions?.length || 0,
-            learningRate: LEARNING_RATE,
-            driftDetected: driftAnalysis.driftDetected,
-            driftMagnitude: driftAnalysis.driftMagnitude,
-            contextProfiles: Object.keys(biometric.contextProfiles || {}).length,
-            lastRollback: biometric.metadata?.lastRollback || null
-        };
+// ── Helpers ────────────────────────────────────────────────────────
 
-    } catch (error) {
-        console.error('Error getting learning stats:', error);
-        throw error;
-    }
+function archiveProfileVersion(biometric) {
+  if (!biometric.profileVersions) biometric.profileVersions = [];
+
+  const archive = {
+    version: biometric.profileVersions.length + 1,
+    timestamp: new Date(),
+    samplesAtVersion: biometric.enrollmentProgress?.samplesCollected || 0
+  };
+
+  // Archive v1 profile if it exists
+  if (biometric.profile && biometric.profile.dwellTime) {
+    archive.profile = JSON.parse(JSON.stringify(biometric.profile));
+  }
+
+  biometric.profileVersions.push(archive);
+
+  // Trim to limit
+  if (biometric.profileVersions.length > PROFILE_VERSION_LIMIT) {
+    biometric.profileVersions = biometric.profileVersions.slice(-PROFILE_VERSION_LIMIT);
+  }
 }
 
 module.exports = {
-    updateProfile,
-    updateWithEWMA,
-    detectConceptDrift,
-    rollbackProfile,
-    getLearningStats,
-    LEARNING_RATE,
-    DRIFT_THRESHOLD,
-    SUDDEN_CHANGE_THRESHOLD
+  buildProfile,
+  updateProfile,
+  migrateToV2,
+  detectConceptDrift,
+  rollbackProfile,
+  getLearningStats,
+  DRIFT_THRESHOLD,
+  SUDDEN_CHANGE_THRESHOLD,
+  MIN_SAMPLES_FOR_PROFILE,
+  RECALIBRATION_INTERVAL
 };
