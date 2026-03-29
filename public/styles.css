@@ -1313,6 +1313,7 @@ select option[selected] {
     left: 40px;
     z-index: 100;
     pointer-events: none;
+    transition: top 0.3s ease;
 }
 
 .brand-text {
