@@ -11,7 +11,7 @@ const dataExportService = require('../services/dataExportService');
 exports.submitSample = async (req, res) => {
   try {
     // Check if user is authenticated
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -29,7 +29,7 @@ exports.submitSample = async (req, res) => {
     }
 
     // Get or create biometric record
-    let biometric = await KeystrokeBiometrics.getOrCreate(req.session.userId);
+    let biometric = await KeystrokeBiometrics.getOrCreate(req.userId);
 
     // Check if user has opted out
     if (biometric.optOut) {
@@ -113,18 +113,18 @@ exports.submitSample = async (req, res) => {
       try {
         if (biometric.profileVersion !== 2) {
           // First-time v2 profile build
-          await adaptiveLearningService.buildProfile(req.session.userId);
+          await adaptiveLearningService.buildProfile(req.userId);
         } else {
           // Incremental v2 update
           await adaptiveLearningService.updateProfile(
-            req.session.userId,
+            req.userId,
             { keystrokes },
             true
           );
         }
 
         // Reload biometric
-        biometric = await KeystrokeBiometrics.findOne({ userId: req.session.userId });
+        biometric = await KeystrokeBiometrics.findOne({ userId: req.userId });
 
         // Verify using v2 pipeline if enrolled
         if (biometric.profileVersion === 2 && biometric.v2Profile?.enrollmentComplete) {
@@ -176,7 +176,7 @@ exports.submitSample = async (req, res) => {
  */
 exports.giveConsent = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -185,7 +185,7 @@ exports.giveConsent = async (req, res) => {
 
     const { researchConsent } = req.body;
 
-    let biometric = await KeystrokeBiometrics.getOrCreate(req.session.userId);
+    let biometric = await KeystrokeBiometrics.getOrCreate(req.userId);
 
     biometric.consent = {
       given: true,
@@ -217,7 +217,7 @@ exports.giveConsent = async (req, res) => {
  */
 exports.optOut = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -226,7 +226,7 @@ exports.optOut = async (req, res) => {
 
     const { deleteData } = req.body;
 
-    let biometric = await KeystrokeBiometrics.findOne({ userId: req.session.userId });
+    let biometric = await KeystrokeBiometrics.findOne({ userId: req.userId });
 
     if (!biometric) {
       return res.status(404).json({
@@ -269,14 +269,14 @@ exports.optOut = async (req, res) => {
  */
 exports.getProfile = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
       });
     }
 
-    const biometric = await KeystrokeBiometrics.findOne({ userId: req.session.userId });
+    const biometric = await KeystrokeBiometrics.findOne({ userId: req.userId });
 
     if (!biometric) {
       return res.json({
@@ -307,7 +307,7 @@ exports.getProfile = async (req, res) => {
  */
 exports.verify = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -323,7 +323,7 @@ exports.verify = async (req, res) => {
       });
     }
 
-    const biometric = await KeystrokeBiometrics.findOne({ userId: req.session.userId });
+    const biometric = await KeystrokeBiometrics.findOne({ userId: req.userId });
 
     if (!biometric || !biometric.isEnrolled()) {
       return res.status(403).json({
@@ -335,8 +335,8 @@ exports.verify = async (req, res) => {
     // Auto-migrate to v2 if needed
     if (biometric.profileVersion !== 2 && biometric.samples?.length >= 10) {
       try {
-        await adaptiveLearningService.buildProfile(req.session.userId);
-        biometric = await KeystrokeBiometrics.findOne({ userId: req.session.userId });
+        await adaptiveLearningService.buildProfile(req.userId);
+        biometric = await KeystrokeBiometrics.findOne({ userId: req.userId });
       } catch (e) {
         console.error('V2 migration failed:', e.message);
       }
@@ -387,14 +387,14 @@ exports.verify = async (req, res) => {
  */
 exports.getAuthHistory = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
       });
     }
 
-    const biometric = await KeystrokeBiometrics.findOne({ userId: req.session.userId });
+    const biometric = await KeystrokeBiometrics.findOne({ userId: req.userId });
 
     if (!biometric) {
       return res.json({
@@ -434,14 +434,14 @@ exports.getAuthHistory = async (req, res) => {
  */
 exports.deleteData = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
       });
     }
 
-    const result = await KeystrokeBiometrics.deleteOne({ userId: req.session.userId });
+    const result = await KeystrokeBiometrics.deleteOne({ userId: req.userId });
 
     res.json({
       success: true,
@@ -464,7 +464,7 @@ exports.deleteData = async (req, res) => {
 exports.getEnrollmentStats = async (req, res) => {
   try {
     // TODO: Add admin authentication check
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -492,14 +492,14 @@ exports.getEnrollmentStats = async (req, res) => {
  */
 exports.getAdaptiveLearningStats = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
       });
     }
 
-    const stats = await adaptiveLearningService.getLearningStats(req.session.userId);
+    const stats = await adaptiveLearningService.getLearningStats(req.userId);
 
     res.json({
       success: true,
@@ -520,7 +520,7 @@ exports.getAdaptiveLearningStats = async (req, res) => {
  */
 exports.rollbackProfile = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -530,7 +530,7 @@ exports.rollbackProfile = async (req, res) => {
     const { version } = req.body;
 
     const result = await adaptiveLearningService.rollbackProfile(
-      req.session.userId,
+      req.userId,
       version || null
     );
 
@@ -554,7 +554,7 @@ exports.rollbackProfile = async (req, res) => {
  */
 exports.exportDataCSV = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -566,7 +566,7 @@ exports.exportDataCSV = async (req, res) => {
       anonymize: req.query.anonymize === 'true'
     };
 
-    const csvData = await dataExportService.exportAsCSV(req.session.userId, options);
+    const csvData = await dataExportService.exportAsCSV(req.userId, options);
 
     // Set headers for file download
     res.setHeader('Content-Type', 'text/csv');
@@ -587,7 +587,7 @@ exports.exportDataCSV = async (req, res) => {
  */
 exports.exportDataJSON = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -600,7 +600,7 @@ exports.exportDataJSON = async (req, res) => {
       anonymize: req.query.anonymize === 'true'
     };
 
-    const jsonData = await dataExportService.exportAsJSON(req.session.userId, options);
+    const jsonData = await dataExportService.exportAsJSON(req.userId, options);
 
     // Set headers for file download
     res.setHeader('Content-Type', 'application/json');
@@ -621,7 +621,7 @@ exports.exportDataJSON = async (req, res) => {
  */
 exports.generateResearchDataset = async (req, res) => {
   try {
-    if (!req.session.userId) {
+    if (!req.userId) {
       return res.status(401).json({
         success: false,
         message: 'Authentication required'

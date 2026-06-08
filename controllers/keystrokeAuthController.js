@@ -21,7 +21,7 @@ const bcrypt = require('bcryptjs');
  */
 exports.getEnrollmentStatus = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
 
         // Get or create biometric record
         let biometric = await KeystrokeBiometrics.findOne({ userId });
@@ -96,7 +96,7 @@ exports.getEnrollmentStatus = async (req, res) => {
  */
 exports.submitSample = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
         const { passage, passageLength, keystrokes, deviceInfo, gameId, source } = req.body;
 
         // Validation
@@ -263,7 +263,7 @@ exports.submitSample = async (req, res) => {
  */
 exports.verifyTest = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
         const { passage, keystrokes, mode } = req.body;
 
         // Validation
@@ -367,7 +367,7 @@ exports.verifyTest = async (req, res) => {
  */
 exports.createImpostorChallenge = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
         const { passageLength } = req.body;
 
         // Check user has sufficient training
@@ -602,7 +602,7 @@ exports.getImpostorLeaderboard = async (req, res) => {
  */
 exports.enableBiometricAuth = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
 
         const biometric = await KeystrokeBiometrics.findOne({ userId });
 
@@ -638,7 +638,7 @@ exports.enableBiometricAuth = async (req, res) => {
  */
 exports.disableBiometricAuth = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
 
         const biometric = await KeystrokeBiometrics.findOne({ userId });
 
@@ -672,7 +672,7 @@ exports.disableBiometricAuth = async (req, res) => {
  */
 exports.getPasswordStatus = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
         const biometric = await KeystrokeBiometrics.findOne({ userId });
 
         const pp = biometric && biometric.passwordProfile;
@@ -707,7 +707,7 @@ exports.getPasswordStatus = async (req, res) => {
  */
 exports.setKeystrokePassword = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
         const { password } = req.body;
 
         if (!password || password.length < 4) {
@@ -763,7 +763,7 @@ exports.setKeystrokePassword = async (req, res) => {
  */
 exports.trainPassword = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
         const { dwellTimes, flightTimes, speed } = req.body;
 
         if (!dwellTimes || !flightTimes || !speed) {
@@ -850,7 +850,7 @@ exports.trainPassword = async (req, res) => {
  */
 exports.verifyPassword = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.userId;
         const { password, dwellTimes, flightTimes } = req.body;
 
         if (!password || !dwellTimes || !flightTimes) {
