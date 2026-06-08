@@ -1,7 +1,9 @@
 .venv/
 __pycache__/
 *.pyc
-# Real CMU dataset (downloaded separately, not committed)
-data/
+# Real CMU dataset (downloaded separately, not committed).
+# Anchored with leading slash so it matches ONLY research/data/,
+# NOT the ksbio/data/ loader package.
+/data/
 *.csv
 !tests/fixtures/*.csv
