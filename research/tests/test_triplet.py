@@ -30,3 +30,35 @@ def test_center_loss_shrinks_intra_class_spread():
     tight = center_loss(torch.tensor([[1.0, 0.0], [1.0, 0.0]]),
                         torch.tensor([0, 0]))
     assert tight.item() < 1e-6
+
+def test_degenerate_batch_returns_backpropable_zero():
+    # No two samples share a label -> no valid triplets. Loss must be exactly 0
+    # AND remain connected to the autograd graph so training never crashes on a
+    # degenerate batch. (Guards the emb.sum()*0.0 idiom against being replaced
+    # by a detached torch.tensor(0.0).)
+    emb = torch.randn(4, 8, requires_grad=True)
+    loss = batch_hard_triplet_loss(emb, torch.tensor([0, 1, 2, 3]), margin=0.2)
+    assert loss.item() == 0.0
+    loss.backward()  # must not raise
+    assert emb.grad is not None
+
+def test_gradient_flows_in_normal_case():
+    # A batch with real positives and negatives must produce nonzero gradients,
+    # i.e. the loss can actually train the encoder.
+    set_global_seed(0)
+    emb = torch.nn.functional.normalize(
+        torch.randn(6, 8), dim=1).detach().requires_grad_(True)
+    labels = torch.tensor([0, 0, 1, 1, 2, 2])
+    loss = batch_hard_triplet_loss(emb, labels, margin=0.2)
+    loss.backward()
+    assert emb.grad is not None
+    assert float(emb.grad.abs().sum()) > 0.0
+
+def test_margin_is_monotonic():
+    # Larger margin -> larger (or equal) loss for the same embeddings.
+    set_global_seed(1)
+    emb = torch.nn.functional.normalize(torch.randn(6, 8), dim=1)
+    labels = torch.tensor([0, 0, 1, 1, 2, 2])
+    l_small = batch_hard_triplet_loss(emb, labels, margin=0.1)
+    l_big = batch_hard_triplet_loss(emb, labels, margin=0.5)
+    assert float(l_big) >= float(l_small)
