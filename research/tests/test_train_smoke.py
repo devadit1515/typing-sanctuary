@@ -30,4 +30,30 @@ def test_training_is_deterministic_with_fixed_seed():
     data = _toy_dataset()
     _, h1 = train_encoder(data, cfg)
     _, h2 = train_encoder(data, cfg)
-    assert abs(h1["loss"][-1] - h2["loss"][-1]) < 1e-6
+    # The reproducibility guarantee is bit-identical FULL trajectory, not just
+    # the endpoint — exact equality across all epochs.
+    assert h1["loss"] == h2["loss"]
+
+def test_training_separates_subjects_in_embedding_space():
+    # Stronger than loss-trends-down: a COLLAPSED encoder (all embeddings equal)
+    # would drive loss down but is useless. Assert the trained encoder actually
+    # separates subjects: mean within-subject distance < mean between-subject.
+    cfg = TrainConfig(embed_dim=32, epochs=8, batch_subjects=4,
+                      samples_per_subject=3, lr=1e-2, seed=42)
+    data = _toy_dataset(n_subjects=4, reps=6, n=8)
+    enc, _ = train_encoder(data, cfg)
+    # embed every sample
+    embs, labels = [], []
+    with torch.no_grad():
+        for feats, cids, length, lab in data:
+            z = enc(feats.unsqueeze(0), cids.unsqueeze(0), torch.tensor([length]))
+            embs.append(z.squeeze(0)); labels.append(lab)
+    embs = torch.stack(embs)
+    labels = torch.tensor(labels)
+    # pairwise euclidean distances
+    d = torch.cdist(embs, embs)
+    same = labels.unsqueeze(0) == labels.unsqueeze(1)
+    eye = torch.eye(len(labels), dtype=torch.bool)
+    intra = d[same & ~eye].mean()
+    inter = d[~same].mean()
+    assert intra < inter, f"encoder did not separate subjects: intra={intra:.4f} inter={inter:.4f}"
