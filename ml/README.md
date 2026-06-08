@@ -1,4 +1,11 @@
-# Machine Learning Models for Keystroke Biometric Authentication
+# [LEGACY — superseded] Early scikit-learn keystroke experiments
+
+> **This directory is LEGACY.** It predates the approved design spec and is NOT
+> the production model. The live, content-independent metric-learning model and
+> its reproducible training live in `research/` (see
+> `docs/superpowers/specs/2026-06-08-keystroke-verification-design.md`). These
+> files are retained only as a simple sklearn baseline-of-a-baseline for
+> comparison. Nothing here is wired into the app.
 
 ## Setup
 
@@ -90,13 +97,9 @@ print(f"Anomaly Score: {result['anomaly_score']}")
 ```
 
 ## Performance Metrics
-
-- **FAR (False Acceptance Rate)**: % of impostors incorrectly accepted
-- **FRR (False Rejection Rate)**: % of authentic users incorrectly rejected
-- **EER (Equal Error Rate)**: Point where FAR = FRR (lower is better)
-- **AUC (Area Under Curve)**: Overall model performance (higher is better)
-
-**Target**: EER < 5%, AUC > 0.95
+FAR / FRR / EER / AUC are defined as usual. **No accuracy numbers are claimed
+here** — any real measurement is produced by `research/ksbio/evaluate.py` on a
+public benchmark, never hardcoded.
 
 ## 100% Free
 All libraries are open-source and free to use!
