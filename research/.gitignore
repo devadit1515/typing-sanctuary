@@ -1,3 +1,7 @@
 .venv/
 __pycache__/
 *.pyc
+# Real CMU dataset (downloaded separately, not committed)
+data/
+*.csv
+!tests/fixtures/*.csv
