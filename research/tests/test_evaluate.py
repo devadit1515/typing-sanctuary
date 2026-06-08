@@ -27,3 +27,19 @@ def test_eer_is_between_zero_and_one():
     imp_feats, imp_cids = _seq_batch(8, shift=5.0)
     eer, thr = eer_for_subject(enc, gen_feats, gen_cids, imp_feats, imp_cids)
     assert 0.0 <= eer <= 1.0
+    # separable genuine/impostor MUST yield a low EER (the eval discriminates)
+    assert eer < 0.15
+
+def test_identical_distributions_give_chance_eer():
+    from ksbio.featurize import TIMING_FEATURES, MAX_CHAR_ID
+    set_global_seed(0)
+    enc = KeystrokeEncoder(embed_dim=32).eval()
+    # genuine and impostor: SAME distribution (shift 0), DIFFERENT samples
+    set_global_seed(1)
+    gen_feats = [torch.randn(6, TIMING_FEATURES) * 0.01 for _ in range(10)]
+    gen_cids = [torch.randint(1, MAX_CHAR_ID, (6,)) for _ in range(10)]
+    set_global_seed(2)
+    imp_feats = [torch.randn(6, TIMING_FEATURES) * 0.01 for _ in range(10)]
+    imp_cids = [torch.randint(1, MAX_CHAR_ID, (6,)) for _ in range(10)]
+    eer, _ = eer_for_subject(enc, gen_feats, gen_cids, imp_feats, imp_cids)
+    assert 0.3 <= eer <= 0.7, f"identical dists should give ~chance EER, got {eer}"
