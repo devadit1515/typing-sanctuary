@@ -21,6 +21,42 @@ from ksbio.evaluate import eer_for_subject
 from ksbio.artifact import save_artifact, ArtifactMeta
 
 
+# Real CMU key labels (as they appear in DSL-StrongPasswordData.csv column names),
+# in typed order, paired with the printable chars row_to_sequence expects.
+_CMU_KEY_LABELS = ["period", "t", "i", "e", "five", "Shift.r", "o", "a", "n", "l", "Return"]
+_CMU_LABEL_TO_CHAR = {"period": ".", "t": "t", "i": "i", "e": "e", "five": "5",
+                      "Shift.r": "R", "o": "o", "a": "a", "n": "n", "l": "l",
+                      "Return": "\n"}
+
+
+def remap_cmu_columns(row):
+    """Translate a raw CMU CSV row (key-NAME columns like H.period, DD.period.t,
+    H.Shift.r, H.Return) into the printable-char column names row_to_sequence
+    expects (H.., DD...t, H.R, H.<newline>). Returns a new dict. Non-timing
+    columns (subject, sessionIndex, rep) are passed through unchanged so the
+    caller can still read row['subject']."""
+    out = {}
+    labels = _CMU_KEY_LABELS
+    # passthrough non-timing fields
+    for k in ("subject", "sessionIndex", "rep"):
+        if k in row:
+            out[k] = row[k]
+    for i, lab in enumerate(labels):
+        ch = _CMU_LABEL_TO_CHAR[lab]
+        # hold: H.<label> -> H.<char>
+        if f"H.{lab}" in row:
+            out[f"H.{ch}"] = row[f"H.{lab}"]
+        # latencies to the next key: DD.<lab>.<next>, UD.<lab>.<next>
+        if i < len(labels) - 1:
+            nxt = labels[i + 1]
+            nch = _CMU_LABEL_TO_CHAR[labels[i + 1]]
+            if f"DD.{lab}.{nxt}" in row:
+                out[f"DD.{ch}.{nch}"] = row[f"DD.{lab}.{nxt}"]
+            if f"UD.{lab}.{nxt}" in row:
+                out[f"UD.{ch}.{nch}"] = row[f"UD.{lab}.{nxt}"]
+    return out
+
+
 @dataclass
 class Phase1Args:
     csv_path: str
@@ -53,7 +89,7 @@ def _samples_from_csv(csv_path, seed):
         with open(csv_path, newline="") as f:
             for row in _csv.DictReader(f):
                 subj = row["subject"]
-                seq = row_to_sequence(row)
+                seq = row_to_sequence(remap_cmu_columns(row))
                 feats, cids = featurize_window(seq)
                 _add(samples, by_subject, labels, subj, feats, cids)
     else:
