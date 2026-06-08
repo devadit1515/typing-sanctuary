@@ -16,9 +16,20 @@ class ArtifactMeta:
     config: dict
     timing_features: int
     max_char_id: int
+    char_emb: int = 16
+    cnn_ch: int = 64
+    gru_hidden: int = 64
 
 
 def save_artifact(path, encoder: KeystrokeEncoder, meta: ArtifactMeta):
+    """Persist encoder weights + metadata to `path`.
+
+    `meta` MUST reflect the encoder's actual architecture
+    (embed_dim/char_emb/cnn_ch/gru_hidden), because `load_artifact`
+    reconstructs the encoder from `meta` alone and then loads the weights.
+    A mismatch would crash at `load_state_dict` (size mismatch) or, worse,
+    silently serve a different network.
+    """
     torch.save({"state_dict": encoder.state_dict(), "meta": asdict(meta)}, path)
 
 
@@ -36,7 +47,8 @@ def load_artifact(path):
             f"Artifact feature spec mismatch: artifact "
             f"(T={meta.timing_features}, V={meta.max_char_id}) vs runtime "
             f"(T={TIMING_FEATURES}, V={MAX_CHAR_ID}). Re-train or re-deploy.")
-    enc = KeystrokeEncoder(embed_dim=meta.embed_dim)
+    enc = KeystrokeEncoder(embed_dim=meta.embed_dim, char_emb=meta.char_emb,
+                           cnn_ch=meta.cnn_ch, gru_hidden=meta.gru_hidden)
     enc.load_state_dict(blob["state_dict"])
     enc.eval()
     return enc, meta

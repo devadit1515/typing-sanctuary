@@ -20,6 +20,7 @@ def test_round_trip_preserves_weights_and_meta(tmp_path):
     assert meta2.version == "cmu-test"
     assert meta2.embed_dim == 32
     assert meta2.git_commit == "abc123"
+    assert meta2.config == {"epochs": 1}
     # weights identical -> identical output
     feats = torch.randn(1, 5, TIMING_FEATURES)
     cids = torch.randint(0, MAX_CHAR_ID, (1, 5))
@@ -27,7 +28,7 @@ def test_round_trip_preserves_weights_and_meta(tmp_path):
     with torch.no_grad():
         a = enc(feats, cids, lengths)
         b = enc2(feats, cids, lengths)
-    assert torch.allclose(a, b, atol=1e-6)
+    assert torch.allclose(a, b, atol=0.0)
 
 def test_load_rejects_feature_spec_mismatch(tmp_path):
     enc = _enc()
@@ -60,3 +61,24 @@ def test_load_uses_weights_only_safe_unpickling(tmp_path, monkeypatch):
     monkeypatch.setattr(artifact_mod.torch, "load", _spy)
     artifact_mod.load_artifact(path)
     assert seen["weights_only"] is True
+
+def test_non_default_architecture_round_trips(tmp_path):
+    # Before the fix, load_artifact passed only embed_dim, so a non-default
+    # char_emb/cnn_ch/gru_hidden would crash at load_state_dict (size mismatch).
+    # Now the full architecture is captured in meta and reconstructed.
+    set_global_seed(0)
+    enc = KeystrokeEncoder(embed_dim=48, char_emb=8, cnn_ch=32, gru_hidden=24)
+    meta = ArtifactMeta(version="arch-test", embed_dim=48, git_commit="x",
+                        config={}, timing_features=TIMING_FEATURES,
+                        max_char_id=MAX_CHAR_ID, char_emb=8, cnn_ch=32,
+                        gru_hidden=24)
+    path = os.path.join(tmp_path, "arch.pt")
+    save_artifact(path, enc, meta)
+    enc2, meta2 = load_artifact(path)  # must NOT raise
+    assert meta2.char_emb == 8 and meta2.cnn_ch == 32 and meta2.gru_hidden == 24
+    feats = torch.randn(1, 5, TIMING_FEATURES)
+    cids = torch.randint(0, MAX_CHAR_ID, (1, 5))
+    with torch.no_grad():
+        a = enc(feats, cids, torch.tensor([5]))
+        b = enc2(feats, cids, torch.tensor([5]))
+    assert torch.allclose(a, b, atol=0.0)
