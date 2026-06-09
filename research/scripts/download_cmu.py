@@ -12,9 +12,13 @@ import urllib.request
 DATA_REL_PATH = os.path.join("data", "cmu", "DSL-StrongPasswordData.csv")
 # Public mirror; if it 404s, follow the manual instructions printed below.
 CMU_URL = "https://www.cs.cmu.edu/~keystroke/DSL-StrongPasswordData.csv"
-# Known digest of the canonical CSV. If the upstream file legitimately changes,
-# update this constant in the SAME commit that records why.
-EXPECTED_SHA256 = "REPLACE_WITH_MEASURED_DIGEST"
+# Known digest of the canonical CSV, measured 2026-06-09 from the official CMU
+# mirror (https://www.cs.cmu.edu/~keystroke/DSL-StrongPasswordData.csv). Verified
+# to be the real dataset by structure: 20,400 data rows (51 subjects x 400 reps),
+# header carries the .tie5Roanl key-name columns (H.period ... H.Shift.r ...
+# H.Return). If the upstream file legitimately changes, update this constant in
+# the SAME commit that records why.
+EXPECTED_SHA256 = "b11d23538b1865fa6ecf4e8b78567caa312e9c1027604bb022fcc6ad7eaa7a33"
 
 MANUAL = (
     "Manual download:\n"

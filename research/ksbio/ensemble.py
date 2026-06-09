@@ -37,12 +37,17 @@ def ledoit_wolf_shrinkage(samples):
     xc = x - mean
     s = (xc.T @ xc) / (n - 1 if n > 1 else 1)
     mu = np.trace(s) / p
-    pi_sum = 0.0
-    for i in range(n):
-        outer = np.outer(xc[i], xc[i])
-        diff = outer - s
-        pi_sum += np.sum(diff * diff)
-    pi_sum /= (n * n)
+    # pi_sum = (1/n^2) * sum_i || outer(xc_i, xc_i) - s ||_F^2, vectorized.
+    # Expanding the Frobenius norm per sample:
+    #   ||outer_i - s||_F^2 = ||outer_i||_F^2 - 2<outer_i, s> + ||s||_F^2
+    #   ||outer_i||_F^2 = (xc_i . xc_i)^2 ;  <outer_i, s> = xc_i^T s xc_i
+    # This is mathematically identical to the prior per-sample Python loop but
+    # avoids constructing n separate p×p outer products (the eval hot path).
+    sq_norms = np.einsum("ij,ij->i", xc, xc)            # xc_i . xc_i
+    outer_fro = sq_norms ** 2                            # ||outer_i||_F^2
+    cross = np.einsum("ij,jk,ik->i", xc, s, xc)          # xc_i^T s xc_i
+    s_fro = np.sum(s * s)                                # ||s||_F^2 (const)
+    pi_sum = float(np.sum(outer_fro - 2.0 * cross + s_fro)) / (n * n)
     target = mu * np.eye(p)
     gamma = np.sum((s - target) ** 2)
     alpha = min(1.0, pi_sum / gamma) if gamma > 0 else 1.0

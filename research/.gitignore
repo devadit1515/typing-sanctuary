@@ -7,3 +7,12 @@ __pycache__/
 /data/
 *.csv
 !tests/fixtures/*.csv
+
+# Artifacts directory: commit the small, human-reviewable EVIDENCE files
+# (metrics.json, figures, problem log) that the CREST report cites, but NOT the
+# mechanically-regenerable bulk — model weights and raw score dumps are rebuilt
+# by reproduce.ps1 from the pinned dataset SHA + seed, and would bloat the repo
+# / risk the 500 MB CREST upload cap.
+/artifacts/*.pt
+/artifacts/scores.json
+/artifacts/_*               # scratch artifacts (e.g. _smoke.pt)
