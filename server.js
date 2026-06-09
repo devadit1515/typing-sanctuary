@@ -36,6 +36,7 @@ const passwordResetRoutes = require('./routes/passwordResetRoutes');
 const friendsRoutes = require('./routes/friendsRoutes');
 const biometricRoutes = require('./routes/biometricRoutes');
 const keystrokeAuthRoutes = require('./routes/keystrokeAuthRoutes');
+const mlKeystrokeRoutes = require('./routes/mlKeystrokeRoutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
 
 // Connect to database
@@ -156,6 +157,7 @@ app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/biometric', biometricRoutes);
 app.use('/api/keystroke-auth', keystrokeAuthRoutes);
+app.use('/api/ml-keystroke', mlKeystrokeRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 
 // Serve static files from public directory

@@ -1,0 +1,90 @@
+{
+  "description": "Problems identified and overcome during the keystroke-biometric build. Machine-readable evidence for CREST Gold criterion 4.4 ('identified and overcame problems successfully'). Each entry follows Problem X -> root cause Y -> fix Z -> verified by W. The first group are defects this open-set sprint caught; the second group are the earlier adversarial-review findings (see PROJECT_HANDOFF.md section 9).",
+  "schema": ["problem", "root_cause", "fix", "verified_by"],
+  "problems": [
+    {
+      "id": "closed-set-leakage",
+      "severity": "critical",
+      "problem": "The Phase-1 EER was measured closed-set: the encoder was trained on all 51 CMU subjects and then scored per-subject, so it had already seen every test subject. Comparing that to the published OPEN-set scaled-Manhattan baseline (0.0962) is not like-for-like and is the single most likely cause of a biometrics result being rejected.",
+      "root_cause": "run_phase1 built training samples from every subject in the CSV, with no train-subjects/test-subjects partition.",
+      "fix": "Added split_subjects(): a seeded 35-train / 16-test subject partition. The encoder trains ONLY on train subjects; EER is measured ONLY on held-out subjects it never saw, with a runtime assertion that no test subject leaks into the training label space.",
+      "verified_by": "test_phase1_is_open_set_no_leakage + the in-run leakage assert; the open-set EER (~0.11-0.14) is honestly ABOVE the 0.096 baseline, exactly what an un-leaked open-set result should look like."
+    },
+    {
+      "id": "ensemble-not-in-eer",
+      "severity": "high",
+      "problem": "The project's 'creative contribution' verifier (Ledoit-Wolf Mahalanobis + k-NN + Manhattan ensemble) was parity-tested but NEVER used to produce an EER; only scaled-Manhattan was scored. The headline would have silently omitted the contribution.",
+      "root_cause": "eer_for_subject called scaled_manhattan only; the ensemble functions in ensemble.py were dead code in the EER path.",
+      "fix": "Added eer_for_subject_ensemble using the exact same fusion as the deployed ml-service verify.py (mean of L1-to-centroid + k-NN + Ledoit-Wolf Mahalanobis). Kept scaled-Manhattan as the PRIMARY/headline metric (apples-to-apples with the baseline) and reported the ensemble as a SECONDARY number.",
+      "verified_by": "test_evaluate.py stays green; both EERs reported per run; ensemble EER (~0.109) < primary (~0.142), demonstrating the ensemble's added discriminative value."
+    },
+    {
+      "id": "degenerate-windowing",
+      "severity": "high",
+      "problem": "If the real-CMU column branch did not fire, each password rep would collapse to a single-keystroke 'window', making the temporal CNN+BiGRU meaningless while the script still printed a plausible EER.",
+      "root_cause": "Two code paths exist (real-CMU sequence vs generic fixture); the fixture path emits 1-keystroke windows, and branch selection was silent.",
+      "fix": "Asserted on real data that the use_sequence branch fires and every window is exactly 11 keys decoding to '.tie5Roanl\\n', with non-degenerate (41/44 nonzero) timing features.",
+      "verified_by": "Day-1.2 assertion run: 20,400 windows across 51 subjects, all length 11; chars == '.tie5Roanl\\n'."
+    },
+    {
+      "id": "redundant-reembedding",
+      "severity": "medium",
+      "problem": "Open-set EER over N held-out subjects re-embedded the same impostor windows once per target and again per metric: O(N) wasted encoder passes. A 3-epoch run exceeded a 300s wall.",
+      "root_cause": "eer_for_subject embeds its inputs on every call; called per subject x 2 metrics, the impostor pool was embedded ~32 times.",
+      "fix": "Embed every held-out window EXACTLY once, cache by subject, and score both metrics from the cache via _eer_from_embeddings.",
+      "verified_by": "3-epoch run dropped from >300s to 89s with BIT-IDENTICAL EER (0.1737/0.1178) before and after the refactor."
+    },
+    {
+      "id": "ledoit-wolf-loop-cost",
+      "severity": "low",
+      "problem": "The Ledoit-Wolf shrinkage used a Python per-sample outer-product loop, the dominant eval cost once re-embedding was removed.",
+      "root_cause": "pi_sum was accumulated by constructing n separate p x p outer products in a Python loop.",
+      "fix": "Vectorized pi_sum via the algebraic expansion ||outer_i - S||_F^2 = (xc_i.xc_i)^2 - 2 xc_i^T S xc_i + ||S||_F^2 using einsum.",
+      "verified_by": "Bit-parity check across shapes (20x5, 200x128, 5x128, 50x32): alpha and shrunk_cov identical to the loop to 1e-9; test_ensemble_parity.py green."
+    },
+    {
+      "id": "missing-profile-builder",
+      "severity": "high",
+      "problem": "The inference service could /embed and /verify, but nothing turned a batch of enrollment embeddings into the {centroid, covInverse, refs, threshold} Profile shape that /verify requires, so the product could not actually verify anyone.",
+      "root_cause": "The enrollment->profile seam was never implemented; mlServiceClient was wired into no route.",
+      "fix": "Added services/keystrokeProfileBuilder.js reusing the existing JS Ledoit-Wolf, with a per-user leave-one-out threshold calibration, and a standalone /api/ml-keystroke consent->enroll->verify slice that does not touch the legacy v2 stack.",
+      "verified_by": "keystrokeProfileBuilder.test.js (5 tests: shape, centroid mean, single-window null-covInverse fallback, tight<loose threshold, empty-input rejection)."
+    },
+    {
+      "id": "dataset-sha-sentinel",
+      "severity": "medium",
+      "problem": "The CMU download script carried a placeholder SHA-256, so the dataset could not be verified or the result reproduced.",
+      "root_cause": "EXPECTED_SHA256 was the sentinel 'REPLACE_WITH_MEASURED_DIGEST'.",
+      "fix": "Downloaded the canonical CSV, structurally verified it (20,400 rows = 51x400, .tie5Roanl key-name columns), and pinned the measured digest with provenance.",
+      "verified_by": "download_cmu.py --skip-download prints 'CMU dataset verified.'; load_cmu returns 51 subjects."
+    },
+    {
+      "id": "eer-fabrication-empty-test",
+      "severity": "high",
+      "problem": "(adversarial review) The evaluator silently fell back to scoring TRAINING data when the genuine test set was empty, producing a flattering fake 0.0 EER.",
+      "root_cause": "No guard for an empty held-out test set after the enroll/test split.",
+      "fix": "eer_for_subject raises ValueError when the test set would be empty rather than scoring enrollment data.",
+      "verified_by": "evaluate.py:41 guard; subjects with too few windows are skipped honestly in the CLI, not fabricated."
+    },
+    {
+      "id": "real-cmu-all-zero-timings",
+      "severity": "high",
+      "problem": "(adversarial review) The real CMU CSV uses key-name columns (H.period, not H..); without a remap the model would train on all-zero timings and report a meaningless ~0.5 EER.",
+      "root_cause": "row_to_sequence expects printable-char columns; real CMU headers use key names.",
+      "fix": "remap_cmu_columns translates H.period/H.Shift.r/H.Return to the printable-char form before featurization.",
+      "verified_by": "test_remap_makes_real_cmu_columns_readable; first real window has 41/44 nonzero timing features."
+    },
+    {
+      "id": "artifact-arbitrary-code",
+      "severity": "medium",
+      "problem": "(adversarial review) Loading a model artifact with torch.load default could execute arbitrary code from a swapped .pt — the artifact is the deployed seam.",
+      "root_cause": "weights_only defaulted to False historically.",
+      "fix": "load_artifact uses weights_only=True (state_dict + plain meta only) plus a load-time embed_dim/feature-spec guard.",
+      "verified_by": "test_artifact roundtrip; load-time ValueError on dim/feature-spec mismatch."
+    }
+  ],
+  "provenance": {
+    "generated_for_commit": "428f68669dbb59aeda09ac5bf42b5f5d9b113551",
+    "note": "git_commit is the Day-1 commit that introduced the open-set fixes; the earlier adversarial-review entries predate it (see PROJECT_HANDOFF.md section 9)."
+  }
+}
