@@ -34,3 +34,19 @@ def test_uses_artifact_when_present(monkeypatch, tmp_path):
     # cleanup: reload back to stub so other tests are unaffected
     monkeypatch.delenv("ML_ARTIFACT_PATH", raising=False)
     importlib.reload(model)
+
+
+def test_warns_when_artifact_path_set_but_missing(monkeypatch, caplog):
+    import logging
+    monkeypatch.setenv("ML_ARTIFACT_PATH", "/no/such/artifact.pt")
+    import app.model as model
+    with caplog.at_level(logging.WARNING):
+        importlib.reload(model)
+    # fail-safe: still serves the stub, does NOT crash
+    assert model.MODEL_VERSION == "stub-0"
+    # but it warned loudly about the misconfiguration
+    assert any("ML_ARTIFACT_PATH" in r.message and "not found" in r.message
+               for r in caplog.records)
+    # cleanup: restore stub state for other tests
+    monkeypatch.delenv("ML_ARTIFACT_PATH", raising=False)
+    importlib.reload(model)

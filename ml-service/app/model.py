@@ -4,6 +4,7 @@ green. MODEL_VERSION reflects whichever model is actually loaded — the single
 swap point. Spec §6.4: profiles built under a different version are rejected
 upstream as version-mismatched."""
 import hashlib
+import logging
 import os
 import numpy as np
 
@@ -38,9 +39,18 @@ class StubEmbedder:
 
 def _load_embedder():
     path = os.environ.get("ML_ARTIFACT_PATH")
-    if path and os.path.exists(path):
-        from .torch_embedder import TorchEmbedder
-        return TorchEmbedder(path)
+    if path:
+        if os.path.exists(path):
+            from .torch_embedder import TorchEmbedder
+            return TorchEmbedder(path)
+        # Set-but-missing: the operator INTENDED a real model but the path is
+        # wrong/unmounted. Fall back to the stub (fail-safe, don't crash) but
+        # WARN loudly — silently serving a non-model from a security feature is
+        # a dangerous, hard-to-notice misconfiguration.
+        logging.warning(
+            "ML_ARTIFACT_PATH set to %r but file not found; falling back to "
+            "StubEmbedder (NON-MODEL — verification will be meaningless). "
+            "Check the artifact path / mount.", path)
     return StubEmbedder()
 
 
