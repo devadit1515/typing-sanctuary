@@ -60,6 +60,13 @@ function l1(a, b) {
  * @param {number} percentile 0..1 of the genuine LOO scores (default 0.9)
  * @param {number} margin multiplicative safety cushion (default 1.15)
  */
+// A near-zero threshold is degenerate: a perfectly consistent typist on a short
+// fixed password produces near-identical embeddings, so the LOO spread is ~0.
+// That both makes verification brittle (accepts almost nothing) and, downstream,
+// blew up the confidence sigmoid (score/threshold -> inf). Floor the threshold
+// at a small positive value so every profile is usable and the server is safe.
+const MIN_THRESHOLD = 1e-3;
+
 function calibrateThreshold(embeddings, percentile = 0.9, margin = 1.15) {
   const n = embeddings.length;
   if (n < 2) {
@@ -74,7 +81,7 @@ function calibrateThreshold(embeddings, percentile = 0.9, margin = 1.15) {
   }
   looScores.sort((a, b) => a - b);
   const idx = Math.min(n - 1, Math.floor(percentile * n));
-  return looScores[idx] * margin;
+  return Math.max(MIN_THRESHOLD, looScores[idx] * margin);
 }
 
 /**

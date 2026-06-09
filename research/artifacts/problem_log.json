@@ -59,6 +59,22 @@
       "verified_by": "download_cmu.py --skip-download prints 'CMU dataset verified.'; load_cmu returns 51 subjects."
     },
     {
+      "id": "confidence-overflow",
+      "severity": "high",
+      "problem": "The live /verify endpoint returned HTTP 500 (OverflowError) for a very consistent typist. Caught only by the real CMU end-to-end test (subject s005), never by unit tests with synthetic data.",
+      "root_cause": "A consistent typist on the fixed 11-key password produces near-identical embeddings, so the leave-one-out spread -> threshold ~ 0. The confidence sigmoid computes exp(k*(score/threshold - 1)); a tiny threshold makes the exponent explode and math.exp overflows. The existing guard only handled threshold <= 0, not a tiny positive threshold.",
+      "fix": "Clamp the sigmoid exponent to [-60, 60] in ml-service verify.py (loss-free, the sigmoid is saturated there) AND floor the calibrated threshold at 1e-3 in keystrokeProfileBuilder.js so no profile is degenerate.",
+      "verified_by": "test_verify_tiny_threshold_does_not_overflow (ml-service); live end-to-end no longer 500s; impostor score (6.73) strictly > genuine (3.10)."
+    },
+    {
+      "id": "threshold-score-scale-mismatch",
+      "severity": "medium",
+      "problem": "With the floored threshold, both genuine and impostor windows read HIGH/0-confidence even though the model RANKS them correctly (genuine 3.10 < impostor 6.73). The absolute confidence is saturated.",
+      "root_cause": "The per-user threshold is calibrated on the L1-to-centroid metric (~0.001 scale for a consistent typist), but the /verify score is the 3-way ensemble mean dominated by the Mahalanobis term (~3-7 scale). The threshold and the score live on different scales.",
+      "fix": "Documented as future work (criterion 3.3 reflection): calibrate the threshold on the SAME fused ensemble score the server returns, not on L1 alone. Ranking/EER (the scientific result) is unaffected — this is a confidence-calibration tuning issue, not a discrimination failure.",
+      "verified_by": "End-to-end ranking holds (impostor > genuine); flagged honestly rather than hidden. EER is computed from rank order, so the headline result stands."
+    },
+    {
       "id": "eer-fabrication-empty-test",
       "severity": "high",
       "problem": "(adversarial review) The evaluator silently fell back to scoring TRAINING data when the genuine test set was empty, producing a flattering fake 0.0 EER.",
