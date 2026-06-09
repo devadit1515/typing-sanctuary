@@ -16,8 +16,11 @@ from ksbio.seeds import set_global_seed
 from ksbio.freetext import load_freetext, sliding_windows
 from ksbio.featurize import featurize_window, TIMING_FEATURES, MAX_CHAR_ID
 from ksbio.train import train_encoder, TrainConfig
-from ksbio.evaluate import eer_for_subject
 from ksbio.artifact import save_artifact, ArtifactMeta
+# Reuse the SAME open-set machinery as Phase 1 (train_cmu): train on
+# train-subjects only, measure EER on held-out subjects, primary + secondary.
+# Free-text had the identical closed-set defect before this.
+from train_cmu import split_subjects, _eval_test_subjects
 
 
 @dataclass
@@ -44,48 +47,53 @@ def _git_commit():
 def run_phase2(args: Phase2Args):
     set_global_seed(args.seed)
     data = load_freetext(args.csv_path)
-    samples, by_subject, labels = [], {}, {}
+    # Window every subject's free typing first (content-independent: the net sees
+    # rhythm over arbitrary text, not the text itself).
+    by_subject = {}
     for subj, events in data.items():
         for w in sliding_windows(events, size=args.window, stride=args.stride):
             feats, cids = featurize_window(w)
-            if subj not in labels:
-                labels[subj] = len(labels)
-            samples.append((torch.from_numpy(feats), torch.from_numpy(cids),
-                            feats.shape[0], labels[subj]))
             by_subject.setdefault(subj, []).append(
                 (torch.from_numpy(feats), torch.from_numpy(cids)))
+    subjects = list(by_subject.keys())
+
+    # OPEN-SET split: train on train-subjects only, evaluate on held-out subjects.
+    train_subjects, test_subjects = split_subjects(subjects, args.seed)
+    train_set = set(train_subjects)
+    train_samples = []
+    label_of = {subj: i for i, subj in enumerate(train_subjects)}
+    for subj in train_subjects:
+        for feats, cids in by_subject[subj]:
+            train_samples.append((feats, cids, feats.shape[0], label_of[subj]))
 
     cfg = TrainConfig(embed_dim=args.embed_dim, epochs=args.epochs, seed=args.seed,
-                      batch_subjects=min(16, max(2, len(by_subject))),
+                      batch_subjects=min(16, max(2, len(train_subjects))),
                       samples_per_subject=2)
-    enc, history = train_encoder(samples, cfg)
+    enc, history = train_encoder(train_samples, cfg)
+    assert not (set(test_subjects) & train_set), \
+        "open-set violation: a test subject leaked into the training set"
 
-    eers = []
-    subjects = list(by_subject.keys())
-    for target in subjects:
-        gen = by_subject[target]
-        imp = [w for s in subjects if s != target for w in by_subject[s]]
-        if not gen or not imp:
-            continue
-        try:
-            eer, _ = eer_for_subject(enc, [g[0] for g in gen], [g[1] for g in gen],
-                                     [i[0] for i in imp], [i[1] for i in imp])
-            eers.append(eer)
-        except ValueError:
-            # too few genuine windows for this subject; skip honestly
-            continue
-    mean_eer = float(np.mean(eers)) if eers else 1.0
+    ev = _eval_test_subjects(enc, by_subject, test_subjects)
 
     os.makedirs(os.path.dirname(args.artifact_path) or ".", exist_ok=True)
     meta = ArtifactMeta(version=args.version, embed_dim=args.embed_dim,
                         git_commit=_git_commit(),
                         config={"epochs": args.epochs, "window": args.window,
-                                "stride": args.stride, "seed": args.seed},
+                                "stride": args.stride, "seed": args.seed,
+                                "n_train_subjects": len(train_subjects),
+                                "n_test_subjects": len(test_subjects)},
                         timing_features=TIMING_FEATURES, max_char_id=MAX_CHAR_ID)
     save_artifact(args.artifact_path, enc, meta)
-    return {"version": args.version, "n_windows": len(samples),
-            "n_subjects": len(subjects), "mean_eer": mean_eer,
-            "final_loss": history["loss"][-1]}
+    return {"version": args.version,
+            "n_windows": sum(len(v) for v in by_subject.values()),
+            "n_subjects": len(subjects),
+            "n_train_subjects": len(train_subjects),
+            "n_test_subjects": len(test_subjects),
+            "n_eer_subjects": ev["n_eer_subjects"],
+            "primary_eer_scaled_manhattan": ev["mean_primary"],
+            "secondary_eer_full_ensemble": ev["mean_secondary"],
+            "final_loss": history["loss"][-1],
+            "train_subjects": train_subjects, "test_subjects": test_subjects}
 
 
 def main():
@@ -102,7 +110,9 @@ def main():
     res = run_phase2(Phase2Args(a.csv_path, a.artifact_path, a.embed_dim,
                                 a.epochs, a.window, a.stride, a.seed, a.version))
     print(f"[phase2] version={res['version']} windows={res['n_windows']} "
-          f"subjects={res['n_subjects']} mean_EER={res['mean_eer']:.4f} "
+          f"train/test subjects={res['n_train_subjects']}/{res['n_test_subjects']} "
+          f"OPEN-SET primary_EER={res['primary_eer_scaled_manhattan']:.4f} "
+          f"ensemble_EER={res['secondary_eer_full_ensemble']:.4f} "
           f"final_loss={res['final_loss']:.4f}")
 
 
