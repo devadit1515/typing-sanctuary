@@ -91,7 +91,7 @@ def tsne_plot(csv_path, artifact_path, seed, out_path, max_per_subject=40):
                 random_state=seed).fit_transform(X)
 
     uniq = sorted(set(labels))
-    cmap = plt.cm.get_cmap("tab20", len(uniq))
+    cmap = matplotlib.colormaps["tab20"].resampled(len(uniq))
     idx = {s: i for i, s in enumerate(uniq)}
     fig, ax = plt.subplots(figsize=(6.5, 5.5))
     colors = [cmap(idx[l]) for l in labels]

@@ -21,7 +21,15 @@ def _knn(z, refs, k=3):
 def _confidence(score, threshold, k=5.0):
     if threshold <= 0:
         return 100.0 if score <= 0.1 else 0.0
-    val = 100.0 / (1.0 + math.exp(k * (score / threshold - 1.0)))
+    # Clamp the exponent argument before math.exp. A very consistent typist on a
+    # short fixed password yields a near-zero threshold, so score/threshold can be
+    # huge and math.exp would raise OverflowError (HTTP 500). The sigmoid
+    # saturates well before +/-60, so clamping there is loss-free for the output
+    # but removes the crash. (Found via the live CMU end-to-end test, subject
+    # s005; see research/artifacts/problem_log.json: confidence-overflow.)
+    expo = k * (score / threshold - 1.0)
+    expo = max(-60.0, min(60.0, expo))
+    val = 100.0 / (1.0 + math.exp(expo))
     return round(min(100.0, max(0.0, val)), 2)
 
 def verify(embedding, profile):
