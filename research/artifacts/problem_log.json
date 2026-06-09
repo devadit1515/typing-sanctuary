@@ -75,6 +75,14 @@
       "verified_by": "End-to-end ranking holds (impostor > genuine); flagged honestly rather than hidden. EER is computed from rank order, so the headline result stands."
     },
     {
+      "id": "freetext-closed-set",
+      "severity": "high",
+      "problem": "train_freetext.py (Phase 2) had the IDENTICAL closed-set defect as Phase 1: it trained the encoder on every subject, then measured per-subject EER, so any reported free-text EER would be a closed-set number masquerading as open-set.",
+      "root_cause": "run_phase2 built training samples from all subjects with no train/test subject partition (the defect was duplicated across both phase entrypoints).",
+      "fix": "Refactored run_phase2 to reuse the SAME open-set machinery as Phase 1 (split_subjects + _eval_test_subjects from train_cmu): train on train-subjects only, evaluate primary + ensemble EER on held-out subjects, with the same leakage assertion.",
+      "verified_by": "test_phase2_is_open_set_no_leakage; the Phase-2 CLI runs open-set end-to-end (4 train / 2 test on the fixture). A real free-text result still needs a public corpus (Aalto) — documented as future work, not faked."
+    },
+    {
       "id": "eer-fabrication-empty-test",
       "severity": "high",
       "problem": "(adversarial review) The evaluator silently fell back to scoring TRAINING data when the genuine test set was empty, producing a flattering fake 0.0 EER.",
