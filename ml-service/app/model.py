@@ -1,19 +1,23 @@
-"""Model loader interface. Foundation phase ships a DETERMINISTIC STUB so the
-service + Node integration can be built and tested before the real model exists.
-Plan 2 replaces StubEmbedder with the trained PyTorch model behind this same API."""
+"""Model loader. Prefers a trained artifact (ML_ARTIFACT_PATH); falls back to a
+DETERMINISTIC STUB when none is present, so local dev + foundation tests stay
+green. MODEL_VERSION reflects whichever model is actually loaded — the single
+swap point. Spec §6.4: profiles built under a different version are rejected
+upstream as version-mismatched."""
 import hashlib
+import os
 import numpy as np
 
-MODEL_VERSION = "stub-0"
 EMBED_DIM = 128
+
 
 def device_name():
     return "cpu"
 
+
 class StubEmbedder:
     """Maps a keystroke window deterministically to a unit vector in R^128.
-    NOT a real model — only for plumbing. Replaced in Plan 2."""
-    version = MODEL_VERSION
+    NOT a real model — only for plumbing/fallback."""
+    version = "stub-0"
 
     def embed(self, keystrokes):
         parts = []
@@ -31,7 +35,18 @@ class StubEmbedder:
             vec /= norm
         return vec.tolist()
 
-_EMBEDDER = StubEmbedder()
+
+def _load_embedder():
+    path = os.environ.get("ML_ARTIFACT_PATH")
+    if path and os.path.exists(path):
+        from .torch_embedder import TorchEmbedder
+        return TorchEmbedder(path)
+    return StubEmbedder()
+
+
+_EMBEDDER = _load_embedder()
+MODEL_VERSION = _EMBEDDER.version
+
 
 def get_embedder():
     return _EMBEDDER
