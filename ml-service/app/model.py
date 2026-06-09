@@ -42,7 +42,17 @@ def _load_embedder():
     if path:
         if os.path.exists(path):
             from .torch_embedder import TorchEmbedder
-            return TorchEmbedder(path)
+            from .contract import EMBED_DIM
+            embedder = TorchEmbedder(path)
+            served_dim = embedder.meta.embed_dim
+            if served_dim != EMBED_DIM:
+                raise ValueError(
+                    f"Artifact embed_dim={served_dim} does not match the served "
+                    f"wire contract ({EMBED_DIM}). The /embed response is fixed at "
+                    f"{EMBED_DIM} dims, so this artifact would fail response "
+                    f"validation at request time. Retrain at embed_dim={EMBED_DIM} "
+                    f"or update the contract.")
+            return embedder
         # Set-but-missing: the operator INTENDED a real model but the path is
         # wrong/unmounted. Fall back to the stub (fail-safe, don't crash) but
         # WARN loudly — silently serving a non-model from a security feature is

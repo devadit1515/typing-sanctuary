@@ -22,8 +22,11 @@ def test_falls_back_to_stub_when_no_artifact(monkeypatch):
 def test_uses_artifact_when_present(monkeypatch, tmp_path):
     art = os.path.join(tmp_path, "cmu.pt")
     set_global_seed(0)
-    enc = KeystrokeEncoder(embed_dim=32)
-    save_artifact(art, enc, ArtifactMeta(version="cmu-v1", embed_dim=32,
+    # embed_dim MUST be 128 to match the wire contract (app/contract.py); the
+    # load-time dim guard rejects any other dim. We test the happy-path swap
+    # with a contract-VALID dim here.
+    enc = KeystrokeEncoder(embed_dim=128)
+    save_artifact(art, enc, ArtifactMeta(version="cmu-v1", embed_dim=128,
                   git_commit="x", config={}, timing_features=TIMING_FEATURES,
                   max_char_id=MAX_CHAR_ID))
     monkeypatch.setenv("ML_ARTIFACT_PATH", art)
@@ -32,6 +35,25 @@ def test_uses_artifact_when_present(monkeypatch, tmp_path):
     assert model.MODEL_VERSION == "cmu-v1"
     assert model.get_embedder().version == "cmu-v1"
     # cleanup: reload back to stub so other tests are unaffected
+    monkeypatch.delenv("ML_ARTIFACT_PATH", raising=False)
+    importlib.reload(model)
+
+
+def test_rejects_artifact_with_wrong_embed_dim(monkeypatch, tmp_path):
+    # The wire contract pins responses to 128 dims; an artifact trained at a
+    # different dim must fail LOUDLY at load, not with an opaque 500 per request.
+    art = os.path.join(tmp_path, "wrongdim.pt")
+    set_global_seed(0)
+    enc = KeystrokeEncoder(embed_dim=32)  # != contract's 128
+    save_artifact(art, enc, ArtifactMeta(version="bad-dim", embed_dim=32,
+                  git_commit="x", config={}, timing_features=TIMING_FEATURES,
+                  max_char_id=MAX_CHAR_ID))
+    monkeypatch.setenv("ML_ARTIFACT_PATH", art)
+    import app.model as model
+    import pytest
+    with pytest.raises(ValueError, match="embed_dim"):
+        importlib.reload(model)
+    # cleanup: restore stub state for other tests
     monkeypatch.delenv("ML_ARTIFACT_PATH", raising=False)
     importlib.reload(model)
 

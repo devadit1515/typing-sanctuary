@@ -16,16 +16,17 @@ real typed characters. These same symbols are used to build the H./DD. column
 names this adapter reads, which keeps it self-consistent with the synthetic
 test fixtures (the tests build rows as H.<char>, DD.<char>.<char>).
 
-REAL-DATA CAVEAT (important): the ACTUAL CMU CSV header does NOT use printable
+REAL-DATA NOTE (important): the ACTUAL CMU CSV header does NOT use printable
 chars. It labels columns with key *names*, e.g. `H.period`, `DD.period.t`,
 `H.five`, `H.Shift.r`, `H.Return` -- not `H..`, `H.5`, `H.r`, `H.<newline>`.
-So this printable-char adapter matches the TEST fixtures but would need a
-label-mapping layer (printable char <-> CMU column label) to read a real CMU
-CSV. That mapping is intentionally NOT solved here: Task 10 (the CMU CLI / the
-loader in ksbio/data/cmu.py) is responsible for translating real column labels
-into these symbols (or for passing pre-mapped row dicts to this adapter). Do
-not assume row_to_sequence can be pointed at a raw Killourhy-Maxion CSV row
-as-is."""
+So this printable-char adapter reads the TEST fixtures directly, while real CMU
+CSVs are read through the implemented label-mapping bridge in
+`research/scripts/train_cmu.py:remap_cmu_columns`, which translates the real CMU
+key-name columns (H.period, H.Shift.r, H.Return, ...) into the printable-char
+columns this adapter expects (H.., H.5, H.R, H.<newline>, ...). That remap is
+applied to each raw Killourhy-Maxion row before it reaches row_to_sequence, so
+this adapter always sees pre-mapped, printable-char rows: do not point
+row_to_sequence at a raw CMU CSV row as-is."""
 from dataclasses import dataclass
 
 # Printable characters of the CMU benchmark password ".tie5Roanl" followed by
