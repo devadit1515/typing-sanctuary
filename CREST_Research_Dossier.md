@@ -226,7 +226,7 @@ A mix of (i) genuine student capstones/theses, (ii) published student-adjacent p
 
 ### C8. Cost/feasibility note (informs the "deferred GPU" decision)
 - **Modal T4 price (June 2026): $0.000164/sec = $0.59/hour**, billed per-second, $30/month free credit on Starter. https://modal.com/pricing
-- **Estimate for this workload** (CNN+BiGRU ~1M params, ~60 epochs, CMU ~20k rows): **~2–15 min** of compute → **~$0.10–$0.60**, comfortably inside the free credit. **[UNVERIFIED]** The minutes-of-compute figure is an engineering estimate; only the per-second price is sourced. *Implication:* the "billable GPU step" is trivially cheap — and the same tiny model trains on **local CPU for $0** in ~10–30 min, which is the path this sprint takes.
+- **Estimate for this workload** (CNN+BiGRU ≈ 83,500 params, ~60 epochs, CMU ~20k rows): **~2–15 min** of compute → **~$0.10–$0.60**, comfortably inside the free credit. **[UNVERIFIED]** The minutes-of-compute figure is an engineering estimate; only the per-second price is sourced. *Implication:* the "billable GPU step" is trivially cheap — and the same tiny model trains on **local CPU for $0** in ~10–30 min, which is the path this sprint takes.
 
 ---
 

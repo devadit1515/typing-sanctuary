@@ -1,0 +1,110 @@
+{
+  "dataset": "CMU-Killourhy-Maxion-DSL-StrongPasswordData",
+  "dataset_sha256": "b11d23538b1865fa6ecf4e8b78567caa312e9c1027604bb022fcc6ad7eaa7a33",
+  "n_subjects_total": 51,
+  "n_train_subjects": 35,
+  "n_test_subjects": 16,
+  "eval_protocol": "open-set: EER on held-out subjects unseen in training",
+  "window_keys": 11,
+  "primary_metric": "scaled_manhattan_eer",
+  "primary_eer_scaled_manhattan": 0.16103645833333333,
+  "primary_eer_mean": 0.16103645833333333,
+  "primary_eer_std": 0.08664861382156712,
+  "n_seeds": 3,
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "secondary_eer_full_ensemble": 0.11284548611111112,
+  "secondary_eer_full_ensemble_std": 0.03784292502363071,
+  "baseline_eer_published_scaled_manhattan": 0.0962,
+  "baseline_source": "Killourhy & Maxion 2009 (DSN-2009, pp.125-134)",
+  "per_subject_eer": [
+    {
+      "subject": "s005",
+      "eer": 0.02
+    },
+    {
+      "subject": "s007",
+      "eer": 0.17
+    },
+    {
+      "subject": "s010",
+      "eer": 0.085
+    },
+    {
+      "subject": "s012",
+      "eer": 0.05
+    },
+    {
+      "subject": "s017",
+      "eer": 0.03
+    },
+    {
+      "subject": "s018",
+      "eer": 0.13016666666666665
+    },
+    {
+      "subject": "s022",
+      "eer": 0.04033333333333333
+    },
+    {
+      "subject": "s030",
+      "eer": 0.08916666666666667
+    },
+    {
+      "subject": "s036",
+      "eer": 0.04591666666666666
+    },
+    {
+      "subject": "s037",
+      "eer": 0.155
+    },
+    {
+      "subject": "s038",
+      "eer": 0.065
+    },
+    {
+      "subject": "s047",
+      "eer": 0.2
+    },
+    {
+      "subject": "s050",
+      "eer": 0.13383333333333333
+    },
+    {
+      "subject": "s053",
+      "eer": 0.04416666666666667
+    },
+    {
+      "subject": "s054",
+      "eer": 0.205
+    },
+    {
+      "subject": "s056",
+      "eer": 0.17
+    }
+  ],
+  "per_seed_primary_eer": [
+    0.10209895833333332,
+    0.283546875,
+    0.09746354166666667
+  ],
+  "per_seed_ensemble_eer": [
+    0.07785937500000001,
+    0.16541145833333332,
+    0.09526562499999999
+  ],
+  "embed_dim": 128,
+  "epochs": 120,
+  "margin": 0.2,
+  "center_weight": 0.01,
+  "samples_per_subject": 2,
+  "seed": 42,
+  "git_commit": "5657295869950c2ae33a94d598a1b11388b0347a",
+  "device": "cpu",
+  "train_seconds": 3430.5949199199677,
+  "artifact": "_cmu_e120.pt",
+  "scores_file": "scores.json"
+}

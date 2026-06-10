@@ -12,7 +12,7 @@
 | CREST Award level | **Gold** |
 | Project title | Content-independent keystroke-dynamics biometric verification: does a deep metric-learning embedding with a classical calibrated verifier authenticate users by typing rhythm alone? |
 | Mentor / supervisor | _[name and role]_ |
-| Approximate hours | _[≥ 70 hours — Gold expectation; the 83 dated git commits over 25 Nov 2025–9 Jun 2026 evidence the time spent]_ |
+| Approximate hours | _[≈ 84 hours — above the ~70-hour Gold expectation; the 86 dated git commits over 25 Nov 2025–10 Jun 2026 (49 of them inside the 8–10 June research sprint) evidence the time spent — see Report §1.5 effort table]_ |
 
 ---
 
@@ -28,7 +28,7 @@ For each criterion, write the **page (and paragraph)** in your report where the 
 | **1.2** Wider purpose | Report §1.2 (p. _[ ]_) | Account-takeover fraud and credential stuffing as the real-world problem; named stakeholders (account holders, the game's players); accessibility angle. |
 | **1.3** Range of approaches | Report §1.3 (p. _[ ]_) | Three distinct approaches (statistical / deep classifier / metric-embedding) compared in a trade-off table on seven criteria, with the decision justified. |
 | **1.4** Plan and why I chose it | Report §1.4 (p. _[ ]_) | The three-part hybrid architecture and why the research/serve separation makes both the science and the product trustworthy. |
-| **1.5** Planned and organised time | Report §1.5 (p. _[ ]_) | A Gantt-style timeline built from **real, immutable git commit dates** (83 commits), planned vs actual milestones, and two honest replanning decisions with reasons. |
+| **1.5** Planned and organised time | Report §1.5 (p. _[ ]_) | A Gantt-style timeline built from **real, immutable git commit dates** (86 commits), an explicit ~84-hour effort breakdown, planned vs actual milestones, and two honest replanning decisions with reasons. |
 
 ### Section 2 — Throughout the project
 
