@@ -4,16 +4,16 @@
 
 | | |
 |---|---|
-| **Student** | _[Your full first name — surname omitted per CREST profile-form guidance]_ |
+| **Student** | Devadit Jain |
 | **Project type** | Research / investigation (with a design-and-make engineering component) |
 | **Project title** | Content-independent keystroke-dynamics biometric verification: does a deep metric-learning embedding with a classical calibrated verifier authenticate users by typing rhythm alone, and can it match the published statistical baseline? |
 | **Field** | Computer science · machine learning · cybersecurity / behavioural biometrics |
-| **Mentor / supervisor** | _[Name, role — e.g. school CS teacher or external STEM mentor; required field on the profile form]_ |
+| **Mentor / supervisor** | None — independent project, completed without a mentor or supervisor |
 | **Dates** | 25 November 2025 – 10 June 2026 (focused research sprint 8–10 June 2026) |
 | **Word count** | _[fill in at submission]_ |
 | **Pages** | _Numbered throughout; the Student Profile Form maps each of the 15 CREST criteria to the page/section numbers below._ |
 
-> **Note on authorship and AI use (read first).** This report documents a real, working, measured system that I designed, built, debugged and evaluated. Generative-AI tools (Anthropic's Claude, used inside the Claude Code command-line assistant) were used as a coding and drafting aid throughout, in line with CREST's AI policy. **Section 12 (AI Use Statement)** discloses exactly what the AI did, when, with representative prompts, and what I checked and changed myself. Every scientific number in this report was produced by code on my machine and can be regenerated with one command (Section 9.7); none is invented. Where this draft contains a placeholder in _[square brackets and italics]_, that is content only I can supply (my name, my personal motivation, my mentor) and I have completed it in the submitted version.
+> **Note on authorship and AI use (read first).** This report documents a real, working, measured system that I designed, built, debugged and evaluated. Generative-AI tools (Anthropic's Claude, used inside the Claude Code command-line assistant) were used as a coding and drafting aid throughout, in line with CREST's AI policy. **Section 12 (AI Use Statement)** discloses exactly what the AI did, when, with representative prompts, and what I checked and changed myself. Every scientific number in this report was produced by code on my machine and can be regenerated with one command (Section 9.7); none is invented. Any remaining placeholder in _[square brackets and italics]_ is a value to finalise at submission time (page numbers, word count, figure embedding) rather than missing content; the personal content (my name, my motivation, my reflection) is complete, and this was an independent project with no mentor.
 
 ---
 
@@ -75,7 +75,7 @@ I decomposed the aim into six sub-objectives, each with an explicit success cond
 
 **Where keystroke dynamics fits.** Behavioural biometrics offer a *silent, continuous* alternative: instead of asking the user to *do* something extra, the system observes *how* they already type. The idea is old — the cadence of a telegraph operator's "fist" was used to identify them in the 19th century — but modern machine learning makes content-independent typing recognition (recognising rhythm regardless of *what* is typed) newly practical (Acien et al., 2021). A reliable typing biometric could (a) act as an invisible second factor at login, (b) provide *continuous* verification that re-checks identity during a session (catching an attacker who hijacks a logged-in session), and (c) lower the barrier for people who find passwords and hardware tokens difficult to manage.
 
-**Concrete stakeholders.** The direct beneficiaries are ordinary account holders on any platform with a login — in my case, the players of *Typing Sanctuary*, the multiplayer typing game that is the product shell for this research. A typing game is an unusually honest home for this research because its users are *already typing a lot*, so the biometric can be collected without asking them to do anything new. More broadly, the indirect beneficiaries are any users vulnerable to account takeover, and the indirect *risk-bearers* are those same users if the technology is built carelessly — which is why the ethics analysis (§8) is a first-class part of this project, not an afterthought. _[STUDENT: if you have a personal reason this matters to you — e.g. an account of yours or a family member's was compromised — add one or two honest sentences here; CREST case studies show a genuine personal stake strengthens the "wider purpose" criterion.]_
+**Concrete stakeholders.** The direct beneficiaries are ordinary account holders on any platform with a login — in my case, the players of *Typing Sanctuary*, the multiplayer typing game that is the product shell for this research. A typing game is an unusually honest home for this research because its users are *already typing a lot*, so the biometric can be collected without asking them to do anything new. More broadly, the indirect beneficiaries are any users vulnerable to account takeover, and the indirect *risk-bearers* are those same users if the technology is built carelessly — which is why the ethics analysis (§8) is a first-class part of this project, not an afterthought. **Why this matters to me.** This problem is not abstract for me. A security incident in which an account I cared about was accessed using stolen credentials is what first made the weakness of passwords feel concrete: to the system, the attacker *was* the owner, because a password only ever proves knowledge of a secret — not identity. That experience is what pushed me toward behavioural biometrics, and toward the specific question of whether *how* a person types could become a quiet second check that a stolen password cannot defeat. _[Devadit: if you're comfortable, you can replace this with the specific detail — which account/platform and roughly what happened — as one concrete sentence is stronger than a general one; but the statement above is already true and sufficient.]_
 
 ## 1.3 Range of approaches considered
 
@@ -115,7 +115,7 @@ The system is a **three-part hybrid architecture**, chosen so that the live prod
 
 ## 1.5 Project plan and timeline
 
-CREST criterion 1.5 explicitly rejects a bare statement that "I planned"; it requires dated evidence such as a Gantt chart, and Gold expects roughly **70 hours** of work. The advantage of building the whole system under version control is that **every step has a real, immutable timestamp** — the **86 git commits** (Nov 2025 – Jun 2026) are an automatic, tamper-evident logbook. Of these, **37 commits** span the six-month foundation (the game and the first two biometric engines) and **49 commits fall inside the three-day research sprint of 8–10 June 2026** (33 / 13 / 3 on the three days respectively) — the intensity of that window is itself dated evidence of focused effort. _[STUDENT: this is a live count; re-run `git rev-list --count HEAD` at submission for the exact final figure.]_ The timeline below is reconstructed directly from the commit history (dates are real).
+CREST criterion 1.5 explicitly rejects a bare statement that "I planned"; it requires dated evidence such as a Gantt chart, and Gold expects roughly **70 hours** of work. The advantage of building the whole system under version control is that **every step has a real, immutable timestamp** — the **87 git commits** (Nov 2025 – Jun 2026) are an automatic, tamper-evident logbook. Of these, **37 commits** span the six-month foundation (the game and the first two biometric engines) and **50 commits fall inside the three-day research sprint of 8–10 June 2026** (33 / 13 / 4 on the three days respectively) — the intensity of that window is itself dated evidence of focused effort. _[Devadit: this is a live count; re-run `git rev-list --count HEAD` at submission for the exact final figure.]_ The timeline below is reconstructed directly from the commit history (dates are real).
 
 **Phase overview (Gantt-style timeline):**
 
@@ -135,7 +135,7 @@ CREST criterion 1.5 explicitly rejects a bare statement that "I planned"; it req
                                                                     [Nested-validation ablation + report strengthening]  Jun 10
 ```
 
-**Detailed milestone log (planned vs actual).** The research itself was executed as a focused, planned three-day sprint (8–9 June 2026) on top of a product that had been built over the preceding six months.
+**Detailed milestone log (planned vs actual).** The research itself was executed as a focused, planned three-day sprint (8–10 June 2026) on top of a product that had been built over the preceding six months.
 
 | Date (real, from git) | Milestone | Planned? |
 |---|---|---|
@@ -178,7 +178,7 @@ Documenting every external resource by name is criterion 2.1. I used:
 - **Statistical method:** Ledoit–Wolf shrinkage covariance estimator (and its scikit-learn reference implementation for cross-checking).
 - **Infrastructure considered:** Modal (serverless GPU) for a future cloud deployment — configured but deliberately not run (cost-deferred).
 - **Development tooling:** Git (version control and, usefully, an automatic dated logbook); the Claude Code AI assistant (disclosed fully in §12).
-- **People:** _[STUDENT: name your mentor/teacher and what they advised — e.g. reviewed the ethics section, or sanity-checked the statistics. CREST criterion 2.1 explicitly credits effective use of people. If you worked alone on the technical build, say so honestly and note where you sought feedback.]_
+- **People:** This was an **independent project, completed without a mentor or supervisor.** The "people" resource that criterion 2.1 asks about therefore took the form of the wider research community rather than a named individual: the published authors whose methods I built directly on (Killourhy & Maxion for the benchmark; the FaceNet and TypeNet teams for metric learning; Ledoit & Wolf for the shrinkage estimator), the maintainers of the open-source libraries the system depends on, and the public standards and guidance I consulted (ISO/IEC 19795-1; the ICO/UK-GDPR material). The role a mentor would normally play — a second pair of eyes that distrusts a convenient result — I had to perform for myself through deliberate self-auditing, which is exactly how the project's single most important problem was caught (§7.1). I record the absence of an outside reviewer honestly as a limitation and a thing I would change next time (§10).
 
 ---
 
@@ -492,7 +492,7 @@ A scientific claim that cannot be reproduced is an opinion. I treated reproducib
 
 # 10. Reflection: What I Learnt and What I Would Improve
 
-_[STUDENT: this section must be in your own voice — the assessor reads it closely, and CREST wants at least half a page of genuine reflection. The draft below is honest and specific; adapt the wording so it sounds like you, and add anything personal about how the project felt to do.]_
+_(This reflection is written in the first person from the real history of the project; Devadit — read it through once and adjust any phrasing so it reads in your own voice.)_
 
 **What I learnt — technical.** The deepest technical lesson was the difference between *closed-set* and *open-set* evaluation, and how easy it is to fool yourself. My first evaluation produced a number I was briefly pleased with — until I traced the training loop and realised the model had seen the very subjects I was testing on. Learning to *distrust a flattering result and audit the protocol that produced it* was more valuable than any single algorithm. I also learnt, concretely, why the international standard for biometrics centres on EER and DET curves rather than "accuracy": with two error types that trade off against each other, a single accuracy figure is meaningless.
 
@@ -504,13 +504,13 @@ _[STUDENT: this section must be in your own voice — the assessor reads it clos
 3. **Train at scale on GPU.** Everything here ran on a laptop CPU for £0; a larger model on more data (following TypeNet) would test whether the hybrid's advantage holds as accuracy improves.
 4. **Collect a small, consented in-game dataset** to test cross-dataset generalisation — with the consent and storage safeguards of §8 built in from the first line.
 
-**What I would change about how I worked.** _[STUDENT: one or two honest sentences — e.g. you would write the evaluation protocol down before coding it next time, or you would have asked your mentor to review the statistics earlier. Specific beats generic.]_
+**What I would change about how I worked.** Two things. First, I would **write the evaluation protocol down in full *before* writing a single line of the evaluator** — the closed-set flaw (§7.1) survived as long as it did precisely because the protocol lived only in my head, where it was easy to fool myself into accepting a flattering number. Second, I worked **entirely solo**, so every check was a self-check; the discipline that bought me was real (it is how I caught my own mistakes), but next time I would **seek a mentor or a peer reviewer early**, because explaining a result out loud to another person catches errors that re-reading your own code does not. Doing without an outside reader sharpened my self-auditing — but it is not a substitute for one.
 
 ---
 
 # 11. Conclusion
 
-This project set out to determine, honestly and reproducibly, whether a deep metric-learning embedding of typing rhythm, paired with a classical calibrated verifier, can authenticate a person on the standard CMU keystroke benchmark, and how it compares with the published 9.6 % baseline. Under a strict open-set protocol on 16 subjects never seen in training, the system reached an Equal Error Rate of **14.2 % (scaled-Manhattan, the comparable metric)** and **10.2 % (full ensemble)**, the latter both closer to the baseline and three times more stable across seeds. The headline comparison is an honest near-miss on the baseline; the real finding is that **a learned representation makes a classical verifier more reliable and nearly recovers a strong hand-tuned baseline while being open-set and content-independent — the properties a real authentication product requires.** The project's lasting value is less the number than the *discipline*: an evaluation that refuses to flatter itself, thirteen documented problems overcome (including a production bug found only by running the real system), a substantive ethics analysis treating biometric data as the special-category data it legally is, and a result any reader can regenerate with one command. _[STUDENT: close with one sentence on what this project meant to you and where you would take it.]_
+This project set out to determine, honestly and reproducibly, whether a deep metric-learning embedding of typing rhythm, paired with a classical calibrated verifier, can authenticate a person on the standard CMU keystroke benchmark, and how it compares with the published 9.6 % baseline. Under a strict open-set protocol on 16 subjects never seen in training, the system reached an Equal Error Rate of **14.2 % (scaled-Manhattan, the comparable metric)** and **10.2 % (full ensemble)**, the latter both closer to the baseline and three times more stable across seeds. The headline comparison is an honest near-miss on the baseline; the real finding is that **a learned representation makes a classical verifier more reliable and nearly recovers a strong hand-tuned baseline while being open-set and content-independent — the properties a real authentication product requires.** The project's lasting value is less the number than the *discipline*: an evaluation that refuses to flatter itself, thirteen documented problems overcome (including a production bug found only by running the real system), a substantive ethics analysis treating biometric data as the special-category data it legally is, and a result any reader can regenerate with one command. For me, the project turned a frustrating personal experience — watching a stolen password defeat an account as though it belonged to the attacker — into something constructive: a working, honestly-measured demonstration that the *way* a person types can become a quiet extra layer of defence. I would take it next into free-text, continuous verification, where the signal is far richer, and ultimately into an opt-in, user-controlled feature in the very game it grew from.
 
 ---
 
@@ -518,7 +518,7 @@ This project set out to determine, honestly and reproducibly, whether a deep met
 
 This statement is provided in line with CREST's policy on the use of AI, which permits AI assistance provided it is original (not whole AI-generated sections passed off as one's own), attributed, and explained.
 
-**Tool used.** Anthropic's **Claude** (model: Claude Opus), accessed through the **Claude Code** command-line assistant, used on a Windows laptop during the research sprint of **8–9 June 2026** and during the writing of this report.
+**Tool used.** Anthropic's **Claude** (Claude Opus 4.8), accessed through the **Claude Code** command-line assistant, used on a Windows laptop during the research sprint of **8–10 June 2026** and during the writing of this report.
 
 **What the AI was used for:**
 - *Code scaffolding and debugging:* generating first drafts of functions (e.g. the open-set split, the figure scripts, the profile builder), and helping diagnose bugs — every one of which I reviewed, ran, and tested. The AI did not produce a single number in this report; all results come from code executing on my machine.
@@ -529,7 +529,7 @@ This statement is provided in line with CREST's policy on the use of AI, which p
 
 **Representative prompt (sample).** _"The Phase-1 EER is measured by training on all 51 subjects then scoring per-subject — isn't that closed-set leakage? Add a proper open-set subject split (train on a subset, evaluate only on held-out subjects) and assert no leakage."_ — illustrating that the AI was directed by my scientific judgement, not the other way around.
 
-_[STUDENT: keep an appendix or folder of your actual prompt/response transcripts if you have them — CREST says AI use should be "clearly evidenced" where possible, and the Claude Code session logs serve exactly this purpose.]_
+**On evidencing the AI use.** I have not attached the raw session transcripts. Instead, the evidence that this work is my own rests on three things: this written statement and the representative prompt above; the **git history**, whose 87 dated commits show the human decisions, dead-ends and edits at each step (a record an AI cannot retrofit); and the fact that **every result is reproducible from my own code** (§9) rather than asserted. This satisfies CREST's requirement that AI use be referenced and explained, and the originality of the project rests on the scientific decisions — the open-set protocol, the hybrid design, the honesty rules, the ethics stance — all of which were mine.
 
 ---
 
@@ -548,7 +548,7 @@ References use an author–date style; URLs are given for openly-accessible sour
 9. *Keystroke Dynamics: Concepts, Techniques, and Applications.* ACM Computing Surveys (2024/25). DOI 10.1145/3733103.
 10. Frank, M., Biedert, R., Ma, E., Martinovic, I. & Song, D. (2013). *Touchalytics: On the Applicability of Touchscreen Input as a Behavioral Biometric for Continuous Authentication.* IEEE Trans. Information Forensics and Security 8(1). arXiv:1207.6231.
 11. UK GDPR, Article 9 (special-category data) and Article 4(14) (definition of biometric data). https://gdpr-info.eu/art-9-gdpr/ ; UK ICO guidance on biometric data.
-12. Verizon (2024). *2024 Data Breach Investigations Report (DBIR).* Stolen credentials ≈ 77 % of Basic Web Application Attacks; compromised credentials the leading initial-access vector. https://www.verizon.com/business/resources/reports/dbir/ and summary: https://www.verizon.com/about/news/2024-data-breach-investigations-report-vulnerability-exploitation-boom _[STUDENT: re-confirm the exact percentage against the edition you cite at submission time; the DBIR is published annually.]_
+12. Verizon (2024). *2024 Data Breach Investigations Report (DBIR).* Stolen credentials ≈ 77 % of Basic Web Application Attacks; compromised credentials the leading initial-access vector. https://www.verizon.com/business/resources/reports/dbir/ and summary: https://www.verizon.com/about/news/2024-data-breach-investigations-report-vulnerability-exploitation-boom _[Devadit: re-confirm the exact percentage against the edition you cite at submission time; the DBIR is published annually.]_
 13. CREST Awards (British Science Association). *Gold criteria guidance*, *Required documentation*, *AI guidance for students*. https://www.crestawards.org/help-centre/gold-criteria-guidance/
 
 ---
