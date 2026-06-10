@@ -1,0 +1,86 @@
+{
+  "outer_seed": 42,
+  "n_inner_train": 24,
+  "n_validation": 11,
+  "n_test_reserved": 16,
+  "results": [
+    {
+      "config": "baseline (original cmu-v1)",
+      "overrides": {},
+      "val_primary_eer": 0.1933409090909091,
+      "val_ensemble_eer": 0.16782954545454545,
+      "seconds": 230.7646143436432,
+      "final_loss": 0.20000025669733684
+    },
+    {
+      "config": "samples_per_subject=4",
+      "overrides": {
+        "samples_per_subject": 4
+      },
+      "val_primary_eer": 0.2572386363636363,
+      "val_ensemble_eer": 0.17306818181818182,
+      "seconds": 159.72759890556335,
+      "final_loss": 0.20000030318895975
+    },
+    {
+      "config": "samples_per_subject=8",
+      "overrides": {
+        "samples_per_subject": 8
+      },
+      "val_primary_eer": 0.1974659090909091,
+      "val_ensemble_eer": 0.20229545454545453,
+      "seconds": 113.84999060630798,
+      "final_loss": 0.20000041365623475
+    },
+    {
+      "config": "epochs=120",
+      "overrides": {
+        "epochs": 120
+      },
+      "val_primary_eer": 0.19039772727272727,
+      "val_ensemble_eer": 0.1684431818181818,
+      "seconds": 482.97371339797974,
+      "final_loss": 0.19999037767450015
+    },
+    {
+      "config": "margin=0.3",
+      "overrides": {
+        "margin": 0.3
+      },
+      "val_primary_eer": 0.1933409090909091,
+      "val_ensemble_eer": 0.16782954545454545,
+      "seconds": 254.52221965789795,
+      "final_loss": 0.3000002610683441
+    },
+    {
+      "config": "center_weight=0.05",
+      "overrides": {
+        "center_weight": 0.05
+      },
+      "val_primary_eer": 0.20535227272727274,
+      "val_ensemble_eer": 0.1725,
+      "seconds": 275.1794424057007,
+      "final_loss": 0.20000024204452832
+    },
+    {
+      "config": "tuned-combined {'epochs': 120}",
+      "overrides": {
+        "epochs": 120
+      },
+      "val_primary_eer": 0.19039772727272727,
+      "val_ensemble_eer": 0.1684431818181818,
+      "seconds": 430.67671275138855,
+      "final_loss": 0.19999037767450015
+    }
+  ],
+  "best": {
+    "config": "epochs=120",
+    "overrides": {
+      "epochs": 120
+    },
+    "val_primary_eer": 0.19039772727272727,
+    "val_ensemble_eer": 0.1684431818181818,
+    "seconds": 482.97371339797974,
+    "final_loss": 0.19999037767450015
+  }
+}
