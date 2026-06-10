@@ -11,7 +11,7 @@ import json
 import os
 import subprocess
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import numpy as np
 import torch
 from ksbio.seeds import set_global_seed
@@ -74,6 +74,12 @@ class Phase1Args:
     epochs: int = 60
     seed: int = 42
     version: str = "cmu-v1"
+    # Training hyperparameters. Defaults reproduce the original cmu-v1 result;
+    # the validation sweep (sweep_cmu.py) tunes these on a held-out validation
+    # split of the TRAIN subjects, never on the 16 test subjects.
+    margin: float = 0.2
+    center_weight: float = 0.01
+    samples_per_subject: int = 2
 
 
 def _git_commit():
@@ -198,30 +204,34 @@ def _eval_test_subjects(enc, by_subject, test_subjects):
     }
 
 
+def train_on_subjects(by_subject, train_subjects, args):
+    """Train an encoder on the given train subjects ONLY, with the hyperparameters
+    carried by `args`. Returns (encoder, history). Factored out so run_phase1 and
+    the validation sweep share one code path (and the same leakage discipline)."""
+    train_samples = []
+    label_of = {subj: i for i, subj in enumerate(train_subjects)}
+    for subj in train_subjects:
+        for feats, cids in by_subject[subj]:
+            train_samples.append((feats, cids, feats.shape[0], label_of[subj]))
+    cfg = TrainConfig(embed_dim=args.embed_dim, epochs=args.epochs,
+                      seed=args.seed,
+                      batch_subjects=min(16, max(2, len(train_subjects))),
+                      samples_per_subject=args.samples_per_subject,
+                      margin=args.margin, center_weight=args.center_weight)
+    return train_encoder(train_samples, cfg)
+
+
 def run_phase1(args: Phase1Args):
     set_global_seed(args.seed)
     samples, by_subject = _samples_from_csv(args.csv_path, args.seed)
     subjects = list(by_subject.keys())
 
     # --- OPEN-SET split: train on train-subjects, evaluate on held-out subjects.
-    # Rebuild training samples directly from the train subjects' windows (with a
-    # fresh contiguous label space) rather than filtering `samples` by its opaque
-    # int labels — keeps the train set provably free of any test subject.
     train_subjects, test_subjects = split_subjects(subjects, args.seed)
     train_set = set(train_subjects)
-    train_samples = []
-    label_of = {subj: i for i, subj in enumerate(train_subjects)}
-    for subj in train_subjects:
-        for feats, cids in by_subject[subj]:
-            train_samples.append((feats, cids, feats.shape[0], label_of[subj]))
+    enc, history = train_on_subjects(by_subject, train_subjects, args)
 
-    cfg = TrainConfig(embed_dim=args.embed_dim, epochs=args.epochs,
-                      seed=args.seed,
-                      batch_subjects=min(16, max(2, len(train_subjects))),
-                      samples_per_subject=2)
-    enc, history = train_encoder(train_samples, cfg)
-
-    # Leakage guard: NO test subject may appear in the training label space.
+    # Leakage guard: NO test subject may appear in the training set.
     assert not (set(test_subjects) & train_set), \
         "open-set violation: a test subject leaked into the training set"
 
@@ -232,7 +242,10 @@ def run_phase1(args: Phase1Args):
                         git_commit=_git_commit(),
                         config={"epochs": args.epochs, "seed": args.seed,
                                 "n_train_subjects": len(train_subjects),
-                                "n_test_subjects": len(test_subjects)},
+                                "n_test_subjects": len(test_subjects),
+                                "margin": args.margin,
+                                "center_weight": args.center_weight,
+                                "samples_per_subject": args.samples_per_subject},
                         timing_features=TIMING_FEATURES, max_char_id=MAX_CHAR_ID)
     save_artifact(args.artifact_path, enc, meta)
     return {
@@ -249,6 +262,9 @@ def run_phase1(args: Phase1Args):
         "seed": args.seed,
         "epochs": args.epochs,
         "embed_dim": args.embed_dim,
+        "margin": args.margin,
+        "center_weight": args.center_weight,
+        "samples_per_subject": args.samples_per_subject,
         "train_subjects": train_subjects,
         "test_subjects": test_subjects,
         # pooled primary score arrays for the DET curve (lists for JSON safety)
@@ -274,8 +290,9 @@ def run_multiseed(args: Phase1Args, seeds, metrics_out=None):
     runs = []
     t0 = time.time()
     for i, sd in enumerate(seeds):
-        a = Phase1Args(args.csv_path, args.artifact_path, args.embed_dim,
-                       args.epochs, sd, args.version)
+        # replace() carries ALL hyperparameters (margin, center_weight,
+        # samples_per_subject, ...) — only the seed changes per run.
+        a = replace(args, seed=sd)
         res = run_phase1(a)
         runs.append(res)
         print(f"[phase1] seed={sd} "
@@ -309,6 +326,9 @@ def run_multiseed(args: Phase1Args, seeds, metrics_out=None):
         "per_seed_ensemble_eer": ens.tolist(),
         "embed_dim": args.embed_dim,
         "epochs": args.epochs,
+        "margin": args.margin,
+        "center_weight": args.center_weight,
+        "samples_per_subject": args.samples_per_subject,
         "seed": seeds[0],
         "git_commit": _git_commit(),
         "device": "cpu",
@@ -342,11 +362,16 @@ def main():
     p.add_argument("--seeds", default=None,
                    help="comma-separated seeds for a mean±std run, e.g. 42,43,44")
     p.add_argument("--version", default="cmu-v1")
+    p.add_argument("--margin", type=float, default=0.2)
+    p.add_argument("--center-weight", type=float, default=0.01)
+    p.add_argument("--samples-per-subject", type=int, default=2)
     p.add_argument("--metrics-out", default=None,
                    help="path to write metrics.json (multi-seed aggregate)")
     a = p.parse_args()
     base = Phase1Args(a.csv_path, a.artifact_path, a.embed_dim, a.epochs,
-                      a.seed, a.version)
+                      a.seed, a.version, margin=a.margin,
+                      center_weight=a.center_weight,
+                      samples_per_subject=a.samples_per_subject)
     if a.seeds:
         seeds = [int(s) for s in a.seeds.split(",") if s.strip()]
         m = run_multiseed(base, seeds, metrics_out=a.metrics_out)
