@@ -26,7 +26,7 @@ For each criterion, write the **page (and paragraph)** in your report where the 
 |---|---|---|
 | **1.1** Clear aim broken into objectives | Report §1.1 (p. _[ ]_) | The aim is one testable sentence; it is decomposed into 6 objectives each with a measurable success condition and an outcome column. |
 | **1.2** Wider purpose | Report §1.2 (p. _[ ]_) | Account-takeover fraud and credential stuffing as the real-world problem; named stakeholders (account holders, the game's players); accessibility angle. |
-| **1.3** Range of approaches | Report §1.3 (p. _[ ]_) | Three distinct approaches (statistical / deep classifier / metric-embedding) compared in a trade-off table on seven criteria, with the decision justified. |
+| **1.3** Range of approaches | Report §1.3 (p. _[ ]_) | Three distinct approaches (statistical / deep classifier / metric-embedding) compared in a trade-off table on nine criteria, with the decision justified. |
 | **1.4** Plan and why I chose it | Report §1.4 (p. _[ ]_) | The three-part hybrid architecture and why the research/serve separation makes both the science and the product trustworthy. |
 | **1.5** Planned and organised time | Report §1.5 (p. _[ ]_) | A Gantt-style timeline built from **real, immutable git commit dates** (87 commits), an explicit ~84-hour effort breakdown, planned vs actual milestones, and two honest replanning decisions with reasons. |
 
