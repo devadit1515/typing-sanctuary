@@ -16,6 +16,7 @@ $root = $PSScriptRoot
 pandoc (Join-Path $root "CREST_Gold_Report.md") `
     -o (Join-Path $root "CREST_Gold_Report.docx") `
     --from gfm `
+    --resource-path $root `
     --metadata title="Keystroke-Dynamics Verification - CREST Gold Report" `
     --metadata author="Devadit Jain"
 Write-Host "Rebuilt CREST_Gold_Report.docx"
