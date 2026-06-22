@@ -9,7 +9,7 @@
 | Project title | Content-independent keystroke-dynamics verification: can a deep embedding plus a classical statistical verifier recognise a person from typing rhythm alone, and how close does it get to the published benchmark? |
 | Field | Computer science · machine learning · cybersecurity / behavioural biometrics |
 | Mentor / supervisor | None — independent project, no mentor or supervisor |
-| Dates | 25 November 2025 – 10 June 2026 (research sprint 8–10 June 2026) |
+| Dates | 25 November 2025 – 10 June 2026 (intensive development phase, 8–10 June 2026) |
 | Word count | ≈ 9,900 words |
 | Pages | _Numbered throughout; the Student Profile Form maps each of the 15 CREST criteria to the sections below._ |
 
@@ -93,10 +93,10 @@ Rather than throw away the classical statistics of A, I run them inside the lear
 | Content-independent (any text) | no | partial | yes |
 | Data efficiency | high | low | medium |
 | Compute cost (training + each new sign-up) | low (no training) | high (retrain on every new user) | low (train once; enrolment is cheap) |
-| Build time (effort in this sprint) | low (reuse tested stats code) | medium | medium–high (hardest to train) |
+| Build time (development effort) | low (reuse tested stats code) | medium | medium–high (hardest to train) |
 | Interpretability | high | low | medium |
 | Published precedent | strong (9.6%) | some | strong (TypeNet, FaceNet) |
-| Risk to build in a short sprint | low | medium | medium–high |
+| Risk to build in a short timeframe | low | medium | medium–high |
 | Fit to an authentication product | poor | poor | best |
 
 I chose C with the A-style ensemble on top: only an open-set, content-independent method fits a product where users keep signing up, and keeping the classical verifier let me compare directly against the 9.6% baseline and reuse tested statistical code rather than discard it.
@@ -113,7 +113,7 @@ Keeping the thing that *makes* the claim separate from the thing that *serves* i
 
 ## 1.5 Plan and timeline
 
-Building everything under version control means every step has a real, dated timestamp, so the 87 git commits (Nov 2025 – Jun 2026) act as an automatic logbook. 37 of them cover the six-month foundation (the game and the first two biometric engines), and 50 fall inside the three-day research sprint of 8–10 June 2026 (33, 13 and 4 on the three days). The dated milestone timeline below comes straight from the commit history (Nov 2025 – Jun 2026), and the three-day research sprint is broken out day by day:
+Building everything under version control means every step has a real, dated timestamp, so the 87 git commits (Nov 2025 – Jun 2026) act as an automatic logbook. 37 of them cover the six-month foundation (the game and the first two biometric engines), and 50 fall inside the intensive three-day development phase of 8–10 June 2026 (33, 13 and 4 on the three days). The dated milestone timeline below comes straight from the commit history (Nov 2025 – Jun 2026), and the three-day development phase is broken out day by day:
 
 | Date (from git) | Milestone |
 |---|---|
@@ -139,19 +139,19 @@ CREST expects ~70 hours at Gold; my breakdown, estimated against the dated commi
 | Background reading (CREST research; ~18 papers; CMU, TypeNet, FaceNet, Ledoit–Wolf, GDPR) | ~10 | §2, §13, dossier |
 | Product-shell work relevant to the research (capture v1/v2, the serving seam) | ~14 | 37 foundation commits |
 | Research design (architecture, the fixed contract, the open-set protocol) | ~8 | Design-spec commit |
-| Implementation (encoder, triplet loss, ensemble, evaluator, profile builder, service) | ~20 | Sprint commits Jun 8–9 |
+| Implementation (encoder, triplet loss, ensemble, evaluator, profile builder, service) | ~20 | Development commits Jun 8–9 |
 | Experiments and debugging (training runs, open-set fix, the 13 problems, the ablation) | ~14 | §7, metrics, sweep results |
 | Analysis and figures (EER, DET, t-SNE, per-subject, ablation) | ~6 | §4, figures |
 | Writing, ethics and reflection | ~12 | this report |
 | **Total** | **~84** | above the 70-hour expectation |
 
-Two milestones slipped during the sprint, both deliberate calls: deferring GPU training (the model trained in ~23 min on my laptop for £0, so the ~£0.10–0.50 cloud step wasn't worth the dependency) and scaling free-text Phase-2 back to "pipeline proven, real corpus deferred" rather than spend the sprint downloading the 136-million-keystroke Aalto corpus (§10). The planned-versus-actual view makes the three replans explicit:
+Two milestones slipped during this phase, both deliberate calls: deferring GPU training (the model trained in ~23 min on my laptop for £0, so the ~£0.10–0.50 cloud step wasn't worth the dependency) and scaling free-text Phase-2 back to "pipeline proven, real corpus deferred" rather than spend the limited time downloading the 136-million-keystroke Aalto corpus (§10). The planned-versus-actual view makes the three replans explicit:
 
 | Planned | Actual | Why it changed |
 |---|---|---|
-| Write the evaluator, then measure the EER | Wrote it, caught a closed-set flaw, rebuilt the protocol, *then* measured | The biggest replan: the closed-set bug (§7.1) forced an unplanned protocol redesign mid-sprint |
+| Write the evaluator, then measure the EER | Wrote it, caught a closed-set flaw, rebuilt the protocol, *then* measured | The biggest replan: the closed-set bug (§7.1) forced an unplanned protocol redesign part-way through |
 | Train on a cloud GPU | Trained on local CPU (~23 min, £0) | The model was small enough to train on a laptop, which removed the cost and an external dependency and made the result easier to reproduce |
-| Phase-2 free text on the real Aalto corpus | Pipeline built and proven on a fixture; the real-corpus run deferred to future work | Downloading the 136-million-keystroke corpus was more schedule risk than value inside a three-day sprint (§10) |
+| Phase-2 free text on the real Aalto corpus | Pipeline built and proven on a fixture; the real-corpus run deferred to future work | Downloading the 136-million-keystroke corpus was more schedule risk than value inside a three-day window (§10) |
 
 ## 1.6 Materials, tools and people
 
@@ -473,7 +473,7 @@ For me, this turned a frustrating personal experience — watching a stolen pass
 
 This follows CREST's AI policy, which allows AI help as long as it is original (not whole AI-written sections passed off as your own), attributed, and explained.
 
-**Tool.** Anthropic's Claude (Claude Opus 4.8), through the Claude Code command-line assistant, on a Windows laptop during the research sprint of 8–10 June 2026 and while writing this report.
+**Tool.** Anthropic's Claude (Claude Opus 4.8), through the Claude Code command-line assistant, on a Windows laptop during the intensive development phase of 8–10 June 2026 and while writing this report.
 
 **What I used it for.** *Code scaffolding and debugging* — first drafts of functions (the open-set split, figure scripts, profile builder) and help diagnosing bugs, all of which I reviewed, ran and tested; it produced no number in this report. *Finding references* — surfacing key papers (Killourhy–Maxion, TypeNet, FaceNet, Ledoit–Wolf, GDPR), which I checked against primary sources, dropping anything I couldn't verify. *Drafting* — organising the report and producing draft prose, which I edited into my own voice, fact-checked, and completed with the personal parts only I can write.
 

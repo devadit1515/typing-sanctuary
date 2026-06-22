@@ -12,7 +12,7 @@
 | CREST Award level | **Gold** |
 | Project title | Content-independent keystroke-dynamics biometric verification: does a deep metric-learning embedding with a classical calibrated verifier authenticate users by typing rhythm alone? |
 | Mentor / supervisor | None — independent project (no mentor or supervisor) |
-| Approximate hours | ≈ 84 hours (above the ~70-hour Gold expectation), evidenced by 87 dated git commits over 25 Nov 2025 – 10 Jun 2026, 50 of them inside the 8–10 June research sprint — see Report §1.5 effort table |
+| Approximate hours | ≈ 84 hours (above the ~70-hour Gold expectation), evidenced by 87 dated git commits over 25 Nov 2025 – 10 Jun 2026, 50 of them inside the 8–10 June intensive development phase — see Report §1.5 effort table |
 
 ---
 
