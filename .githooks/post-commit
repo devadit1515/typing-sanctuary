@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Auto-push every commit to GitHub (origin).
+# Set up at the user's request: "from now directly update every change on the github repo."
+#
+# Non-blocking by design: post-commit runs AFTER the commit is already recorded,
+# so a failed push (offline, expired credentials) never loses work — it only warns.
+# GIT_TERMINAL_PROMPT=0 ensures a missing credential fails fast instead of hanging.
+#
+# Pushes the new commit to origin/main (the repo's default / showcase branch) and,
+# when on a feature branch, to that same branch on origin.
+#
+# To pause auto-push:  git config core.hooksPath .git/hooks
+# To resume:           git config core.hooksPath .githooks
+
+export GIT_TERMINAL_PROMPT=0
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+echo "[auto-push] pushing commit to origin (main + ${branch})…"
+
+git push origin "HEAD:main" \
+  || echo "[auto-push] WARNING: push to origin/main failed — commit is saved locally, push manually later."
+
+if [ "$branch" != "main" ]; then
+  git push origin "HEAD:${branch}" \
+    || echo "[auto-push] WARNING: push to origin/${branch} failed — commit is saved locally, push manually later."
+fi
