@@ -1,0 +1,38 @@
+/* Print stylesheet for the CREST Gold report PDF (headless-Chrome render). */
+@page {
+  size: A4;
+  margin: 22mm 20mm 20mm 20mm;
+}
+html { font-size: 11pt; }
+body {
+  font-family: "Georgia", "Cambria", "Times New Roman", serif;
+  line-height: 1.45;
+  color: #111;
+  max-width: 100%;
+  margin: 0;
+}
+h1, h2, h3, h4 {
+  font-family: "Helvetica Neue", "Arial", sans-serif;
+  line-height: 1.2;
+  color: #0b0b0b;
+  page-break-after: avoid;
+}
+h1 { font-size: 18pt; margin: 1.4em 0 0.5em; border-bottom: 2px solid #222; padding-bottom: 3px; }
+h2 { font-size: 14pt; margin: 1.2em 0 0.4em; }
+h3 { font-size: 12pt; margin: 1em 0 0.3em; }
+p, li { orphans: 3; widows: 3; }
+a { color: #1a3e6e; text-decoration: none; word-break: break-word; }
+code { font-family: "Consolas", "Menlo", monospace; font-size: 0.9em; background: #f3f3f3; padding: 0 2px; }
+blockquote {
+  margin: 0.8em 0; padding: 0.4em 0.9em;
+  border-left: 3px solid #999; background: #f7f7f7; color: #222;
+}
+table {
+  border-collapse: collapse; width: 100%; margin: 0.7em 0;
+  font-size: 0.92em; page-break-inside: avoid;
+}
+th, td { border: 1px solid #bbb; padding: 4px 7px; text-align: left; vertical-align: top; }
+th { background: #efefef; }
+img { max-width: 100%; height: auto; display: block; margin: 0.6em auto; page-break-inside: avoid; }
+em { color: #333; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.2em 0; }
