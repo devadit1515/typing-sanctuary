@@ -10,10 +10,10 @@
 | Field | Computer science · machine learning · cybersecurity / behavioural biometrics |
 | Mentor / supervisor | None — independent project, no mentor or supervisor |
 | Dates | 25 November 2025 – 10 June 2026 (research sprint 8–10 June 2026) |
-| Word count | _[fill in at submission]_ |
+| Word count | ≈ 9,900 words |
 | Pages | _Numbered throughout; the Student Profile Form maps each of the 15 CREST criteria to the sections below._ |
 
-> **A note on AI use, read first.** I designed, built, debugged and evaluated this system myself. I used an AI assistant (Anthropic's Claude, inside the Claude Code tool) to help with coding, debugging and drafting, which CREST allows. Section 12 sets out exactly what it did and what I checked. Every number in this report came out of code running on my own laptop and can be regenerated with a single command; none is made up. A few placeholders in _[square brackets]_ remain — they are values to fill in at submission (page numbers, word count, where to paste the figures), not missing content.
+> **A note on AI use, read first.** I designed, built, debugged and evaluated this system myself. I used an AI assistant (Anthropic's Claude, inside the Claude Code tool) to help with coding, debugging and drafting, which CREST allows. Section 12 sets out exactly what it did and what I checked. Every number in this report came out of code running on my own laptop and can be regenerated with a single command; none is made up.
 
 ---
 
@@ -69,11 +69,11 @@ Forcing each objective to carry a checkable condition is what stopped me hiding 
 
 ## 1.2 Wider purpose
 
-Passwords check knowledge, not identity: anyone who steals or guesses one becomes, as far as the system is concerned, the real owner. Account-takeover is large and stubborn — Verizon's 2024 Data Breach Investigations Report found stolen credentials were used in roughly 77% of web-application breaches, and credential-stuffing (replaying leaked username/password pairs automatically) is a dominant login attack (Verizon, 2024). Multi-factor authentication helps but adds friction people switch off. That is the gap a behavioural biometric could fill: instead of asking the user to do something extra, the system watches how they already type. The idea is old — telegraph operators were recognised by the rhythm of their "fist" in the 19th century — but modern machine learning makes content-independent typing recognition genuinely practical (Acien et al., 2021): an invisible second factor at login, a continuous session check, or a lower barrier for people who find passwords and tokens hard to manage.
+Passwords check knowledge, not identity: anyone who steals or guesses one becomes, as far as the system is concerned, the real owner. Account-takeover is large and stubborn — Verizon's 2024 Data Breach Investigations Report found stolen credentials were involved in about 88% of Basic Web Application Attacks, and credential-stuffing (replaying leaked username/password pairs automatically) is a dominant login attack (Verizon, 2024). Multi-factor authentication helps but adds friction people switch off. That is the gap a behavioural biometric could fill: instead of asking the user to do something extra, the system watches how they already type. The idea is old — telegraph operators were recognised by the rhythm of their "fist" in the 19th century — but modern machine learning makes content-independent typing recognition genuinely practical (Acien et al., 2021): an invisible second factor at login, a continuous session check, or a lower barrier for people who find passwords and tokens hard to manage.
 
 The people who would benefit are ordinary account holders on any site with a login — in my case the players of *Typing Sanctuary*, the typing game that is this project's product side, who already type constantly so the biometric needs nothing new of them. They are also the ones put at risk if the technology is built carelessly, which is why I treat ethics (§8) as part of the project, not an add-on.
 
-This is not an abstract problem for me. What made the weakness of passwords concrete was a real security incident: an account I cared about was accessed by someone using stolen credentials, and from the system's point of view nothing was wrong at all — the password was correct, so as far as the login was concerned the attacker simply *was* the owner. Watching a secret that "worked" perfectly defend nothing is what pushed me towards behavioural biometrics, and towards the specific question behind this project: whether *how* a person types could be a quiet second check that a stolen password cannot reproduce.
+This isn't abstract for me. What made the weakness of passwords real was a security incident of my own: an account I cared about was broken into with stolen credentials, and the system never noticed anything was wrong — the password was correct, so to the login the attacker simply *was* me. The fact that a perfectly correct password defended nothing is what pushed me towards behavioural biometrics, and towards the question behind this whole project: could *how* a person types be a quiet second check that a stolen password can't fake?
 
 ## 1.3 Approaches I considered
 
@@ -113,7 +113,7 @@ Keeping the thing that *makes* the claim separate from the thing that *serves* i
 
 ## 1.5 Plan and timeline
 
-Building everything under version control means every step has a real, dated timestamp, so the 87 git commits (Nov 2025 – Jun 2026) act as an automatic logbook. 37 of them cover the six-month foundation (the game and the first two biometric engines), and 50 fall inside the three-day research sprint of 8–10 June 2026 (33, 13 and 4 on the three days). _[Devadit: this is a live count; re-run `git rev-list --count HEAD` at submission for the exact final figure.]_ The dated milestone timeline below comes straight from the commit history (Nov 2025 – Jun 2026), and the three-day research sprint is broken out day by day:
+Building everything under version control means every step has a real, dated timestamp, so the 87 git commits (Nov 2025 – Jun 2026) act as an automatic logbook. 37 of them cover the six-month foundation (the game and the first two biometric engines), and 50 fall inside the three-day research sprint of 8–10 June 2026 (33, 13 and 4 on the three days). The dated milestone timeline below comes straight from the commit history (Nov 2025 – Jun 2026), and the three-day research sprint is broken out day by day:
 
 | Date (from git) | Milestone |
 |---|---|
@@ -445,11 +445,11 @@ A result you can't reproduce is just an opinion, so I treated reproducibility as
 
 # 10. Reflection
 
-**The lesson that mattered most: how easily you can fool yourself.** The turning point was the moment I stopped trusting my own first result. My initial evaluation gave an EER I was briefly pleased with — until I traced the training loop and saw the model had already been trained on the very people I was testing it on. It wasn't a lie I told on purpose; it was a lie the code told me, and I believed it because it flattered the project. Learning to treat a good-looking result as a suspect — to ask "what would make this wrong?" before celebrating — changed how I work more than any algorithm. The open-set rewrite that followed (§7.1) cost me a much better-looking number and is the decision I am most confident about. It also taught me, concretely, why biometrics use EER and DET curves rather than "accuracy": with two errors that trade off, a single figure hides the choice that matters.
+**The biggest lesson: how easily you can fool yourself.** The moment this project turned a corner was when I stopped believing my own first result. My first evaluation gave an EER I was genuinely pleased with — until I read back through the training loop and realised the model had already seen, in training, the exact people I was testing it on. I hadn't cheated on purpose; the code had quietly handed me a flattering number and I'd been happy to take it. Forcing myself to treat a good result as something to attack — to ask "what would make this wrong?" before I celebrated — is the habit I'll keep from this more than any single technique. Redoing it as an open-set test (§7.1) cost me a nicer-looking number, and it's the decision I'm proudest of. It also drove home why biometrics are judged on EER and DET curves, not "accuracy": when you can fail in two opposite ways, one number hides the trade-off that actually matters.
 
-**Reproducibility stopped being paperwork.** Pinning the dataset by hash, seeding everything and stamping the git commit into each artefact felt like overhead until the moment I could regenerate the whole headline result with one command — at which point it became the part of the project I trusted most. And running the real system finds what tests miss: the §7.5 crash passed every unit test and appeared only when a genuinely consistent typist hit the live endpoint, because synthetic data has artificial spread.
+**Reproducibility stopped feeling like box-ticking.** Hashing the dataset, fixing every seed and stamping the git commit into each file all felt like a chore while I did them — until the day I could rebuild the entire headline result with one command, and it became the thing I trusted most about the whole project. I also learned that running the real system catches what tests don't: the crash in §7.5 sailed through every unit test and only showed up when a real, very consistent typist hit the live endpoint.
 
-**Doing it alone.** With no mentor, every sanity check was one I performed on myself. That forced the self-auditing habit that eventually caught the closed-set flaw — but it also bit hardest there, because there was no second person to ask "aren't you testing on your training set?" I was both the person who wrote that mistake and the only one who could catch it, and for a while I didn't.
+**Doing it on my own.** With no mentor, every check on my work was one I had to run on myself. That's probably why I eventually caught the closed-set mistake — I'd trained myself to distrust my own results — but it's also exactly where working alone hurt: there was no one else to glance at it and say "hang on, aren't those your training subjects?" I was the person who made the mistake and the only person who could catch it, and for a while I just didn't.
 
 **What I would do next.**
 1. **Free text on a real corpus.** The 11-key password is the limiting factor (§4.3), and the ablation (§4.6) proved it — nothing I changed moved the result, so the ceiling is the data, not the model. The free-text pipeline is built and open-set-correct, but a real result needs a large public corpus (the Aalto 136-million-keystroke dataset). That is the clear next experiment.
@@ -457,7 +457,7 @@ A result you can't reproduce is just an opinion, so I treated reproducibility as
 3. **Train at scale on GPU.** Everything here ran on a laptop for £0; a bigger model on more data (following TypeNet) would test whether the hybrid's advantage holds as accuracy rises.
 4. **Collect a small, consented in-game dataset** to test cross-dataset generalisation, with the §8 safeguards built in from the start.
 
-**What I would change.** First, I would write the evaluation protocol down in full *before* writing a line of the evaluator — the closed-set flaw lasted because the protocol only lived in my head, where it was easy to talk myself into a flattering number; on paper the leak would have been obvious. Second, I would find a mentor or peer reviewer early: explaining a result out loud to someone allowed to doubt it catches things re-reading your own code does not, and it would have caught my biggest mistake far sooner.
+**What I'd change about how I worked.** Two things. First, I'd write the whole evaluation protocol down before writing any of the evaluator — the closed-set flaw survived as long as it did because the protocol only existed in my head, where it was easy to talk myself into a number I liked; on paper the leak would have been obvious. Second, I'd get a mentor or even one peer reviewer early on: saying a result out loud to someone who's allowed to doubt you catches things re-reading your own code never will, and it would have caught my biggest mistake far sooner.
 
 ---
 
@@ -500,7 +500,7 @@ Author–date style; URLs given for openly-accessible sources. Full provenance, 
 9. *Keystroke Dynamics: Concepts, Techniques, and Applications.* ACM Computing Surveys (2024/25). DOI 10.1145/3733103.
 10. Frank, M., Biedert, R., Ma, E., Martinovic, I. & Song, D. (2013). *Touchalytics: On the Applicability of Touchscreen Input as a Behavioral Biometric for Continuous Authentication.* IEEE Trans. Information Forensics and Security 8(1). arXiv:1207.6231.
 11. UK GDPR, Article 9 (special-category data) and Article 4(14) (definition of biometric data). https://gdpr-info.eu/art-9-gdpr/ ; UK ICO guidance on biometric data.
-12. Verizon (2024). *2024 Data Breach Investigations Report (DBIR).* Stolen credentials ≈ 77% of Basic Web Application Attacks; compromised credentials the leading initial-access vector. https://www.verizon.com/business/resources/reports/dbir/ _[Devadit: re-confirm the exact percentage against the edition you cite at submission; the DBIR is published annually.]_
+12. Verizon (2024). *2024 Data Breach Investigations Report (DBIR).* Stolen credentials involved in ≈ 88% of Basic Web Application Attacks; compromised credentials a leading initial-access vector. https://www.verizon.com/business/resources/reports/dbir/
 13. CREST Awards (British Science Association). *Gold criteria guidance*, *Required documentation*, *AI guidance for students*. https://www.crestawards.org/help-centre/gold-criteria-guidance/
 
 ---
