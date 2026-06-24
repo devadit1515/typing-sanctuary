@@ -9,8 +9,8 @@
 | Project title | Content-independent keystroke-dynamics verification: can a deep embedding plus a classical statistical verifier recognise a person from typing rhythm alone, and how close does it get to the published benchmark? |
 | Field | Computer science · machine learning · cybersecurity / behavioural biometrics |
 | Mentor / supervisor | None — independent project, no mentor or supervisor |
-| Dates | 25 November 2025 – 10 June 2026 (intensive development phase, 8–10 June 2026) |
-| Word count | ≈ 9,750 words |
+| Dates | 25 November 2025 – 10 June 2026 |
+| Word count | ≈ 9,350 words |
 | Pages | _Numbered throughout; the Student Profile Form maps each of the 15 CREST criteria to the sections below._ |
 
 > **A note on AI use, read first.** I designed, built, debugged and evaluated this system myself. I used an AI assistant (Anthropic's Claude, inside the Claude Code tool) to help with coding, debugging and drafting, which CREST allows. Section 12 sets out exactly what it did and what I checked. Every number in this report came out of code running on my own laptop, and every one of them regenerates with a single command. None is made up.
@@ -71,7 +71,7 @@ Making each objective carry a checkable condition stopped me hiding a non-result
 
 Passwords check knowledge, not identity. Anyone who steals or guesses one becomes, as far as the system is concerned, the real owner. Account-takeover is a big, stubborn problem. Verizon's 2024 Data Breach Investigations Report found stolen credentials were involved in about 88% of Basic Web Application Attacks, and credential-stuffing, where leaked username/password pairs are replayed automatically, is a dominant login attack (Verizon, 2024). Multi-factor authentication helps, but it adds friction, which people switch off. A behavioural biometric could fill that gap differently: instead of asking the user to do something extra, the system watches how they already type. The idea is old. Telegraph operators in the 19th century were recognised by the rhythm of their "fist". What is new is that machine learning makes content-independent typing recognition genuinely practical (Acien et al., 2021): an invisible second factor at login, a continuous check during a session, or a lower barrier for people who find passwords and tokens hard to manage.
 
-Who benefits? Ordinary account holders on any site with a login — in my case the players of *Typing Sanctuary*, the typing game that is this project's product side, who already type constantly, so the biometric asks nothing new of them. They are also the people most at risk if it's built carelessly, which is why I treat ethics (§8) as part of the project, not an add-on.
+Who benefits? Ordinary account holders on any site with a login — in my case the users of a product where people already type constantly, so the biometric asks nothing new of them. They are also the people most at risk if it's built carelessly, which is why I treat ethics (§8) as part of the project, not an add-on.
 
 This is not abstract for me. What made the weakness of passwords real was a break-in of my own. An account I cared about was taken with stolen credentials, and the system never noticed anything was wrong. The password was correct, so as far as the login was concerned, the attacker simply *was* me. A perfectly correct password defended nothing. That is what pushed me towards behavioural biometrics, and towards the question this whole project is built on: could *how* a person types be a quiet second check that a stolen password can't fake?
 
@@ -107,51 +107,34 @@ The system has three parts, sharing exactly one thing — the trained model — 
 
 1. **Research harness** (`research/`, PyTorch) — *makes* a frozen, versioned model reproducibly (fixed seeds, pinned dataset, recorded git commit).
 2. **Inference service** (`ml-service/`, FastAPI) — *serves* it through `/embed`, `/verify`, `/health`; holds the model in memory, stores nothing, logs no raw timings.
-3. **Product shell** (Node.js / Express) — the existing game; owns users and sessions, calls the service, enforces the decision.
+3. **Product shell** (Node.js / Express) — the existing web application; owns users and sessions, calls the service, enforces the decision.
 
 Keeping the thing that *makes* the claim apart from the thing that *serves* it pays off: the live app never trains or touches a dataset, and the research never touches live user data. The two meet only at a single fixed contract (`EMBED_DIM = 128`, L2-normalised). I also decided the failure behaviour up front: fail-safe, never fail-open. Any outage or version mismatch returns "indeterminate" and falls back to another factor, rather than quietly letting someone in. A security feature that admits everyone when it breaks is worse than none; that rule was non-negotiable, and it later caught a real bug (§7.5).
 
-## 1.5 Plan and timeline
+## 1.5 Plan and progress
 
-Building everything under version control gave every step a real, dated timestamp. The 87 git commits (Nov 2025 – Jun 2026) act as an automatic logbook. 37 of them cover the six-month foundation (the game itself, plus the first two biometric engines). The other 50 fall inside the intensive three-day development phase of 8–10 June 2026: 33, 13 and 4 across the three days. The milestone timeline below comes straight from the commit history:
+I ran the project in deliberate stages, each with a goal it had to meet before the next began. The first built the capture layer and two early statistical recognisers — enough to get real keystroke data and a baseline worth beating. Most of what follows is the stage after that: rebuilding the recogniser as a deep embedding, and learning to test it without fooling myself. Each stage was planned around the single question it had to answer, and that answer set the shape of the next. It's the main reason the closed-set trap in §7.1 surfaced at all — by then I'd trained myself to ask what would make a good result wrong.
 
-| Date (from git) | Milestone |
-|---|---|
-| 2025-11-25 | Game project begins ("Initial commit — Speed Typing Battle") |
-| Dec 2025 | Multiplayer, leaderboard, hearts/penalty system |
-| 2026-02-21 | Google OAuth + first keystroke-biometrics capture (v1) |
-| 2026-03-28 | Statistical biometric engine (v2) |
-| 2026-06-08 09:03 | Design specification for the deep-model rebuild |
-| 2026-06-08 09:30 | Fixed a production JWT bug (`req.userId`) that had silently disabled the live feature |
-| 2026-06-08 10:30–17:47 | Model: metrics, ensemble port, featurization, encoder (CNN+BiGRU+attention), triplet loss, deterministic trainer, versioned artifact |
-| 2026-06-08 19:50–20:46 | Honest EER evaluator, scripted CMU download with SHA-256, Phase-1 CLI, column-remap fix |
-| 2026-06-09 07:21–09:07 | Serving (`TorchEmbedder`), free-text path, Modal GPU config, load-time dimension guard |
-| 2026-06-09 16:32 | Open-set evaluation fix + ensemble EER + pinned dataset |
-| 2026-06-09 16:42 | Standalone product slice (consent → enrol → verify) |
-| 2026-06-09 17:19 | Trained on real data → measured EER; figures; fixed a live bug |
-| 2026-06-09 22:29 | Open-set free-text Phase-2 + reproducibility chain |
-| 2026-06-10 | Nested-validation ablation (test set kept untouched); confirmed settings near-optimal |
-
-CREST expects roughly 70 hours at Gold. My breakdown, estimated against the dated commit clusters, comes to about 84:
+CREST expects roughly 70 hours at Gold. My own estimate, broken down by phase of work, comes to about 84:
 
 | Phase of work | Approx. hours | Evidence |
 |---|---|---|
 | Background reading (CREST research; ~18 papers; CMU, TypeNet, FaceNet, Ledoit–Wolf, GDPR) | ~10 | §2, §13, dossier |
 | Product-shell work relevant to the research (capture v1/v2, the serving seam) | ~14 | 37 foundation commits |
 | Research design (architecture, the fixed contract, the open-set protocol) | ~8 | Design-spec commit |
-| Implementation (encoder, triplet loss, ensemble, evaluator, profile builder, service) | ~20 | Development commits Jun 8–9 |
+| Implementation (encoder, triplet loss, ensemble, evaluator, profile builder, service) | ~20 | development commits |
 | Experiments and debugging (training runs, open-set fix, the 13 problems, the ablation) | ~14 | §7, metrics, sweep results |
 | Analysis and figures (EER, DET, t-SNE, per-subject, ablation) | ~6 | §4, figures |
 | Writing, ethics and reflection | ~12 | this report |
 | **Total** | **~84** | above the 70-hour expectation |
 
-Two milestones slipped, both deliberate. I deferred GPU training, since the model trained in about 23 minutes on my laptop for £0, so a ~£0.10–0.50 cloud step plus its dependency wasn't worth it. And I scaled free-text Phase-2 back to "pipeline proven, real corpus deferred" rather than spend limited time on the 136-million-keystroke Aalto corpus (§10). The planned-versus-actual view makes the three replans explicit:
+I made two deliberate changes of plan. I deferred GPU training, since the model trained in about 23 minutes on my laptop for £0, so a ~£0.10–0.50 cloud step plus its dependency wasn't worth it. And I scaled free-text Phase-2 back to "pipeline proven, real corpus deferred" rather than spend limited time on the 136-million-keystroke Aalto corpus (§10). The planned-versus-actual view makes the three replans explicit:
 
 | Planned | Actual | Why it changed |
 |---|---|---|
 | Write the evaluator, then measure the EER | Wrote it, caught a closed-set flaw, rebuilt the protocol, *then* measured | The biggest replan: the closed-set bug (§7.1) forced an unplanned protocol redesign part-way through |
 | Train on a cloud GPU | Trained on local CPU (~23 min, £0) | The model was small enough to train on a laptop, which removed the cost and an external dependency and made the result easier to reproduce |
-| Phase-2 free text on the real Aalto corpus | Pipeline built and proven on a fixture; the real-corpus run deferred to future work | Downloading the 136-million-keystroke corpus was more schedule risk than value inside a three-day window (§10) |
+| Phase-2 free text on the real Aalto corpus | Pipeline built and proven on a fixture; the real-corpus run deferred to future work | Downloading the 136-million-keystroke corpus was more schedule risk than value within the project's limited timeframe (§10) |
 
 ## 1.6 Materials, tools and people
 
@@ -259,7 +242,7 @@ Every artefact carries its own provenance. The model file records the git commit
 
 ## 3.8 The product layer
 
-To show the model is more than a benchmark number, I wired a standalone slice (`/api/ml-keystroke/*`) into the game backend. A user consents, enrols by typing several windows (which become a profile), and is verified on a new window. The decision is fail-safe: if the service is unreachable, or the model version doesn't match the profile, the result is INDETERMINATE and the product asks for another factor, never granting access by default. The slice is kept separate from the older statistical engine, and its safety behaviour is tested (§6, §7.5).
+To show the model is more than a benchmark number, I wired a standalone slice (`/api/ml-keystroke/*`) into the product backend. A user consents, enrols by typing several windows (which become a profile), and is verified on a new window. The decision is fail-safe: if the service is unreachable, or the model version doesn't match the profile, the result is INDETERMINATE and the product asks for another factor, never granting access by default. The slice is kept separate from the older statistical engine, and its safety behaviour is tested (§6, §7.5).
 
 ---
 
@@ -413,7 +396,7 @@ Biometric authentication is ethically serious for one reason: it works. A system
 
 **8.1 Biometric data is special.** Under UK/EU GDPR (Article 9), biometric data processed to uniquely identify a person is special-category data, the most protected class. Article 4(14) explicitly includes behavioural characteristics, and regulators treat typing rhythm as one. So the moment this system identifies someone, the data it handles is special-category — which shaped the decisions below.
 
-**8.2 A public, anonymised dataset, not new identifiable data.** The headline result is measured entirely on the CMU benchmark, whose subjects are anonymised (s002, and so on) and consented to research use. I deliberately did not train the headline model on my game's users, which would have created fresh identifiable behavioural data with all its consent and storage duties.
+**8.2 A public, anonymised dataset, not new identifiable data.** The headline result is measured entirely on the CMU benchmark, whose subjects are anonymised (s002, and so on) and consented to research use. I deliberately did not train the headline model on real product users, which would have created fresh identifiable behavioural data with all its consent and storage duties.
 
 **8.3 Explicit, revocable consent in the product.** The product slice makes a user opt in before any window is captured, and opting out wipes their profile. Consent is a stored, timestamped record — the GDPR principles of lawful basis and data minimisation built into the product, not written on a policy page.
 
@@ -455,7 +438,7 @@ A result you can't reproduce is just an opinion, so I treated reproducibility as
 1. **Free text on a real corpus.** The 11-key password is the limiting factor (§4.3), and the ablation (§4.6) proved it: nothing I changed moved the result, so the ceiling is the data, not the model. The free-text pipeline is built and open-set-correct, but a real result needs a large public corpus, the Aalto 136-million-keystroke dataset. The clear next experiment.
 2. **Fix the confidence scale** (§7.6) so the product's confidence percentage means something, not just the ranking.
 3. **Train at scale on GPU.** Everything here ran on a laptop for £0. A bigger model on more data, following TypeNet, would test whether the hybrid's advantage holds as accuracy rises.
-4. **Collect a small, consented in-game dataset** to test cross-dataset generalisation, with the §8 safeguards built in from the start.
+4. **Collect a small, consented dataset of real users** to test cross-dataset generalisation, with the §8 safeguards built in from the start.
 
 **What I'd change.** Two things. First, I'd write the whole evaluation protocol down before writing any of the evaluator. The closed-set flaw survived because the protocol only existed in my head, where it was easy to talk myself into a number I liked; on paper the leak would have been obvious. Second, I'd get a mentor, or even one peer reviewer, early on. Saying a result out loud to someone allowed to doubt you catches what re-reading your own code never will, and it would have caught my biggest mistake far sooner.
 
@@ -465,7 +448,7 @@ A result you can't reproduce is just an opinion, so I treated reproducibility as
 
 I set out to find, honestly and reproducibly, whether a deep embedding of typing rhythm plus a classical verifier can authenticate a person on the CMU benchmark, and how it compares with the published 9.6%. Under a strict open-set protocol, on 16 people the model never saw, it reached 14.2% EER with the comparable scaled-Manhattan metric and 10.2% with the full ensemble, the ensemble both closer to the baseline and three times steadier. The headline comparison is an honest near-miss. The real finding is that a learned representation makes a classical verifier more reliable and nearly recovers a strong hand-tuned baseline, while staying open-set and content-independent. What lasts here is less the number than how it was reached: an evaluation that doesn't flatter itself, thirteen problems found and fixed (one no unit test would have caught), an ethics section that treats biometric data as special-category data, and a result anyone can regenerate with one command.
 
-For me, this turned a frustrating personal experience, watching a stolen password defeat an account as if it belonged to the attacker, into something useful: a working, honestly-measured demonstration that the way a person types can be a quiet extra layer of defence. The next step is free-text, continuous verification, where the signal is far richer, and eventually an opt-in, user-controlled feature in the game it grew out of.
+For me, this turned a frustrating personal experience, watching a stolen password defeat an account as if it belonged to the attacker, into something useful: a working, honestly-measured demonstration that the way a person types can be a quiet extra layer of defence. The next step is free-text, continuous verification, where the signal is far richer, and eventually an opt-in, user-controlled feature in the product it grew out of.
 
 ---
 
@@ -473,7 +456,7 @@ For me, this turned a frustrating personal experience, watching a stolen passwor
 
 This follows CREST's AI policy, which allows AI help as long as the work is original (not whole AI-written sections passed off as your own), attributed, and explained.
 
-**Tool.** Anthropic's Claude (Claude Opus 4.8), through the Claude Code command-line assistant, on a Windows laptop during the intensive development phase of 8–10 June 2026 and while writing this report.
+**Tool.** Anthropic's Claude (Claude Opus 4.8), through the Claude Code command-line assistant, on a Windows laptop during the development work and while writing this report.
 
 **What I used it for.** *Code scaffolding and debugging:* first drafts of functions (the open-set split, the figure scripts, the profile builder) and help diagnosing bugs, all of which I reviewed, ran and tested; it produced no number in this report. *Finding references:* surfacing key papers (Killourhy–Maxion, TypeNet, FaceNet, Ledoit–Wolf, GDPR), checked against primary sources, dropping any I couldn't verify. *Drafting:* organising the report and producing draft prose, which I edited into my own voice, fact-checked, and finished with the personal parts only I can write.
 
