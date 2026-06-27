@@ -1,6 +1,6 @@
 # CREST Gold Award — Student Profile Form
 
-> **What this is.** CREST requires a Student Profile Form submitted *alongside* the report — one per student, even in a group. It has two functional parts: (1) a **criteria checklist** where you point the assessor to *where in your report* each of the 15 criteria is evidenced (the assessor reads this first), and (2) a **personal reflection**. This file reproduces that structure so you can transcribe it into the official CREST form (Word/PDF) at https://www.crestawards.org/resources/crest-gold-student-profile-form/. The criteria checklist below carries the page numbers from the regenerated `CREST_Gold_Report.pdf` (31 pages, exported from the current `.docx` via Word); if you re-format or re-export the PDF the pagination may shift, so re-check the numbers against the file you actually submit. The official form asks for "Page X, paragraph Y" — add paragraph numbers if you wish.
+> **What this is.** CREST requires a Student Profile Form submitted *alongside* the report — one per student, even in a group. It has two functional parts: (1) a **criteria checklist** where you point the assessor to *where in your report* each of the 15 criteria is evidenced (the assessor reads this first), and (2) a **personal reflection**. This file reproduces that structure so you can transcribe it into the official CREST form (Word/PDF) at https://www.crestawards.org/resources/crest-gold-student-profile-form/. The criteria checklist below carries the page numbers from the regenerated `CREST_Gold_Report.pdf` (33 pages, exported from the current `.docx` via Word); if you re-format or re-export the PDF the pagination may shift, so re-check the numbers against the file you actually submit. The official form asks for "Page X, paragraph Y" — add paragraph numbers if you wish.
 
 ---
 
@@ -27,7 +27,7 @@ For each criterion, write the **page (and paragraph)** in your report where the 
 | **1.1** Clear aim broken into objectives | Report §1.1 (p. 3) | The aim is one testable sentence; it is decomposed into 6 objectives each with a measurable success condition and an outcome column. |
 | **1.2** Wider purpose | Report §1.2 (p. 4) | Account-takeover fraud and credential stuffing as the real-world problem; named stakeholders (ordinary account holders on any login); accessibility angle. |
 | **1.3** Range of approaches | Report §1.3 (p. 4) | Three distinct approaches (statistical / deep classifier / metric-embedding) compared in a trade-off table on nine criteria, with the decision justified. |
-| **1.4** Plan and why I chose it | Report §1.4 (p. 5) | The three-part hybrid architecture and why the research/serve separation makes both the science and the product trustworthy. |
+| **1.4** Plan and why I chose it | Report §1.4 (p. 6) | The three-part hybrid architecture and why the research/serve separation makes both the science and the product trustworthy. |
 | **1.5** Planned and organised time | Report §1.5 (p. 6) | A dated month-level timeline (planned versus actual across the project's four stages), an explicit ~84-hour effort breakdown by phase of work, and the project's honest replanning decisions with their reasons — the work organised in deliberate, dated stages. |
 
 ### Section 2 — Throughout the project
@@ -35,25 +35,25 @@ For each criterion, write the **page (and paragraph)** in your report where the 
 | Criterion | Where I show this | My note to the assessor |
 |---|---|---|
 | **2.1** Made good use of materials and people | Report §1.6 (p. 8) | Every dataset, library, tool, standard and source named. This was an **independent project with no mentor**, so §1.6 documents how the *research community* (published authors, library maintainers, ISO/ICO standards) and rigorous self-auditing stood in for a supervisor — stated honestly, not hidden. |
-| **2.2** Researched background, acknowledged sources | Report §2 + §13 (pp. 8, 26) | A *synthesised* literature review (not paper-by-paper) that locates a specific gap; author–date in-text references with a full reference list; full provenance in `CREST_Research_Dossier.md`. |
+| **2.2** Researched background, acknowledged sources | Report §2 + §13 (pp. 8, 28) | A *synthesised* literature review (not paper-by-paper) that locates a specific gap; author–date in-text references with a full reference list; full provenance in `CREST_Research_Dossier.md`. |
 
 ### Section 3 — Finalising the project
 
 | Criterion | Where I show this | My note to the assessor |
 |---|---|---|
-| **3.1** Logical conclusions + implications for the wider world | Report §4 + §5 (pp. 14, 16) | Results answer the aim directly; §5.2 draws out implications for account security, the research community, and accessibility. |
-| **3.2** How my actions/decisions affected the outcome | Report §6 (p. 18) | Six pivotal decisions, each with its concrete effect — e.g. the open-set choice cost a "better" number but bought a defensible one, and refusing a noisy tuning "win" (§4.6) kept the headline honest. |
-| **3.3** What I learnt and would improve | Report §10 (p. 24) | ≥ half a page of specific reflection: closed-vs-open-set as the key lesson, reproducibility, and four concrete next steps. |
+| **3.1** Logical conclusions + implications for the wider world | Report §4 + §5 (pp. 14, 17) | Results answer the aim directly; §5.2 draws out implications for account security, the research community, and accessibility. |
+| **3.2** How my actions/decisions affected the outcome | Report §6 (p. 19) | Six pivotal decisions, each with its concrete effect — e.g. the open-set choice cost a "better" number but bought a defensible one, and refusing a noisy tuning "win" (§4.6) kept the headline honest. |
+| **3.3** What I learnt and would improve | Report §10 (p. 25) | ≥ half a page of specific reflection: closed-vs-open-set as the key lesson, reproducibility, and four concrete next steps. |
 
 ### Section 4 — Project-wide
 
 | Criterion | Where I show this | My note to the assessor |
 |---|---|---|
 | **4.1** Understanding of the science | Report §2 + §3 (pp. 8, 11) | Metric learning, triplet loss, L2-normalisation, Ledoit–Wolf shrinkage, Mahalanobis, EER/DET explained at Level-3+ depth and applied. |
-| **4.2** Ethics and safety decisions | Report §8 + App. E (pp. 22, 31) | Biometric data as GDPR special-category; consent; data minimisation (public dataset, templates not raw timings); fail-safe design; dual-use; risk assessment. |
+| **4.2** Ethics and safety decisions | Report §8 + App. E (pp. 23, 33) | Biometric data as GDPR special-category; consent; data minimisation (public dataset, templates not raw timings); fail-safe design; dual-use; risk assessment. |
 | **4.3** Creative thinking | Report §3.5 + §1.3 (pp. 12, 4) | The creative core is combining two usually-separate fields — deep representation learning and classical shrinkage statistics — by running the classical ensemble *inside the learned embedding space*. |
-| **4.4** Identified and overcame problems | Report §7 (p. 19) | 13 problems in *problem → root cause → fix → verified* form, including a live production crash found only by running the real system — strategic, root-cause problem-solving. |
-| **4.5** Explained the project clearly | Whole report (pp. 1–31) | Logical structure, abstract, labelled tables and figures, a glossary defining every term/abbreviation (App. B), accessible language. |
+| **4.4** Identified and overcame problems | Report §7 (p. 20) | 13 problems in *problem → root cause → fix → verified* form, including a live production crash found only by running the real system — strategic, root-cause problem-solving. |
+| **4.5** Explained the project clearly | Whole report (pp. 1–33) | Logical structure, abstract, labelled tables and figures, a glossary defining every term/abbreviation (App. B), accessible language. |
 
 > **Coverage:** all **15** criteria are evidenced across all **four** sections — comfortably above the Gold threshold of "at least 11 covering all four sections."
 
