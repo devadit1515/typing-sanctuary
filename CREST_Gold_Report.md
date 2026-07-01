@@ -2,20 +2,16 @@
 
 **A CREST Gold Award Research Project**
 
-| | |
-|---|---|
+|  |  |
+|----|----|
 | Student | Devadit Jain |
 | Project type | Research / investigation (with a design-and-make engineering component) |
 | Project title | Content-independent keystroke-dynamics verification: can a deep embedding plus a classical statistical verifier recognise a person from typing rhythm alone, and how close does it get to the published benchmark? |
 | Field | Computer science · machine learning · cybersecurity / behavioural biometrics |
-| Mentor / supervisor | None — independent project, no mentor or supervisor |
+| Mentor | None — independent project |
 | Dates | 25 November 2025 – 10 June 2026 |
-| Word count | ≈ 11,300 words |
-| Pages | _Numbered throughout; the Student Profile Form maps each of the 15 CREST criteria to the sections below._ |
 
-> **A note on AI use, read first.** I designed, built, debugged and evaluated this system myself. I used an AI assistant (Anthropic's Claude, inside the Claude Code tool) to help with coding, debugging and drafting, which CREST allows. Section 12 sets out exactly what it did and what I checked. Every number in this report came out of code running on my own laptop, and every one of them regenerates with a single command. None is made up.
-
----
+------------------------------------------------------------------------
 
 ## Abstract
 
@@ -23,30 +19,25 @@ A password only proves you know a secret. It says nothing about whether you are 
 
 I built the system in three parts: a PyTorch research harness that trains the model, a FastAPI service that serves the frozen model, and a Node.js product layer where a real user can consent, enrol and be verified. The model is a 1-D convolutional network with a bidirectional GRU and an attention layer, turning a window of keystrokes into a 128-number vector. On that learned representation, a hand-built ensemble (Ledoit–Wolf shrinkage, Mahalanobis distance and nearest-neighbour) makes the accept-or-reject call.
 
-I tested on the standard CMU benchmark: 51 people typing `.tie5Roanl`. The protocol was strict open-set, so I trained on 35 people and tested only on the 16 the model never saw, and the result measures how well it generalises to new users. Over three seeds it reached an Equal Error Rate (EER) of 14.2% ± 2.8% with the scaled-Manhattan scorer, the metric you can put next to the published 9.6% baseline, and 10.2% ± 1.0% with the full ensemble. The honest headline is a near-miss, not a win: on this small fixed-text benchmark the deep model does not beat the 2009 classical baseline. The contribution is what that honest measurement buys — a reproducible, open-set test of a hybrid design (a classical verifier run inside a learned embedding space) on people the model never trained on, in which the ensemble holds steadier from seed to seed than the simple scorer on the same embeddings (an internal SD comparison, 1.0% vs 2.8%, not a claim against the baseline's across-subject spread). With only three seeds that steadiness is indicative rather than a strong statistical result, and the report treats it that way. A component ablation traces the ensemble's edge specifically to the Ledoit–Wolf Mahalanobis term inside the learned space, not to the averaging of three distances. The report also documents the closed-set mistake that would have handed me a better-looking but meaningless number (§7.1), twelve other problems found and fixed, the ablation behind the headline setting, and an ethics section treating biometric data as the special-category data it legally is.
-
----
+I tested on the standard CMU benchmark: 51 people typing `.tie5Roanl`. The protocol was strict open-set, so I trained on 35 people and tested only on the 16 the model never saw, and the result measures how well it generalises to new users. Over three seeds it reached an Equal Error Rate (EER) of 14.2% ± 2.8% with the scaled-Manhattan scorer, the metric you can put next to the published 9.6% baseline, and 10.2% ± 1.0% with the full ensemble. The honest headline is a near-miss, not a win: on this small fixed-text benchmark the deep model does not beat the 2009 classical baseline. The contribution is what that honest measurement buys — a reproducible, open-set test of a hybrid design (a classical verifier run inside a learned embedding space) on people the model never trained on, in which the ensemble holds steadier from seed to seed than the simple scorer on the same embeddings (an internal SD comparison, 1.0% vs 2.8%, not a claim against the baseline's across-subject spread). Across 14 seeds the ensemble beats the simple scorer every time (Wilcoxon signed-rank p ≈ 0.0001), and a component ablation traces that edge to the Ledoit–Wolf Mahalanobis term inside the learned space, not to the averaging of three distances. The wider run is also less flattering than the three-seed headline — across 14 seeds the mean EERs are higher (≈ 18.7% primary, ≈ 13.3% ensemble) — which the report states plainly. The report also documents the closed-set mistake that would have handed me a better-looking but meaningless number (§7.1), twelve other problems found and fixed, the ablation behind the headline setting, and an ethics section treating biometric data as the special-category data it legally is.
 
 ## Table of Contents
 
-1. Introduction and project planning
-2. Background and literature
-3. Method
-4. Results
-5. Discussion
-6. How my decisions shaped the outcome
-7. Problems I found and fixed
-8. Ethics and safety
-9. Reproducibility
-10. Reflection
-11. Conclusion
-12. AI use statement
-13. References
-14. Appendices (A: criteria map · B: glossary · C: full results · D: code map · E: risk assessment)
+1.  Introduction
+2.  Background and literature
+3.  Method
+4.  Results
+5.  Discussion
+6.  How my decisions shaped the outcome
+7.  Problems I found and fixed
+8.  Ethics and safety
+9.  Reflection
+10. Conclusion
+11. AI use statement
+12. References
+13. Appendix
 
----
-
-# 1. Introduction and project planning
+# 1. Introduction
 
 ## 1.1 Aim and objectives
 
@@ -56,14 +47,14 @@ I wrote the aim with a clear pass/fail test built in: one number, the Equal Erro
 
 I split the aim into six objectives, and gave each one a success condition I could actually check:
 
-| # | Objective | Success condition | Outcome |
-|---|---|---|---|
+| \# | Objective | Success condition | Outcome |
+|----|----|----|----|
 | O1 | Build a keystroke-embedding network | Maps a variable-length window to a fixed 128-D vector; forward pass runs on CPU | Met (§3.3) |
-| O2 | Train it so same-person windows cluster and different-person windows separate | After training, mean within-person distance < mean between-person distance, checked by a test | Met (§3.4) |
+| O2 | Train it so same-person windows cluster and different-person windows separate | After training, mean within-person distance \< mean between-person distance, checked by a test | Met (§3.4) |
 | O3 | Evaluate honestly on a public benchmark, open-set | EER computed only on held-out people; the evaluator refuses to score training data | Met (§3.6, §4) |
 | O4 | Reuse a statistical ensemble as the decision layer inside the embedding space | Two EERs reported (scaled-Manhattan vs full ensemble) from one run | Met (§4.1) |
-| O5 | Make the pipeline reproducible | One script regenerates the result from a SHA-pinned dataset and fixed seeds | Met (§9) |
-| O6 | Show it working in a real product flow with safe failure | A live service serves the model; a user can consent → enrol → be verified; outages never grant access | Met (§3.8, §6) |
+| O5 | Make the pipeline reproducible | One script regenerates the result from a SHA-pinned dataset and fixed seeds | Met (App. B) |
+| O6 | Show it working in a real product flow with safe failure | A live service serves the model; a user can consent → enrol → be verified; outages never grant access | Met (§3.7, §6) |
 
 Making each objective carry a checkable condition stopped me hiding a non-result behind code that merely "ran" — the trap I nearly fell into (§7.1).
 
@@ -87,8 +78,8 @@ There were three genuinely different ways to build the verifier; I compared them
 
 I didn't want to throw away the classical statistics of A, so I run them inside the learned embedding space of C. The network gives the representation; a Ledoit–Wolf Mahalanobis, nearest-neighbour and scaled-Manhattan ensemble makes the decision. That combination is the core idea of the project.
 
-| | A: Statistical | B: Deep classifier | C: Metric embedding (+ ensemble) |
-|---|---|---|---|
+|  | A: Statistical | B: Deep classifier | C: Metric embedding (+ ensemble) |
+|----|----|----|----|
 | Open-set (new users, no retraining) | yes | no | yes |
 | Content-independent (any text) | no | partial | yes |
 | Data efficiency | high | low | medium |
@@ -105,9 +96,9 @@ I went with C and put the A-style ensemble on top: only an open-set, content-ind
 
 The system has three parts, sharing exactly one thing — the trained model — across a clean boundary:
 
-1. **Research harness** (`research/`, PyTorch) — *makes* a frozen, versioned model reproducibly (fixed seeds, pinned dataset, recorded git commit).
-2. **Inference service** (`ml-service/`, FastAPI) — *serves* it through `/embed`, `/verify`, `/health`; holds the model in memory, stores nothing, logs no raw timings.
-3. **Product shell** (Node.js / Express) — the existing web application; owns users and sessions, calls the service, enforces the decision.
+1.  **Research harness** (`research/`, PyTorch) — *makes* a frozen, versioned model reproducibly (fixed seeds, pinned dataset, recorded git commit).
+2.  **Inference service** (`ml-service/`, FastAPI) — *serves* it through `/embed`, `/verify`, `/health`; holds the model in memory, stores nothing, logs no raw timings.
+3.  **Product shell** (Node.js / Express) — the existing web application; owns users and sessions, calls the service, enforces the decision.
 
 Keeping the thing that *makes* the claim apart from the thing that *serves* it pays off: the live app never trains or touches a dataset, and the research never touches live user data. The two meet only at a single fixed contract (`EMBED_DIM = 128`, L2-normalised). I also decided the failure behaviour up front: fail-safe, never fail-open. Any outage or version mismatch returns "indeterminate" and falls back to another factor, rather than quietly letting someone in. A security feature that admits everyone when it breaks is worse than none; that rule was non-negotiable, and it later caught a real bug (§7.5).
 
@@ -118,7 +109,7 @@ I ran the project in deliberate stages, each with a goal it had to meet before t
 At the project level the work fell into four dated stages, each one gating the next:
 
 | When | Stage | Planned | What actually happened |
-|---|---|---|---|
+|----|----|----|----|
 | Nov–Dec 2025 | Foundation | Build the typing web application and a keystroke-capture layer | Built; it became the real source of typing data the rest of the project stands on |
 | Feb–Mar 2026 | Accounts and first recognisers | Add accounts and a first statistical keystroke check | Built the v1/v2 statistical recognisers and the clean serving seam between research and product |
 | Jun 2026 | Deep-learning research | Rebuild the recogniser as a deep embedding and evaluate it open-set | Done — but with an unplanned protocol redesign (§7.1) and an added nested-validation ablation (§4.6) |
@@ -129,23 +120,23 @@ The research this report is about is the June stage; the earlier months built th
 CREST expects roughly 70 hours at Gold. My own estimate, broken down by phase of work, comes to about 84:
 
 | Phase of work | Approx. hours | Evidence |
-|---|---|---|
-| Background reading (CREST research; ~18 papers; CMU, TypeNet, FaceNet, Ledoit–Wolf, GDPR) | ~10 | §2, §13, dossier |
+|----|----|----|
+| Background reading (CREST research; ~18 papers; CMU, TypeNet, FaceNet, Ledoit–Wolf, GDPR) | ~10 | §2, §12, dossier |
 | Product-shell work relevant to the research (capture v1/v2, the serving seam) | ~14 | 37 foundation commits |
 | Research design (architecture, the fixed contract, the open-set protocol) | ~8 | Design-spec commit |
 | Implementation (encoder, triplet loss, ensemble, evaluator, profile builder, service) | ~20 | development commits |
 | Experiments and debugging (training runs, open-set fix, the 13 problems, the ablation) | ~14 | §7, metrics, sweep results |
 | Analysis and figures (EER, DET, t-SNE, per-subject, ablation) | ~6 | §4, figures |
 | Writing, ethics and reflection | ~12 | this report |
-| **Total** | **~84** | above the 70-hour expectation |
+| **Total** | **~84** |  |
 
-I made two deliberate changes of plan. I deferred GPU training, since the model trained in about 23 minutes on my laptop for £0, so a ~£0.10–0.50 cloud step plus its dependency wasn't worth it. And I scaled free-text Phase-2 back to "pipeline proven, real corpus deferred" rather than spend limited time on the 136-million-keystroke Aalto corpus (§10). The planned-versus-actual view makes the three replans explicit:
+I made two deliberate changes of plan. I deferred GPU training, since the model trained in about 23 minutes on my laptop for £0, so a ~£0.10–0.50 cloud step plus its dependency wasn't worth it. And I scaled free-text Phase-2 back to "pipeline proven, real corpus deferred" rather than spend limited time on the 136-million-keystroke Aalto corpus (§9). The planned-versus-actual view makes the three replans explicit:
 
 | Planned | Actual | Why it changed |
-|---|---|---|
+|----|----|----|
 | Write the evaluator, then measure the EER | Wrote it, caught a closed-set flaw, rebuilt the protocol, *then* measured | The biggest replan: the closed-set bug (§7.1) forced an unplanned protocol redesign part-way through |
 | Train on a cloud GPU | Trained on local CPU (~23 min, £0) | The model was small enough to train on a laptop, which removed the cost and an external dependency and made the result easier to reproduce |
-| Phase-2 free text on the real Aalto corpus | Pipeline built and proven on a fixture; the real-corpus run deferred to future work | Downloading the 136-million-keystroke corpus was more schedule risk than value within the project's limited timeframe (§10) |
+| Phase-2 free text on the real Aalto corpus | Pipeline built and proven on a fixture; the real-corpus run deferred to future work | Downloading the 136-million-keystroke corpus was more schedule risk than value within the project's limited timeframe (§9) |
 
 ## 1.6 Materials, tools and people
 
@@ -153,10 +144,8 @@ I made two deliberate changes of plan. I deferred GPU training, since the model 
 - **Languages and libraries:** Python 3.12; PyTorch 2.12 (CPU) for the network; NumPy for the ensemble; FastAPI + Uvicorn for the service; scikit-learn (t-SNE) and Matplotlib for figures; Node.js / Express for the product; Jest and pytest for testing.
 - **Statistical method:** the Ledoit–Wolf shrinkage covariance estimator, cross-checked against scikit-learn's implementation.
 - **Infrastructure considered:** Modal (serverless GPU) for a future deployment, configured but not run, to avoid cost.
-- **Tooling:** Git (version control, and a handy dated logbook); the Claude Code AI assistant (fully disclosed in §12).
-- **People:** an independent project with no mentor. The "people" side came from the wider research community: the authors whose methods I built on (Killourhy & Maxion; the FaceNet and TypeNet teams; Ledoit & Wolf), the maintainers of the libraries I used, and the standards I read (ISO/IEC 19795-1; the ICO's GDPR guidance). The job a mentor usually does, being the second person who distrusts a convenient result, I had to do myself by auditing my own work; that is how the most important mistake got caught (§7.1). The lack of an outside reviewer is a real limitation, noted in §10.
-
----
+- **Tooling:** Git (version control, and a handy dated logbook); the Claude Code AI assistant (fully disclosed in §11).
+- **People:** an independent project with no mentor. The "people" side came from the wider research community: the authors whose methods I built on (Killourhy & Maxion; the FaceNet and TypeNet teams; Ledoit & Wolf), the maintainers of the libraries I used, and the standards I read (ISO/IEC 19795-1; the ICO's GDPR guidance). The job a mentor usually does, being the second person who distrusts a convenient result, I had to do myself by auditing my own work; that is how the most important mistake got caught (§7.1). The lack of an outside reviewer is a real limitation, noted in §9.
 
 # 2. Background and literature
 
@@ -202,8 +191,6 @@ Two reference points bracket this project.
 
 So the two reference points don't really disagree; they never meet. One owns small fixed-text data and hand-built statistics, the other owns web-scale free text and a learned model, and neither asks what happens when you bring a deep representation *down* to the small benchmark. That gap is where a student-scale project can contribute: on the small, public, reproducible CMU benchmark, does a deep embedding *plus* a classical verifier do better than the classical verifier on its own, tested honestly on people it never trained on? That is the falsifiable question. The contribution isn't a new record but a careful, reproducible, honest measurement of a hybrid design, with the failure modes written down rather than swept aside.
 
----
-
 # 3. Method
 
 This is the build, in enough detail to reproduce. The pipeline is short: one keystroke window in, one 128-number vector out, a decision off the back of that.
@@ -220,10 +207,10 @@ Each keystroke becomes a small vector: four timing features (hold, down-down, fl
 
 The encoder (`KeystrokeEncoder`) turns a window into a 128-D L2-normalised vector in four stages:
 
-1. **Input fusion** — each keystroke's four timing features join a 16-D learned character embedding, making a 20-D per-keystroke vector. The character embedding lets the network learn keyboard geography rather than being told it.
-2. **1-D convolutions** — two `Conv1d` layers (20→64→64, kernel 3) pick up local rhythm, the timing of adjacent key-pairs, or digraphs.
-3. **Bidirectional GRU** — a recurrent layer (GRU: Cho et al., 2014; 64 units each way → 128) reads the sequence in both directions, catching longer-range cadence.
-4. **Attention pooling → projection → L2-norm** — a single-head additive attention layer (additive attention: Bahdanau et al., 2015; a learned linear score per time step, soft-maxed over the valid keystrokes with a length mask) weights the time steps so the network learns which keystrokes matter; a linear layer projects to 128-D, and L2-normalisation puts the vector on the unit sphere.
+1.  **Input fusion** — each keystroke's four timing features join a 16-D learned character embedding, making a 20-D per-keystroke vector. The character embedding lets the network learn keyboard geography rather than being told it.
+2.  **1-D convolutions** — two `Conv1d` layers (20→64→64, kernel 3) pick up local rhythm, the timing of adjacent key-pairs, or digraphs.
+3.  **Bidirectional GRU** — a recurrent layer (GRU: Cho et al., 2014; 64 units each way → 128) reads the sequence in both directions, catching longer-range cadence.
+4.  **Attention pooling → projection → L2-norm** — a single-head additive attention layer (additive attention: Bahdanau et al., 2015; a learned linear score per time step, soft-maxed over the valid keystrokes with a length mask) weights the time steps so the network learns which keystrokes matter; a linear layer projects to 128-D, and L2-normalisation puts the vector on the unit sphere.
 
 I chose CNN + BiGRU + attention over a Transformer deliberately, and the choice is one of capacity against data rather than taste. The open-set split trains on 35 people, about 14,000 windows (35 × 400 reps), of one 11-key password — a narrow, low-diversity signal. This encoder carries 83,505 parameters; a comparable-depth Transformer encoder runs several times larger, and on a benchmark with only 35 training identities and a single password that extra capacity has little real signal to fit and ample room to memorise. I didn't benchmark a Transformer head-to-head, so I hold this as a reasoned design decision, not a measured one — but the parameter-to-task ratio is exactly the regime where the literature expects a Transformer to overfit and a smaller, data-efficient model to generalise better. The network has exactly 83,505 parameters (0.32 MB stored as float32) — small enough to train to roughly 10% open-set EER on a laptop CPU in minutes, with little room to overfit a 51-person benchmark. On that same CPU it embeds one window in about 0.8 ms (mean of 200 runs, batch of one), so a verification is comfortably real-time.
 
@@ -249,59 +236,53 @@ This is where the project's credibility lives or dies.
 
 **Hyperparameters by nested validation.** Try many settings and keep the best on the test set, and you've quietly turned the test set into a training signal. So I set the 16 test people aside first, then inside the 35 training people carved a further 24 inner-train / 11 validation split, judging every setting only on the validation people; the validation winner ran once on the 16. Because nothing was chosen using the test set, the final EER stays an honest open-set estimate (the ablation in §4.6).
 
-## 3.7 Reproducibility engineering
-
-Every artefact carries its own provenance. The model file records the git commit, embedding dimension and feature spec; the metrics file records the dataset SHA-256, the seeds, the protocol and the same commit. One command regenerates the result from pinned data, and the model loads with `weights_only=True`, so a swapped file can't run code inside the service. I checked this chain end to end (§9).
-
-## 3.8 The product layer
+## 3.7 The product layer
 
 To show the model is more than a benchmark number, I wired a standalone slice (`/api/ml-keystroke/*`) into the product backend. A user consents, enrols by typing several windows (which become a profile), and is verified on a new window. The decision is fail-safe: if the service is unreachable, or the model version doesn't match the profile, the result is INDETERMINATE and the product asks for another factor, never granting access by default. The slice is kept separate from the older statistical engine, and its safety behaviour is tested (§6, §7.5).
 
----
-
 # 4. Results
 
-Everything below was trained on real CMU data on a laptop CPU (no GPU), averaged over three seeds (42, 43, 44), and is reproducible with one command (§9). The full run took about 23 minutes and cost £0.
+Everything below was trained on real CMU data on a laptop CPU (no GPU), averaged over three seeds (42, 43, 44), and is reproducible from a pinned dataset and fixed seeds (App. B). The full run took about 23 minutes and cost £0.
 
 ## 4.1 Headline result
 
 Open-set EER on the 16 held-out people (mean ± SD over 3 seeds):
 
 | Scorer | EER (mean) | SD | Per-seed | Comparison |
-|---|---|---|---|---|
+|----|----|----|----|----|
 | Scaled-Manhattan (headline; comparable to baseline) | 0.1422 (14.2%) | ± 0.0279 | 0.1421 / 0.1764 / 0.1080 | vs published 0.0962 (9.6%) |
 | Full ensemble (secondary; centroid-L1 + NN + Mahalanobis) | 0.1016 (10.2%) | ± 0.0097 | 0.1086 / 0.1083 / 0.0878 | — |
 | Published baseline — Killourhy & Maxion (2009) | 0.0962 (9.6%) | (their SD 0.069) | — | reference |
 
-Two things jump out. First, the ensemble is more accurate and steadier than the simple scorer: its EER (10.2%) beats scaled-Manhattan (14.2%) by about four points on the *same* embeddings, and its seed-to-seed SD is smaller (0.97% vs 2.79%). I want to be careful how hard I lean on that second figure. It compares my own two scorers across just three seeds — it is not a comparison against the baseline's across-subject spread (0.069), and with only three seeds an SD ratio is indicative, not a statistical result I'd defend to a decimal. What I will stand behind is the *direction*, and a component ablation (§4.7) pins down its source: the gain isn't the averaging but the Ledoit–Wolf Mahalanobis distance computed inside the learned space — a steadier, more accurate decision than scaled-Manhattan on the same embeddings, which is the hybrid idea from §1.3 doing its job. Second, the honest open-set result sits *above* the baseline, not below it: 14.2% and 10.2% against 9.6%. That is what an un-leaked open-set result on a small CPU-trained model should look like, and the fact that it didn't come out implausibly low is itself a sign the evaluation is honest (§7.1).
+Two things jump out. First, the ensemble is more accurate and steadier than the simple scorer: its EER (10.2%) beats scaled-Manhattan (14.2%) by about four points on the same embeddings, and its seed-to-seed SD is smaller (0.97% vs 2.79%). That SD is an internal comparison between my own two scorers, not a claim against the baseline's across-subject spread (0.069). Three seeds can't settle whether the ensemble is genuinely steadier, so I re-ran the open-set pipeline over 14 seeds: it beats scaled-Manhattan on all 14 (Wilcoxon signed-rank p ≈ 0.0001), so the advantage is real, not a three-seed fluke. A component ablation (§4.7) pins down where it comes from — not the averaging, but the Ledoit–Wolf Mahalanobis distance inside the learned space. Second, the honest open-set result sits above the baseline, not below it: 14.2% and 10.2% against 9.6%. The 14-seed run is a blunter check on that headline too: across 14 seeds the mean EERs are higher than the three-seed figures (primary ≈ 18.7%, ensemble ≈ 13.3%), so seeds 42/43/44 sit on the optimistic side of the spread. They were fixed in advance, not chosen to flatter, but the fuller picture is the less flattering one, and the gap to the 9.6% baseline is wider than the headline suggests.
 
 ## 4.2 The DET curve
 
-The DET curve (Fig C.1) plots FRR against FAR across all thresholds for the headline scaled-Manhattan scorer; the EER point sits on the FAR = FRR diagonal at 14.2%, with the 9.6% baseline marked. It shows the security-versus-convenience trade-off directly (full curve and caption in App. C).
+The DET curve (Fig B.1) plots FRR against FAR across all thresholds for the headline scaled-Manhattan scorer; the EER point sits on the FAR = FRR diagonal at 14.2%, with the 9.6% baseline marked. It shows the security-versus-convenience trade-off directly (full curve and caption in App. B).
 
 ## 4.3 Per-subject analysis
 
-The 16 held-out people vary a lot in how recognisable they are (full table in Appendix C):
+The 16 held-out people vary a lot in how recognisable they are (full table in Appendix B):
 
 - **Most distinctive** (lowest EER): s036 at 0.9%, s017 at 2.0%, s022 at 3.5% — essentially strong authenticators on their own.
 - **Hardest** (highest EER): s047 at 33.5%, s007 at 29.5%, s037 at 23.4% — for them the 11-key password is too short and inconsistent to tell them apart reliably.
 
-The spread itself is informative: the limiting factor isn't the model but the information in an 11-key fixed password, which for some people doesn't carry a distinctive enough rhythm. That's the main argument for free text (§10).
+The spread itself is informative: the limiting factor isn't the model but the information in an 11-key fixed password, which for some people doesn't carry a distinctive enough rhythm. That's the main argument for free text (§9).
 
 ## 4.4 The embedding space (t-SNE)
 
-To check *why* it works, I projected the held-out 128-D embeddings down to 2-D with t-SNE (van der Maaten & Hinton, 2008) (Fig C.2). Several people form tight, well-separated clusters, which confirms the encoder maps a person's typing to a consistent region even though it never trained on them. A denser middle region of overlap lines up with the high-EER people from §4.3, so the picture and the numbers agree.
+To check *why* it works, I projected the held-out 128-D embeddings down to 2-D with t-SNE (van der Maaten & Hinton, 2008) (Fig B.2). Several people form tight, well-separated clusters, which confirms the encoder maps a person's typing to a consistent region even though it never trained on them. A denser middle region of overlap lines up with the high-EER people from §4.3, so the picture and the numbers agree.
 
 ## 4.5 End-to-end on a live user
 
-Beyond the benchmark, I served the trained model and ran the real flow. A held-out person was enrolled, then genuine and impostor windows were verified over HTTP. The mean genuine score (3.10) came out clearly lower, meaning more genuine, than the mean impostor score (6.73). So the deployed model ranks impostors as less genuine than the real user, behaving the same live as in the notebook. This is a single-user **smoke test**, not a result: it shows the wiring works end to end and the maths matches the offline run, not that the system performs well on a population of real users. The headline EER (§4.1) remains the evidence of performance; a real user study, with the §8 consent flow, is future work (§10). The smoke test also turned up a real crash (§7.5).
+Beyond the benchmark, I served the trained model and ran the real flow. A held-out person was enrolled, then genuine and impostor windows were verified over HTTP. The mean genuine score (3.10) came out clearly lower, meaning more genuine, than the mean impostor score (6.73). So the deployed model ranks impostors as less genuine than the real user, behaving the same live as in the notebook. This is a single-user **smoke test**, not a result: it shows the wiring works end to end and the maths matches the offline run, not that the system performs well on a population of real users. The headline EER (§4.1) remains the evidence of performance; a real user study, with the §8 consent flow, is future work (§9). The smoke test also turned up a real crash (§7.5).
 
 ## 4.6 Was the headline setting well-chosen, or just lucky? An ablation
 
 A fair criticism is that I might just have picked good settings by luck. To answer it without touching the test set, I ran the nested-validation ablation from §3.6: the 16 test people stayed untouched while, inside the 35 training people, a 24/11 inner-train/validation split judged one changed setting at a time.
 
 | Setting (change from the original) | Validation primary EER | Validation ensemble EER | Final loss |
-|---|---|---|---|
+|----|----|----|----|
 | Original (60 epochs, margin 0.2, centre-weight 0.01, 2 windows/subject) | 0.1933 | 0.1678 | 0.200 |
 | more windows per subject (2 → 4) | 0.2572 | 0.1731 | 0.200 |
 | more windows per subject (2 → 8) | 0.1975 | 0.2023 | 0.200 |
@@ -313,11 +294,11 @@ A fair criticism is that I might just have picked good settings by luck. To answ
 
 Three things come out of this.
 
-1. **The original setting was already near-optimal.** Nothing helped meaningfully. More windows per subject made it worse, which surprised me — I'd expected harder triplet mining to help. A stronger centre-loss made it worse too, and a wider margin was identical. The only nominal gain was doubling the epochs, lowering validation EER by 0.003, well inside the noise of an 11-person fold.
+1.  **The original setting was already near-optimal.** Nothing helped meaningfully. More windows per subject made it worse, which surprised me — I'd expected harder triplet mining to help. A stronger centre-loss made it worse too, and a wider margin was identical. The only nominal gain was doubling the epochs, lowering validation EER by 0.003, well inside the noise of an 11-person fold.
 
-2. **That tiny "win" didn't survive the test set.** Following the protocol, I ran the validation winner (120 epochs) once on the 16 test people. It generalised *worse*, and far less steadily: primary EER 0.161 ± 0.087 against the original's 0.142 ± 0.028, ensemble 0.113 ± 0.038 against 0.102 ± 0.010, with one seed sliding all the way to 0.284. That is what overfitting a small validation fold looks like: the 0.003 gain was noise, and acting on it would have hurt. So I kept the original, now backed by evidence.
+2.  **That tiny "win" didn't survive the test set.** Following the protocol, I ran the validation winner (120 epochs) once on the 16 test people. It generalised *worse*, and far less steadily: primary EER 0.161 ± 0.087 against the original's 0.142 ± 0.028, ensemble 0.113 ± 0.038 against 0.102 ± 0.010, with one seed sliding all the way to 0.284. That is what overfitting a small validation fold looks like: the 0.003 gain was noise, and acting on it would have hurt. So I kept the original, now backed by evidence.
 
-3. **The loss saturates at the margin** (final loss ≈ the margin in every row). The triplets are essentially all satisfied, so the bottleneck isn't optimisation but the information in an 11-key password (§4.3). The system is on a plateau: more epochs, samples or margin can't pull out a signal that isn't in the data. That's the strongest argument for free text (§10).
+3.  **The loss saturates at the margin** (final loss ≈ the margin in every row). The triplets are essentially all satisfied, so the bottleneck isn't optimisation but the information in an 11-key password (§4.3). The system is on a plateau: more epochs, samples or margin can't pull out a signal that isn't in the data. That's the strongest argument for free text (§9).
 
 The value isn't a better number but a demonstration that the reported number is robust, plus an honest account of a tuning attempt that failed, written down rather than buried.
 
@@ -325,29 +306,27 @@ The value isn't a better number but a demonstration that the reported number is 
 
 The ensemble fuses three distances, so before crediting "averaging" for the gain in §4.1 I tested which term actually earns it, by dropping each in turn and re-scoring the same held-out embeddings (mean over the three seeds, same 16 people):
 
-| Ensemble variant | EER (mean of 3 seeds) |
-|---|---|
-| Full (centroid-L1 + k-NN + Mahalanobis) | 0.1016 |
-| − drop centroid-L1 (k-NN + Mahalanobis) | 0.1016 |
-| − drop k-NN (centroid-L1 + Mahalanobis) | 0.1016 |
-| − drop Mahalanobis (centroid-L1 + k-NN) | 0.1330 |
+| Ensemble variant                        | EER (mean of 3 seeds) |
+|-----------------------------------------|-----------------------|
+| Full (centroid-L1 + k-NN + Mahalanobis) | 0.1016                |
+| − drop centroid-L1 (k-NN + Mahalanobis) | 0.1016                |
+| − drop k-NN (centroid-L1 + Mahalanobis) | 0.1016                |
+| − drop Mahalanobis (centroid-L1 + k-NN) | 0.1330                |
 
-The result is blunt and a little humbling. Removing the centroid-L1 or the nearest-neighbour term changes the EER by essentially nothing, while removing the Ledoit–Wolf Mahalanobis term throws most of the advantage away, back toward the 0.1422 primary scorer. So the honest mechanism behind the ensemble's edge isn't "averaging three distances" — it's the single Mahalanobis term, computed in the learned space. The other two are numerically swamped: a Mahalanobis distance in 128 dimensions is far larger in scale than a mean-absolute L1 term, so in an unweighted mean it dominates the ranking. The right way to read §4.1, then, is that a shrinkage-covariance Mahalanobis distance *inside the learned embedding* is what recovers most of the gap to the baseline, with lower seed-to-seed variance than scaled-Manhattan. That is a more specific claim than I started with, and it came from testing my own ensemble instead of trusting it — the same habit as §7.1. (It also flags a clear improvement: scale the three terms before fusing, so the centroid and nearest-neighbour distances can actually contribute.)
-
----
+Removing the centroid-L1 or the nearest-neighbour term changes the EER by essentially nothing, while removing the Ledoit–Wolf Mahalanobis term throws most of the advantage away, back toward the 0.1422 primary scorer. So the ensemble's edge isn't "averaging three distances"; it is the Mahalanobis term, computed in the learned space. The other two are numerically swamped — a Mahalanobis distance in 128 dimensions is far larger in scale than a mean-absolute L1 term, so in an unweighted mean it dominates the ranking. The right way to read §4.1 is that a shrinkage-covariance Mahalanobis distance inside the learned embedding recovers most of the gap to the baseline, with lower seed-to-seed variance than scaled-Manhattan. This also flags a clear improvement: scale the three terms before fusing, so the centroid and nearest-neighbour distances can actually contribute.
 
 # 5. Discussion
 
 **Objectives revisited.** Each objective from §1.1 carried a checkable success condition. Before I get into what the headline number means, here are the results tied back to them:
 
 | Objective | Met? | Evidence |
-|---|---|---|
-| O1 — build the keystroke encoder | Yes | 128-D vector, CPU forward pass (§3.3); encoder tests (§9.4) |
-| O2 — same-person windows cluster | Yes | intra < inter distance test passes (§3.4); t-SNE clusters (§4.4) |
+|----|----|----|
+| O1 — build the keystroke encoder | Yes | 128-D vector, CPU forward pass (§3.3); encoder test (§3.4) |
+| O2 — same-person windows cluster | Yes | intra \< inter distance test passes (§3.4); t-SNE clusters (§4.4) |
 | O3 — honest open-set EER | Yes | 14.2% on 16 held-out people; the evaluator refuses to score training data (§3.6, §7.4) |
 | O4 — ensemble decision layer | Yes | two EERs from one run; ensemble 10.2% (§4.1) |
-| O5 — reproducible pipeline | Yes | one-command regeneration, pinned SHA + fixed seeds (§9) |
-| O6 — live product, safe failure | Yes | consent → enrol → verify served end to end; any outage returns INDETERMINATE (§3.8, §4.5) |
+| O5 — reproducible pipeline | Yes | regeneration from a pinned SHA and fixed seeds (App. B) |
+| O6 — live product, safe failure | Yes | consent → enrol → verify served end to end; any outage returns INDETERMINATE (§3.7, §4.5) |
 
 All six were met. The substance is in what the headline EER *means* against the baseline, which is the rest of this section.
 
@@ -355,9 +334,9 @@ All six were met. The substance is in what the headline EER *means* against the 
 
 The aim asked whether a deep embedding plus a classical verifier can authenticate from typing rhythm, and how it compares with 9.6%. The honest answer has three parts:
 
-1. **It authenticates.** Well above chance (0.5), reaching 0.10–0.14 on people it never trained on, end to end through a live service.
-2. **It doesn't beat the classical baseline** on this small fixed-text benchmark: the headline scaled-Manhattan EER (14.2%) is above 9.6%. An honest negative, reported rather than hidden behind a kinder protocol.
-3. **The hybrid idea holds, with a sharper mechanism than I first claimed.** The ensemble inside the learned space (10.2%, ±1.0%) is both closer to the baseline and steadier from seed to seed than the simple scorer on the same embeddings (SD 1.0% vs 2.8% across three seeds — indicative, not a significance claim). A component ablation (§4.7) traces that edge specifically to the Ledoit–Wolf Mahalanobis term inside the learned embedding, not to the averaging. A shrinkage-covariance verifier run inside a learned representation, measured honestly, is the contribution.
+1.  **It authenticates.** Well above chance (0.5), reaching 0.10–0.14 on people it never trained on, end to end through a live service.
+2.  **It doesn't beat the classical baseline** on this small fixed-text benchmark: the headline scaled-Manhattan EER (14.2%) is above 9.6%. An honest negative, reported rather than hidden behind a kinder protocol.
+3.  **The hybrid idea holds, with a sharper mechanism than I first claimed.** The ensemble inside the learned space (10.2%, ±1.0%) is both closer to the baseline and steadier from seed to seed than the simple scorer on the same embeddings (SD 1.0% vs 2.8% across three seeds — indicative, not a significance claim). A component ablation (§4.7) traces that edge specifically to the Ledoit–Wolf Mahalanobis term inside the learned embedding, not to the averaging. A shrinkage-covariance verifier run inside a learned representation, measured honestly, is the contribution.
 
 So a learned representation makes a classical verifier more reliable while staying open-set and content-independent, which is what a real product needs and the baseline is not.
 
@@ -369,52 +348,159 @@ So a learned representation makes a classical verifier more reliable while stayi
 
 ## 5.3 Limitations
 
-The conclusions only hold within their bounds: a single small public dataset (51 people, one 11-key password), a small CPU-trained model, and fixed text only, since the free-text claim is designed for but not yet measured on a real corpus. The per-user threshold ranks correctly but isn't yet calibrated to the fused score's scale (§7.6). The §4.6 ablation sharpens these limits rather than softening them: because no extra training, sampling or margin helped, the 11-key password, not the model and not the compute, is clearly the ceiling, which is why free text (§10) is the highest-value next step. None of this invalidates the measured EER, but each is a reason not to over-generalise from it.
-
----
+The conclusions only hold within their bounds: a single small public dataset (51 people, one 11-key password), a small CPU-trained model, and fixed text only, since the free-text claim is designed for but not yet measured on a real corpus. The per-user threshold ranks correctly but isn't yet calibrated to the fused score's scale (§7.6). The §4.6 ablation sharpens these limits rather than softening them: because no extra training, sampling or margin helped, the 11-key password, not the model and not the compute, is clearly the ceiling, which is why free text (§9) is the highest-value next step. None of this invalidates the measured EER, but each is a reason not to over-generalise from it.
 
 # 6. How my decisions shaped the outcome
 
 Six decisions mattered most.
 
-1. **Open-set over the easier closed-set protocol** (§7.1) changed the meaning of every number in this report. Closed-set would have given a lower, more impressive, scientifically worthless EER. It cost a better-looking number and bought a defensible one — the biggest reason the report can be trusted at all.
-2. **Keeping the classical ensemble** instead of going pure-deep produced the actual positive finding, the variance reduction in §4.1. Without it I'd have only the 14.2% number and no real contribution.
-3. **Reporting scaled-Manhattan as the headline** against the baseline, rather than the kinder ensemble number, kept the central comparison honest. I fixed the metric before I saw which one flattered me.
-4. **Training on local CPU instead of cloud GPU** (§1.5) gave the same result for £0, with no external dependency, and made it easier to reproduce.
-5. **Building and running the real product slice** rather than stopping at the benchmark exposed the confidence-overflow crash (§7.5) no unit test caught.
-6. **Refusing a noisy validation "win"** (§4.6): nested validation nominally preferred a longer-trained model by 0.003 EER, but it generalised worse on the test set, so I kept the original and wrote up the failed attempt.
-
----
+1.  **Open-set over the easier closed-set protocol** (§7.1) changed the meaning of every number in this report. Closed-set would have given a lower, more impressive, scientifically worthless EER. It cost a better-looking number and bought a defensible one — the biggest reason the report can be trusted at all.
+2.  **Keeping the classical ensemble** instead of going pure-deep produced the actual positive finding, the variance reduction in §4.1. Without it I'd have only the 14.2% number and no real contribution.
+3.  **Reporting scaled-Manhattan as the headline** against the baseline, rather than the kinder ensemble number, kept the central comparison honest. I fixed the metric before I saw which one flattered me.
+4.  **Training on local CPU instead of cloud GPU** (§1.5) gave the same result for £0, with no external dependency, and made it easier to reproduce.
+5.  **Building and running the real product slice** rather than stopping at the benchmark exposed the confidence-overflow crash (§7.5) no unit test caught.
+6.  **Refusing a noisy validation "win"** (§4.6): nested validation nominally preferred a longer-trained model by 0.003 EER, but it generalised worse on the test set, so I kept the original and wrote up the failed attempt.
 
 # 7. Problems I found and fixed
 
 I kept a machine-readable problem log (`research/artifacts/problem_log.json`) of thirteen entries, each as problem → root cause → fix → how verified. The important ones weren't caught by a test passing, but by asking whether a passing test actually meant what it claimed. The full log is below; two are expanded afterwards.
 
-| # | Severity | Problem | Root cause | Fix | Verified by |
-|---|---|---|---|---|---|
-| 1 | critical | EER measured closed-set (trained on all 51, scored per-subject) | No train/test split by person | Seeded 35/16 split; score only the held-out 16 | No-leakage test; result honestly above baseline |
-| 2 | high | Ledoit–Wolf ensemble never used in the EER path | Ensemble was dead code there | Added an ensemble EER path using the deployed fusion | Ensemble 10.2% < primary 14.2% |
-| 3 | high | Wrong branch could collapse each rep to a 1-keystroke window | Silent real-CMU vs fixture branch | Assert the sequence branch fires | 20,400 windows all length 11 |
-| 4 | medium | Open-set eval re-embedded impostors O(N) times | `eer_for_subject` re-embedded each call | Embed once, cache, score both metrics | 300 s → 89 s, identical EER |
-| 5 | low | Ledoit–Wolf used a slow per-sample loop | `pi_sum` built n outer products | Vectorised (einsum) | Bit-parity 1e-9 across 4 shapes |
-| 6 | high | Service could verify no-one — nothing built a Profile | Enrolment→profile step missing | New `keystrokeProfileBuilder.js`, leave-one-out threshold | 5 profile-builder tests |
-| 7 | medium | Download script's SHA-256 was unverifiable | `EXPECTED_SHA256` a sentinel | Pinned the measured digest | `download_cmu.py --skip-download` verifies |
-| 8 | high | Live `/verify` 500'd for a very consistent typist | Tiny threshold overflowed the sigmoid exponent | Clamp exponent, floor threshold | Regression test; live ranks impostor > genuine |
-| 9 | medium | Confidence saturates (all HIGH) though ranking is right | Threshold and fused score on different scales | Logged as future work; rank-based EER unaffected | Ranking holds; flagged openly |
-| 10 | high | Free-text Phase-2 had the same closed-set defect as #1 | Defect duplicated across entrypoints | Refactored to reuse the open-set machinery | `test_phase2_is_open_set_no_leakage` |
-| 11 | high | Evaluator could fabricate 0.0 EER on an empty test set | No empty-test-set guard | Evaluator now raises | Empty-test-set guard test |
-| 12 | high | Real key-named columns (`H.period`) → all-zero timings | Fixture vs real-file column mismatch | `remap_cmu_columns` before featurising | Remap test; 41/44 non-zero |
-| 13 | medium | `torch.load` could run arbitrary code from a swapped file | `weights_only` defaulted to False | Load `weights_only=True` + dim guard | Round-trip + load-time guard |
-
-Two are worth expanding, because they best show the habit of auditing a passing result instead of trusting it.
+<table>
+<colgroup>
+<col style="width: 3%" />
+<col style="width: 6%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 55%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Severity</th>
+<th>Problem</th>
+<th>Root cause</th>
+<th>Fix</th>
+<th>Verified by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>critical</td>
+<td>EER measured closed-set (trained on all 51, scored per-subject)</td>
+<td>No train/test split by person</td>
+<td>Seeded 35/16 split; score only the held-out 16</td>
+<td>No-leakage test; result honestly<br />
+above baseline</td>
+</tr>
+<tr>
+<td>2</td>
+<td>high</td>
+<td>Ledoit–Wolf ensemble never used in the EER path</td>
+<td>Ensemble was dead code there</td>
+<td>Added an ensemble EER path using the deployed fusion</td>
+<td>Ensemble 10.2% &lt; primary 14.2%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>high</td>
+<td>Wrong branch could collapse each rep to a 1-keystroke window</td>
+<td>Silent real-CMU vs fixture branch</td>
+<td>Assert the sequence branch fires</td>
+<td>20,400 windows all length 11</td>
+</tr>
+<tr>
+<td>4</td>
+<td>medium</td>
+<td>Open-set eval re-embedded impostors O(N) times</td>
+<td><code>eer_for_subject</code> re-embedded each call</td>
+<td>Embed once, cache, score both metrics</td>
+<td>300 s → 89 s, identical EER</td>
+</tr>
+<tr>
+<td>5</td>
+<td>low</td>
+<td>Ledoit–Wolf used a slow per-sample loop</td>
+<td><code>pi_sum</code> built n outer products</td>
+<td>Vectorised (einsum)</td>
+<td>Bit-parity 1e-9 across 4 shapes</td>
+</tr>
+<tr>
+<td>6</td>
+<td>high</td>
+<td>Service could verify no-one — nothing built a Profile</td>
+<td>Enrolment→profile step missing</td>
+<td>New <code>keystrokeProfileBuilder.js</code>, leave-one-out threshold</td>
+<td>5 profile-builder tests</td>
+</tr>
+<tr>
+<td>7</td>
+<td>medium</td>
+<td>Download script's SHA-256 was unverifiable</td>
+<td><code>EXPECTED_SHA256</code> a sentinel</td>
+<td>Pinned the measured digest</td>
+<td><code>download_cmu.py </code><code>
+</code><code>--skip-download</code> verifies</td>
+</tr>
+<tr>
+<td>8</td>
+<td>high</td>
+<td>Live <code>/verify</code> 500'd for a very consistent typist</td>
+<td>Tiny threshold overflowed the sigmoid exponent</td>
+<td>Clamp exponent, floor threshold</td>
+<td>Regression test;<br />
+live ranks impostor &gt; genuine</td>
+</tr>
+<tr>
+<td>9</td>
+<td>medium</td>
+<td>Confidence saturates (all HIGH) though ranking is right</td>
+<td>Threshold and fused score on different scales</td>
+<td>Logged as future work; rank-based EER unaffected</td>
+<td>Ranking holds; flagged openly</td>
+</tr>
+<tr>
+<td>10</td>
+<td>high</td>
+<td>Free-text Phase-2 had the same closed-set defect as #1</td>
+<td>Defect duplicated across entrypoints</td>
+<td>Refactored to reuse the open-set machinery</td>
+<td><code>test_phase2_is_open_</code><code>
+</code><code>set_no_leakage</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>high</td>
+<td>Evaluator could fabricate 0.0 EER on an empty test set</td>
+<td>No empty-test-set guard</td>
+<td>Evaluator now raises</td>
+<td>Empty-test-set guard test</td>
+</tr>
+<tr>
+<td>12</td>
+<td>high</td>
+<td>Real key-named columns (<code>H.period</code>) → all-zero timings</td>
+<td>Fixture vs real-file column mismatch</td>
+<td><code>remap_cmu_columns</code> before featurising</td>
+<td>Remap test; 41/44 non-zero</td>
+</tr>
+<tr>
+<td>13</td>
+<td>medium</td>
+<td><code>torch.load</code> could run arbitrary code from a swapped file</td>
+<td><code>weights_only</code> defaulted to False</td>
+<td>Load <code>weights_only=True</code> + dim guard</td>
+<td>Round-trip + load-time guard</td>
+</tr>
+</tbody>
+</table>
 
 **7.1 — The closed-set flaw (the most important problem).** The original evaluator trained the encoder on all 51 people, then measured EER per person, so the network had already met every test subject. That isn't comparable to a published open-set baseline, and anyone reading the training loop would rightly bin the result. The cause was simple: with no split by person, the split protected the profile but not the representation. The fix was a seeded 35/16 split, training on 35 and evaluating only on the 16 held-out, with a runtime check that no test person leaks into training. It's verified by an automated no-leakage test, and by the resulting EER (14.2%) landing honestly above the baseline rather than implausibly below it.
 
 **7.5 — A crash only the real system showed.** The live `/verify` endpoint returned HTTP 500 for a very consistent typist, and no unit test caught it. Here's why: such a typist, on a fixed 11-key password, produces nearly identical embeddings, so the per-user threshold drops close to zero, the confidence sigmoid's exponent (`score/threshold`) blows up, and `math.exp` overflows. I clamped the exponent to a safe range (lossless, since the sigmoid is flat there) and floored the threshold so no profile can be degenerate, verified by a regression test and a live run that still ranks impostor above genuine. Synthetic embeddings have artificial spread, so the tests never hit it; only real data from a real consistent typist did. It's the clearest case in the project of why running the real system beats trusting the tests.
 
 The other eleven carry the same discipline — among them the closed-set defect duplicated in the free-text path (#10), the column remap that stopped the real file training on all-zero timings (#12), the empty-test-set guard that blocks a fabricated 0.0 EER (#11), and `weights_only=True` closing the arbitrary-code risk in model loading (#13). Each is in `problem_log.json` in full.
-
----
 
 # 8. Ethics and safety
 
@@ -434,53 +520,30 @@ Biometric authentication is ethically serious for one reason: it works. A system
 
 **8.7 Unequal error rates across users.** My own results carry a fairness problem I have to name. The per-subject EER (§4.3) runs from 0.9% for the most distinctive typist to 33.5% for the least — roughly a 37-fold difference in how often the system fails a person, on the same model and the same password. A biometric whose error rate is not uniform across users is a textbook disparate-impact risk: the people it serves worst would, in a careless deployment, be wrongly rejected (or wrongly admitted) far more often than the population EER suggests, and the headline 14.2% hides that completely. This is the concrete, measured reason the system must never be a sole factor (§8.5), and the reason a real deployment needs a *per-user* error audit, not just an aggregate EER, before it is trusted. It is also the honest counterweight to the accessibility hope in §5.2: the same technology that might lower a barrier for some users could raise one for others whose typing is simply less consistent.
 
-**8.8 Risk assessment.** This is a software project with no physical hazards. The risks are informational: data leakage (§8.4), wrongly rejecting genuine users (mitigated by fail-safe step-up, never the only factor), the unequal error rates just described (§8.7), and over-claiming (mitigated by honest numbers). A short table is in Appendix E.
+**8.8 Risk assessment.** This is a software project with no physical hazards. The risks are informational: data leakage (§8.4), wrongly rejecting genuine users (mitigated by fail-safe step-up, never the only factor), the unequal error rates just described (§8.7), and over-claiming (mitigated by honest numbers).
 
----
+# 9. Reflection
 
-# 9. Reproducibility
-
-A result you can't reproduce is just an opinion, so I treated reproducibility as a requirement.
-
-**9.1 One command.** A single script (`reproduce.ps1`) verifies the dataset SHA-256, trains over three seeds, checks the EER is within a sane ceiling, regenerates the figures and runs the full test suite, failing loudly on any step. From a clean checkout plus the dataset, the whole result regenerates on its own.
-
-**9.2 Pinned data, fixed seeds.** The dataset is pinned by SHA-256, all randomness is seeded, and CPU training is deterministic, so the same seed gives the same model bit-for-bit.
-
-**9.3 Provenance chain.** The model records its git commit and feature spec; the metrics file records the dataset SHA, the seeds and the same commit. Model-commit equals metrics-commit, and pinned-SHA equals metrics-SHA, so the result, the data and the code version are provably one triple.
-
-**9.4 Tested, not asserted.** 103 automated tests (research 65, service 22, product 16) cover featurization, the encoder, the loss, the open-set split, the no-leakage and EER-honesty guards, the wire contract, the profile builder and the fail-safe logic. Every "verified" claim points to a test or a logged run.
-
-**9.5 Train/serve match.** The served model embeds byte-identically to training, because featurization and encoder code are shared — no gap between the science I measured and the product I shipped.
-
----
-
-# 10. Reflection
-
-**The biggest lesson: how easily you can fool yourself.** The project turned a corner the moment I stopped believing my own first result. My first evaluation gave an EER I was genuinely pleased with, until I read back through the training loop and realised the model had already seen, in training, the exact people I was testing it on. I hadn't cheated on purpose; the code had quietly handed me a flattering number and I'd been happy to take it. Forcing myself to treat a good result as something to attack, to ask "what would make this wrong?" before celebrating, is the habit I'll keep more than any single technique. Redoing it open-set (§7.1) cost me a nicer-looking number, and it's the decision I'm proudest of. It also drove home why biometrics are judged on EER and DET curves, not "accuracy": when you can fail in two opposite ways, one number hides the trade-off that matters.
-
-**Reproducibility stopped feeling like box-ticking.** Hashing the dataset, fixing every seed and stamping the git commit into each file felt like a chore while I did them. Then came the day I could rebuild the entire headline result with one command, and it became the thing I trusted most. Running the real system also catches what tests don't: the crash in §7.5 sailed through every unit test and only showed up when a real, very consistent typist hit the live endpoint.
+The project turned a corner the moment I stopped believing my own first result. My first evaluation gave an EER I was genuinely pleased with, until I read back through the training loop and realised the model had already seen, in training, the exact people I was testing it on. I hadn't cheated on purpose; the code had quietly handed me a flattering number and I'd been happy to take it. Forcing myself to treat a good result as something to attack, to ask "what would make this wrong?" before celebrating, is the habit I'll keep more than any single technique. Redoing it open-set (§7.1) cost me a nicer-looking number, and it's the decision I'm proudest of. It also drove home why biometrics are judged on EER and DET curves, not "accuracy": when you can fail in two opposite ways, one number hides the trade-off that matters.
 
 **Doing it on my own.** With no mentor, every check on my work was one I ran on myself. That's probably why I eventually caught the closed-set mistake, since I'd trained myself to distrust my own results. It's also where working alone hurt: there was nobody else to glance over and say "hang on, aren't those your training subjects?" I made the mistake and was the only person who could catch it, and for a while I just didn't.
 
 **What I would do next.**
-1. **Free text on a real corpus.** The 11-key password is the limiting factor (§4.3), and the ablation (§4.6) proved it: nothing I changed moved the result, so the ceiling is the data, not the model. The free-text pipeline is built and open-set-correct, but a real result needs a large public corpus, the Aalto 136-million-keystroke dataset. The clear next experiment.
-2. **Fix the confidence scale** (§7.6) so the product's confidence percentage means something, not just the ranking.
-3. **Train at scale on GPU.** Everything here ran on a laptop for £0. A bigger model on more data, following TypeNet, would test whether the hybrid's advantage holds as accuracy rises.
-4. **Collect a small, consented dataset of real users** to test cross-dataset generalisation, with the §8 safeguards built in from the start.
+
+1.  **Free text on a real corpus.** The 11-key password is the limiting factor (§4.3), and the ablation (§4.6) proved it: nothing I changed moved the result, so the ceiling is the data, not the model. The free-text pipeline is built and open-set-correct, but a real result needs a large public corpus, the Aalto 136-million-keystroke dataset. The clear next experiment.
+2.  **Fix the confidence scale** (§7.6) so the product's confidence percentage means something, not just the ranking.
+3.  **Train at scale on GPU.** Everything here ran on a laptop for £0. A bigger model on more data, following TypeNet, would test whether the hybrid's advantage holds as accuracy rises.
+4.  **Collect a small, consented dataset of real users** to test cross-dataset generalisation, with the §8 safeguards built in from the start.
 
 **What I'd change.** Two things. First, I'd write the whole evaluation protocol down before writing any of the evaluator. The closed-set flaw survived because the protocol only existed in my head, where it was easy to talk myself into a number I liked; on paper the leak would have been obvious. Second, I'd get a mentor, or even one peer reviewer, early on. Saying a result out loud to someone allowed to doubt you catches what re-reading your own code never will, and it would have caught my biggest mistake far sooner.
 
----
-
-# 11. Conclusion
+# 10. Conclusion
 
 I set out to find, honestly and reproducibly, whether a deep embedding of typing rhythm plus a classical verifier can authenticate a person on the CMU benchmark, and how it compares with the published 9.6%. Under a strict open-set protocol, on 16 people the model never saw, it reached 14.2% EER with the comparable scaled-Manhattan metric and 10.2% with the full ensemble, the ensemble both closer to the baseline and steadier from seed to seed (an indicative result on three seeds, not a statistical claim). The headline comparison is an honest near-miss. The real finding is that a learned representation makes a classical verifier more reliable and nearly recovers a strong hand-tuned baseline, while staying open-set and content-independent. What lasts here is less the number than how it was reached: an evaluation that doesn't flatter itself, thirteen problems found and fixed (one no unit test would have caught), an ethics section that treats biometric data as special-category data, and a result anyone can regenerate with one command.
 
 For me, this turned a frustrating personal experience, watching a stolen password defeat an account as if it belonged to the attacker, into something useful: a working, honestly-measured demonstration that the way a person types can be a quiet extra layer of defence. The next step is free-text, continuous verification, where the signal is far richer, and eventually an opt-in, user-controlled feature in the product it grew out of.
 
----
-
-# 12. AI use statement
+# 11. AI use statement
 
 This follows CREST's AI policy, which allows AI help as long as the work is original (not whole AI-written sections passed off as your own), attributed, and explained.
 
@@ -488,49 +551,31 @@ This follows CREST's AI policy, which allows AI help as long as the work is orig
 
 **What I used it for.** *Code scaffolding and debugging:* first drafts of functions (the open-set split, the figure scripts, the profile builder) and help diagnosing bugs, all of which I reviewed, ran and tested; it produced no number in this report. *Finding references:* surfacing key papers (Killourhy–Maxion, TypeNet, FaceNet, Ledoit–Wolf, GDPR), checked against primary sources, dropping any I couldn't verify. *Drafting:* organising the report and producing draft prose, which I edited into my own voice, fact-checked, and finished with the personal parts only I can write.
 
-**What I did myself.** I set the direction and made every design decision: the open-set protocol, the hybrid architecture, the honesty rules, the ethics stance. I ran all the code, read the diffs, and checked every "verified" claim against a test or a run. Where the AI's first attempt was wrong — the early closed-set evaluation — I spotted the flaw and directed the fix (§7.1). The judgements are mine, and so is the responsibility.
-
-**A representative prompt.** *"The Phase-1 EER is measured by training on all 51 subjects then scoring per-subject — isn't that closed-set leakage? Add a proper open-set subject split and assert no leakage."* That is the kind of direction I gave. The science came from me.
-
-**On evidence.** I haven't attached raw transcripts. The evidence that the work is mine: this statement and the prompt above, the git history (dated commits showing the decisions, dead-ends and edits, which an AI can't retrofit), and the fact that every result regenerates from my own code (§9).
-
----
-
-# 13. References
+# 12. References
 
 Author–date style; URLs given for openly-accessible sources. Full provenance, including items I checked and rejected, is in `CREST_Research_Dossier.md`.
 
-1. Killourhy, K. S. & Maxion, R. A. (2009). *Comparing Anomaly-Detection Algorithms for Keystroke Dynamics.* Proc. IEEE/IFIP Int. Conf. on Dependable Systems and Networks (DSN-2009), pp. 125–134. Dataset: https://www.cs.cmu.edu/~keystroke/
-2. Acien, A., Morales, A., Monaco, J. V., Vera-Rodriguez, R. & Fierrez, J. (2021). *TypeNet: Deep Learning Keystroke Biometrics.* IEEE Trans. Biometrics, Behavior, and Identity Science. arXiv:2101.05570.
-3. Schroff, F., Kalenichenko, D. & Philbin, J. (2015). *FaceNet: A Unified Embedding for Face Recognition and Clustering.* CVPR 2015, pp. 815–823. DOI 10.1109/CVPR.2015.7298682. arXiv:1503.03832.
-4. Hermans, A., Beyer, L. & Leibe, B. (2017). *In Defense of the Triplet Loss for Person Re-Identification.* arXiv:1703.07737.
-5. Wen, Y., Zhang, K., Li, Z. & Qiao, Y. (2016). *A Discriminative Feature Learning Approach for Deep Face Recognition (center loss).* ECCV 2016, LNCS 9911, pp. 499–515. DOI 10.1007/978-3-319-46478-7_31.
-6. Ledoit, O. & Wolf, M. (2004). *A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices.* J. Multivariate Analysis 88(2), 365–411. DOI 10.1016/S0047-259X(03)00096-4. (Reference implementation: scikit-learn `LedoitWolf`.)
-7. Dhakal, V., Feit, A. M., Kristensson, P. O. & Oulasvirta, A. (2018). *Observations on Typing from 136 Million Keystrokes (Aalto dataset).* CHI 2018. DOI 10.1145/3173574.3174220. Data: https://userinterfaces.aalto.fi/136Mkeystrokes/
-8. ISO/IEC 19795-1. *Information technology — Biometric performance testing and reporting — Part 1: Principles and framework.* https://www.iso.org/standard/73515.html
-9. *Keystroke Dynamics: Concepts, Techniques, and Applications.* ACM Computing Surveys (2024/25). DOI 10.1145/3733103.
+1.  Killourhy, K. S. & Maxion, R. A. (2009). *Comparing Anomaly-Detection Algorithms for Keystroke Dynamics.* Proc. IEEE/IFIP Int. Conf. on Dependable Systems and Networks (DSN-2009), pp. 125–134. Dataset: <https://www.cs.cmu.edu/~keystroke/>
+2.  Acien, A., Morales, A., Monaco, J. V., Vera-Rodriguez, R. & Fierrez, J. (2021). *TypeNet: Deep Learning Keystroke Biometrics.* IEEE Trans. Biometrics, Behavior, and Identity Science. arXiv:2101.05570.
+3.  Schroff, F., Kalenichenko, D. & Philbin, J. (2015). *FaceNet: A Unified Embedding for Face Recognition and Clustering.* CVPR 2015, pp. 815–823. DOI 10.1109/CVPR.2015.7298682. arXiv:1503.03832.
+4.  Hermans, A., Beyer, L. & Leibe, B. (2017). *In Defense of the Triplet Loss for Person Re-Identification.* arXiv:1703.07737.
+5.  Wen, Y., Zhang, K., Li, Z. & Qiao, Y. (2016). *A Discriminative Feature Learning Approach for Deep Face Recognition (center loss).* ECCV 2016, LNCS 9911, pp. 499–515. DOI 10.1007/978-3-319-46478-7_31.
+6.  Ledoit, O. & Wolf, M. (2004). *A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices.* J. Multivariate Analysis 88(2), 365–411. DOI 10.1016/S0047-259X(03)00096-4. (Reference implementation: scikit-learn `LedoitWolf`.)
+7.  Dhakal, V., Feit, A. M., Kristensson, P. O. & Oulasvirta, A. (2018). *Observations on Typing from 136 Million Keystrokes (Aalto dataset).* CHI 2018. DOI 10.1145/3173574.3174220. Data: <https://userinterfaces.aalto.fi/136Mkeystrokes/>
+8.  ISO/IEC 19795-1. *Information technology — Biometric performance testing and reporting — Part 1: Principles and framework.* <https://www.iso.org/standard/73515.html>
+9.  *Keystroke Dynamics: Concepts, Techniques, and Applications.* ACM Computing Surveys (2024/25). DOI 10.1145/3733103.
 10. Frank, M., Biedert, R., Ma, E., Martinovic, I. & Song, D. (2013). *Touchalytics: On the Applicability of Touchscreen Input as a Behavioral Biometric for Continuous Authentication.* IEEE Trans. Information Forensics and Security 8(1). arXiv:1207.6231.
-11. UK GDPR, Article 9 (special-category data) and Article 4(14) (definition of biometric data). https://gdpr-info.eu/art-9-gdpr/ ; UK ICO guidance on biometric data.
-12. Verizon (2024). *2024 Data Breach Investigations Report (DBIR).* Stolen credentials involved in ≈ 88% of Basic Web Application Attacks; compromised credentials a leading initial-access vector. https://www.verizon.com/business/resources/reports/dbir/
-13. CREST Awards (British Science Association). *Gold criteria guidance*, *Required documentation*, *AI guidance for students*. https://www.crestawards.org/help-centre/gold-criteria-guidance/
+11. UK GDPR, Article 9 (special-category data) and Article 4(14) (definition of biometric data). <https://gdpr-info.eu/art-9-gdpr/> ; UK ICO guidance on biometric data.
+12. Verizon (2024). *2024 Data Breach Investigations Report (DBIR).* Stolen credentials involved in ≈ 88% of Basic Web Application Attacks; compromised credentials a leading initial-access vector. <https://www.verizon.com/business/resources/reports/dbir/>
+13. CREST Awards (British Science Association). *Gold criteria guidance*, *Required documentation*, *AI guidance for students*. <https://www.crestawards.org/help-centre/gold-criteria-guidance/>
 14. Cho, K., van Merriënboer, B., Gulcehre, C., Bahdanau, D., Bougares, F., Schwenk, H. & Bengio, Y. (2014). *Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation (GRU).* EMNLP 2014. arXiv:1406.1078.
 15. Bahdanau, D., Cho, K. & Bengio, Y. (2015). *Neural Machine Translation by Jointly Learning to Align and Translate (additive attention).* ICLR 2015. arXiv:1409.0473.
 16. van der Maaten, L. & Hinton, G. (2008). *Visualizing Data using t-SNE.* Journal of Machine Learning Research 9, 2579–2605.
 17. Kingma, D. P. & Ba, J. (2015). *Adam: A Method for Stochastic Optimization.* ICLR 2015. arXiv:1412.6980.
 
----
+# 13. Appendices
 
-# 14. Appendices
-
-## Appendix A — CREST criteria → section map
-
-An index for the assessor; the Student Profile Form carries the full criterion → page map with descriptions. Section numbers here:
-
-- **1.1** §1.1 · **1.2** §1.2 · **1.3** §1.3 · **1.4** §1.4 · **1.5** §1.5
-- **2.1** §1.6 · **2.2** §2 + §13 · **3.1** §4–§5 · **3.2** §6 · **3.3** §10
-- **4.1** §2, §3, §3.6, §4.6, §4.7 · **4.2** §8 + App. E · **4.3** §3.5, §1.3, §4.7 · **4.4** §7 · **4.5** whole report (structure, abstract, tables, figures, glossary App. B)
-
-## Appendix B — Glossary
+## Appendix A — Glossary
 
 - **Behavioural biometric** — recognition by how you act (typing rhythm, gait), not what you are; keystroke dynamics recognises a person by their typing timing.
 - **Embedding** — a fixed-length vector representation of an input; here, 128 numbers per window.
@@ -542,20 +587,20 @@ An index for the assessor; the Student Profile Form carries the full criterion �
 - **Ledoit–Wolf shrinkage** — a way to make a covariance matrix stable and invertible from few samples.
 - **CMU dataset** — the Killourhy–Maxion keystroke benchmark (51 people, password `.tie5Roanl`).
 
-## Appendix C — Full results and figures
+## Appendix B — Full results and figures
 
 Per-subject EER (scaled-Manhattan, seed 42), 16 held-out people, most to least distinctive:
 
-| Rank | Subject | EER | | Rank | Subject | EER |
-|---|---|---|---|---|---|---|
-| 1 | s036 | 0.009 | | 9 | s050 | 0.179 |
-| 2 | s017 | 0.020 | | 10 | s056 | 0.190 |
-| 3 | s022 | 0.035 | | 11 | s030 | 0.190 |
-| 4 | s005 | 0.045 | | 12 | s018 | 0.205 |
-| 5 | s012 | 0.051 | | 13 | s054 | 0.215 |
-| 6 | s010 | 0.090 | | 14 | s037 | 0.234 |
-| 7 | s038 | 0.090 | | 15 | s007 | 0.295 |
-| 8 | s053 | 0.090 | | 16 | s047 | 0.335 |
+| Rank | Subject | EER   |     | Rank | Subject | EER   |
+|------|---------|-------|-----|------|---------|-------|
+| 1    | s036    | 0.009 |     | 9    | s050    | 0.179 |
+| 2    | s017    | 0.020 |     | 10   | s056    | 0.190 |
+| 3    | s022    | 0.035 |     | 11   | s030    | 0.190 |
+| 4    | s005    | 0.045 |     | 12   | s018    | 0.205 |
+| 5    | s012    | 0.051 |     | 13   | s054    | 0.215 |
+| 6    | s010    | 0.090 |     | 14   | s037    | 0.234 |
+| 7    | s038    | 0.090 |     | 15   | s007    | 0.295 |
+| 8    | s053    | 0.090 |     | 16   | s047    | 0.335 |
 
 The seed-42 mean of these is 0.1421, which matches the headline seed-42 EER (a consistency check). The spread from 0.9% to 33.5% is the §4.3 finding: the limiting factor is the information in an 11-key password, not the model.
 
@@ -567,39 +612,19 @@ Aggregate (mean ± SD over seeds 42/43/44): scaled-Manhattan 0.1422 ± 0.0279; f
 - Git commit of the recorded run: `13fafe8f039d969fd77734b67d2457d37c59f918`
 - Seeds 42 / 43 / 44 · embedding dim 128 · 60 epochs · CPU · ~23 min total
 
-The model artifact and `metrics.json` both record this commit, and `metrics.json` records this SHA-256, so the data, the code version and the result are provably one triple (§9.3).
+The model artifact and `metrics.json` both record this commit, and `metrics.json` records this SHA-256, so the data, the code version and the result are provably one triple.
 
 Both figures are generated by `research/scripts/make_figures.py` and live in `research/artifacts/`.
 
-**Figure C.1 — DET curve.**
+**Figure B.1 — DET curve.**
 
 ![DET curve for the headline scaled-Manhattan scorer on the 16 held-out people, plotting FRR against FAR across all thresholds.](research/artifacts/det_curve.png)
 
 *FRR plotted against FAR across all decision thresholds for the headline scaled-Manhattan scorer on the 16 held-out people. The equal-error point sits on the FAR = FRR diagonal at 14.2%; the 9.6% published baseline (Killourhy & Maxion 2009) is marked for reference. See §4.2.*
 
-**Figure C.2 — Embedding space (t-SNE).**
+**Figure B.2 — Embedding space (t-SNE).**
 
 ![t-SNE projection of the 16 held-out people's 128-D embeddings into two dimensions, coloured by person.](research/artifacts/tsne.png)
 
 *The 128-D embeddings of the 16 held-out people, projected to 2-D with t-SNE and coloured by person. Several people form tight, well-separated clusters even though the encoder never trained on them; the denser overlap region corresponds to the high-EER people of §4.3, so the picture and the numbers agree. See §4.4.*
 
-## Appendix D — Code and artefact map
-
-- `research/` — harness: `ksbio/featurize.py`, `encoder.py`, `triplet.py`, `train.py`, `evaluate.py`, `ensemble.py`, `artifact.py`; `scripts/train_cmu.py` (open-set Phase-1), `train_freetext.py` (Phase-2), `sweep_cmu.py` (the §4.6 ablation), `make_figures.py`, `reproduce.ps1`.
-- `ml-service/` — FastAPI service: `app/contract.py` (the fixed wire contract), `model.py`, `torch_embedder.py`, `verify.py`.
-- Product slice — `services/keystrokeProfileBuilder.js`, `controllers/mlKeystrokeController.js`, `routes/mlKeystrokeRoutes.js`, `models/MlKeystrokeProfile.js`.
-- Evidence — `research/artifacts/metrics.json` (headline + provenance), `sweep_results.json` (validation ablation), `metrics_e120.json` (the §4.6 test cross-check), `problem_log.json` (the 13 problems), `det_curve.png`, `tsne.png`; `CREST_Research_Dossier.md` (full citations).
-
-## Appendix E — Risk assessment
-
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Leak of stored biometric profiles | Low | High | Store derived templates not raw timings; stateless service logs no keystrokes (§8.4) |
-| Genuine user wrongly rejected | Medium | Medium | Never the only factor; fail-safe step-up, not a hard lock-out; honest EER disclosed (§8.5–8.6) |
-| Impostor wrongly accepted | Medium | Medium | Used as a second factor; ensemble lowers EER; continuous re-check planned (§5.2) |
-| Over-claiming accuracy | Low | High | Honest open-set EER with per-person variance; no fabricated numbers (§7) |
-| Misuse for covert surveillance (dual use) | Low | High | Opt-in, user-controlled framing; consent and revocation enforced (§8.3, §8.6) |
-
----
-
-*End of report. This document, together with the code, the metrics, the figures and the problem log, makes up the CREST Gold submission; the Student Profile Form maps each criterion to its page.*
