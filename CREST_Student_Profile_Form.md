@@ -42,7 +42,7 @@ For each criterion, write the **page (and paragraph)** in your report where the 
 | Criterion | Where I show this | My note to the assessor |
 |---|---|---|
 | **3.1** Logical conclusions + implications for the wider world | Report §4 + §5 (pp. 13, 17) | Results answer the aim directly; §5.2 draws out implications for account security, the research community, and accessibility. |
-| **3.2** How my actions/decisions affected the outcome | Report §6 (p. 18) | Six pivotal decisions, each with its concrete effect — e.g. the open-set choice cost a "better" number but bought a defensible one, and refusing a noisy tuning "win" (§4.6) kept the headline honest. |
+| **3.2** How my actions/decisions affected the outcome | Report §6 (p. 19) | Six pivotal decisions, each with its concrete effect — e.g. the open-set choice cost a "better" number but bought a defensible one, and refusing a noisy tuning "win" (§4.6) kept the headline honest. |
 | **3.3** What I learnt and would improve | Report §9 (p. 21) | ≥ half a page of specific reflection: closed-vs-open-set as the key lesson, working solo without a mentor, and four concrete next steps. |
 
 ### Section 4 — Project-wide
