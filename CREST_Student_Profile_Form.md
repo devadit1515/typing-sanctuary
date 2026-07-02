@@ -21,36 +21,36 @@
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **1.1** Set a clear aim, broken into smaller objectives | §1.2 | One testable aim, split into six objectives each with a checkable success condition. |
-| **1.2** Explained a wider purpose | §1.1 | Account-takeover from stolen credentials as the real problem; who a silent second factor helps. |
-| **1.3** Identified a range of approaches | §3.1 | Three verifier designs compared (statistical / deep classifier / metric embedding) and the choice justified. |
-| **1.4** Described the plan and why I chose it | §3.1–3.2 | The three-part research / serve / product architecture and why that separation makes the science and the product trustworthy. |
-| **1.5** Planned and organised my time | §1.3 | Four dated stages, each gating the next, plus the two replanning decisions and their reasons. |
+| **1.1** Set a clear aim, broken into smaller objectives | §1 | One testable aim ("can a computer tell it's you from your typing rhythm?"), split into five checkable objectives. |
+| **1.2** Explained a wider purpose | §1 | Account-takeover from stolen credentials as the real problem (88% of web-app attacks), plus the personal incident behind it. |
+| **1.3** Identified a range of approaches | §3 | Three designs compared (pure statistics / standard classifier / learned fingerprint) and the hybrid choice justified. |
+| **1.4** Described the plan and why I chose it | §3 | The three-part research / serve / product design, and why running classical statistics inside a learned fingerprint is the core idea. |
+| **1.5** Planned and organised my time | §1 ("How the project ran") | Four dated stages, each gating the next, and the mid-project replan when the honesty test had to be rebuilt. |
 
 ### 2 — Throughout your project
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **2.1** Made good use of materials and people | §10 (+ §3) | Every dataset, library, tool and standard named; an independent project, so the research community stood in for a mentor — stated honestly. |
-| **2.2** Researched the background, acknowledged sources | §2 + §12 | A synthesised literature review that locates a specific gap, with author–date references and a fuller dossier. |
+| **2.1** Made good use of materials and people | §9 (Acknowledgements) | Every dataset, library, tool and standard named; an independent project, so the research community stood in for a mentor. |
+| **2.2** Researched the background, acknowledged sources | §2 + References | The background woven into the story locates a specific gap, with 16 references (primary papers and standards). |
 
 ### 3 — Finalising your project
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **3.1** Logical conclusions + implications for the wider world | §5 + §8 | Results answer the aim directly; implications drawn for account security, research, and accessibility. |
-| **3.2** How my actions/decisions affected the outcome | §7 + §9 | The closed-set fix changed every number; refusing a noisy tuning "win" (§4.4) kept the headline honest. |
-| **3.3** What I learnt and would improve | §9 | Closed-vs-open-set as the key lesson, working solo, and what I'd change next time. |
+| **3.1** Logical conclusions + implications for the wider world | §6 | The result answers the aim directly; implications drawn for account security, research, and (hedged) accessibility. |
+| **3.2** How my actions/decisions affected the outcome | §4 + §8 | The broken-test fix changed every number; and when tuning looked slightly better it failed on the real test, so I kept the original (§5). |
+| **3.3** What I learnt and would improve | §8 | Learning to distrust my own results as the key lesson, working solo, and what I'd change next time. |
 
 ### 4 — Project-wide
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
 | **4.1** Understanding of the science | §2 + §3 + App. C | The science explained in plain terms in the body; the full model design, settings and statistics (metric learning, triplet loss, Ledoit–Wolf/Mahalanobis, EER) in the technical appendix. |
-| **4.2** Ethics and safety decisions | §6 | Typing data as GDPR special-category; consent, data minimisation, fail-safe design, disparate impact. |
-| **4.3** Creative thinking | §3.1 + §5.2 | The core idea: running a classical shrinkage-statistics ensemble *inside* a learned embedding space. |
-| **4.4** Identified and overcame problems | §7 | Thirteen problems in problem → root cause → fix → verified form, including a crash only the live system revealed. |
-| **4.5** Explained the project clearly | Whole report + App. A | Written to be followed without a technical background (a "how to read" note, an everyday comparison for each hard idea, jargon in a glossary), with the depth kept in the technical appendix. |
+| **4.2** Ethics and safety decisions | §7 | Typing data as GDPR special-category; consent, data minimisation, fail-safe design, and the measured disparate impact (a 37× error spread). |
+| **4.3** Creative thinking | §3 | The core idea: running a classical shrinkage-statistics decision-maker *inside* a learned fingerprint. |
+| **4.4** Identified and overcame problems | §4 | The broken honesty test told in full, plus the live crash and the all-zero-columns bug; the full log of thirteen is in the repository. |
+| **4.5** Explained the project clearly | Whole report + App. A | Written to be followed without a technical background — an everyday comparison for each hard idea, jargon in a glossary, and the depth kept in a technical appendix. |
 
 ---
 
@@ -72,7 +72,7 @@
 
 ## My mentor
 
-This project was completed **independently, with no mentor or supervisor.** The role a mentor usually plays — the second person who distrusts a convenient result — I had to do myself by auditing my own work, which is how the closed-set mistake (§7) was eventually caught. AI assistance is disclosed in full in Report §11: I set the research direction, made every scientific decision, ran and tested all the code, and verified every result.
+This project was completed **independently, with no mentor or supervisor.** The role a mentor usually plays — the second person who distrusts a convenient result — I had to do myself by auditing my own work, which is how the broken-test mistake (§4) was eventually caught. AI assistance is disclosed in the report's AI-use note: I set the research direction, made every scientific decision, ran and tested all the code, and verified every result.
 
 > **Logistics note (check before submitting).** CREST Gold projects are normally submitted through a registered CREST provider or coordinator, and the official form has a section for a supervisor/teacher to verify the work. Because this is an independent submission with no mentor, **confirm the correct route with CREST first** — email `crest@britishscienceassociation.org` or check the "how to apply" guidance — as you may need to register as an independent participant or have an eligible adult act as the verifying coordinator. Do not leave the verification section blank without confirming what CREST requires.
 
@@ -80,7 +80,7 @@ This project was completed **independently, with no mentor or supervisor.** The 
 
 ## AI declaration
 
-Per CREST's AI policy, I confirm all AI-assisted content has been referenced and declared. The full disclosure — tool, dates, what it did, how I checked it — is in **Report §11**. On the official application, remember to tick the AI-declaration box.
+Per CREST's AI policy, I confirm all AI-assisted content has been referenced and declared. The full disclosure — tool, what it did, and how I checked it — is in the report's **"A note on AI use"** section. On the official application, remember to tick the AI-declaration box.
 
 | | |
 |---|---|
