@@ -1,96 +1,89 @@
 # CREST Gold Award — Student Profile Form
 
-> **What this is.** CREST requires a Student Profile Form submitted *alongside* the report — one per student, even in a group. It has two functional parts: (1) a **criteria checklist** where you point the assessor to *where in your report* each of the 15 criteria is evidenced (the assessor reads this first), and (2) a **personal reflection**. This file reproduces that structure so you can transcribe it into the official CREST form (Word/PDF) at https://www.crestawards.org/resources/crest-gold-student-profile-form/. The criteria checklist below carries the page numbers from the regenerated `CREST_Gold_Report.pdf` (27 pages, exported from the current `.docx` via Word); if you re-format or re-export the PDF the pagination may shift, so re-check the numbers against the file you actually submit. The official form asks for "Page X, paragraph Y" — add paragraph numbers if you wish.
+> **What this is.** CREST requires a Student Profile Form submitted *alongside* the report — one per student. It is the assessor's map: for each of the 15 criteria you point to *where in the report* you show it, with an optional short note. This file mirrors the official form (download and transcribe at <https://www.crestawards.org/resources/crest-gold-student-profile-form/>). The "Where" column cites report **sections**; after you export the report to PDF, add the page (and paragraph) numbers the official form asks for, because pagination shifts on export.
 
 ---
 
-## Part 1 — Project details
-
-| Field | Entry |
+| | |
 |---|---|
-| First name | Devadit |
+| Student / team member's first name | Devadit |
 | CREST Award level | **Gold** |
-| Project title | Content-independent keystroke-dynamics biometric verification: does a deep metric-learning embedding with a classical calibrated verifier authenticate users by typing rhythm alone? |
-| Mentor / supervisor | None — independent project (no mentor or supervisor) |
-| Approximate hours | ≈ 84 hours (above the ~70-hour Gold expectation), evidenced by the git history and the effort breakdown in Report §1.5 |
+| Project title | Can you be recognised by the way you type? Building and testing an open-set keystroke-dynamics verification system |
+| Mentor name | None — independent project (see the note at the end) |
 
 ---
 
-## Part 2 — Criteria checklist (the evidence index)
+## Criteria checklist
 
-For each criterion, write the **page (and paragraph)** in your report where the assessor will find the evidence. Replace each "Report §" with the matching page number after you paginate the PDF.
+*Notes to the assessor are optional and deliberately brief — the evidence is in the report section named.*
 
-### Section 1 — Planning the project
+### 1 — Planning your project
 
-| Criterion | Where I show this (page / section) | My note to the assessor |
+| Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **1.1** Clear aim broken into objectives | Report §1.1 (p. 2) | The aim is one testable sentence; it is decomposed into 6 objectives each with a measurable success condition and an outcome column. |
-| **1.2** Wider purpose | Report §1.2 (p. 3) | Account-takeover fraud and credential stuffing as the real-world problem; named stakeholders (ordinary account holders on any login); accessibility angle. |
-| **1.3** Range of approaches | Report §1.3 (p. 4) | Three distinct approaches (statistical / deep classifier / metric-embedding) compared in a trade-off table on nine criteria, with the decision justified. |
-| **1.4** Plan and why I chose it | Report §1.4 (p. 5) | The three-part hybrid architecture and why the research/serve separation makes both the science and the product trustworthy. |
-| **1.5** Planned and organised time | Report §1.5 (p. 6) | A dated month-level timeline (planned versus actual across the project's four stages), an explicit ~84-hour effort breakdown by phase of work, and the project's honest replanning decisions with their reasons — the work organised in deliberate, dated stages. |
+| **1.1** Set a clear aim, broken into smaller objectives | §1.2 | One testable aim, split into six objectives each with a checkable success condition. |
+| **1.2** Explained a wider purpose | §1.1 | Account-takeover from stolen credentials as the real problem; who a silent second factor helps. |
+| **1.3** Identified a range of approaches | §3.1 | Three verifier designs compared (statistical / deep classifier / metric embedding) and the choice justified. |
+| **1.4** Described the plan and why I chose it | §3.1 | The three-part research/serve/product architecture and why that separation makes the science and the product trustworthy. |
+| **1.5** Planned and organised my time | §1.3 | Four dated stages, each gating the next, plus the two replanning decisions and their reasons. |
 
-### Section 2 — Throughout the project
+### 2 — Throughout your project
 
-| Criterion | Where I show this | My note to the assessor |
+| Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **2.1** Made good use of materials and people | Report §1.6 (p. 7) | Every dataset, library, tool, standard and source named. This was an **independent project with no mentor**, so §1.6 documents how the *research community* (published authors, library maintainers, ISO/ICO standards) and rigorous self-auditing stood in for a supervisor — stated honestly, not hidden. |
-| **2.2** Researched background, acknowledged sources | Report §2 + §12 (pp. 8, 23) | A *synthesised* literature review (not paper-by-paper) that locates a specific gap; author–date in-text references with a full reference list; full provenance in `CREST_Research_Dossier.md`. |
+| **2.1** Made good use of materials and people | §10 (+ §3) | Every dataset, library, tool and standard named; an independent project, so the research community stood in for a mentor — stated honestly. |
+| **2.2** Researched the background, acknowledged sources | §2 + §12 | A synthesised literature review that locates a specific gap, with author–date references and a fuller dossier. |
 
-### Section 3 — Finalising the project
+### 3 — Finalising your project
 
-| Criterion | Where I show this | My note to the assessor |
+| Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **3.1** Logical conclusions + implications for the wider world | Report §4 + §5 (pp. 13, 17) | Results answer the aim directly; §5.2 draws out implications for account security, the research community, and accessibility. |
-| **3.2** How my actions/decisions affected the outcome | Report §6 (p. 19) | Six pivotal decisions, each with its concrete effect — e.g. the open-set choice cost a "better" number but bought a defensible one, and refusing a noisy tuning "win" (§4.6) kept the headline honest. |
-| **3.3** What I learnt and would improve | Report §9 (p. 21) | ≥ half a page of specific reflection: closed-vs-open-set as the key lesson, working solo without a mentor, and four concrete next steps. |
+| **3.1** Logical conclusions + implications for the wider world | §5 + §8 | Results answer the aim directly; implications drawn for account security, research, and accessibility. |
+| **3.2** How my actions/decisions affected the outcome | §7 + §9 | The closed-set fix changed every number; refusing a noisy tuning "win" (§4.4) kept the headline honest. |
+| **3.3** What I learnt and would improve | §9 | Closed-vs-open-set as the key lesson, working solo, and what I'd change next time. |
 
-### Section 4 — Project-wide
+### 4 — Project-wide
 
-| Criterion | Where I show this | My note to the assessor |
+| Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **4.1** Understanding of the science | Report §2 + §3 (pp. 8, 10) | Metric learning, triplet loss, L2-normalisation, Ledoit–Wolf shrinkage, Mahalanobis, EER/DET explained at Level-3+ depth and applied. |
-| **4.2** Ethics and safety decisions | Report §8 (p. 20) | Biometric data as GDPR special-category; consent; data minimisation (public dataset, templates not raw timings); fail-safe design; dual-use; risk assessment. |
-| **4.3** Creative thinking | Report §3.5 + §1.3 (pp. 12, 4) | The creative core is combining two usually-separate fields — deep representation learning and classical shrinkage statistics — by running the classical ensemble *inside the learned embedding space*. |
-| **4.4** Identified and overcame problems | Report §7 (p. 19) | 13 problems in *problem → root cause → fix → verified* form, including a live production crash found only by running the real system — strategic, root-cause problem-solving. |
-| **4.5** Explained the project clearly | Whole report (pp. 1–27) | Logical structure, abstract, labelled tables and figures, a glossary defining every term/abbreviation (App. A), accessible language. |
-
-> **Coverage:** all **15** criteria are evidenced across all **four** sections — comfortably above the Gold threshold of "at least 11 covering all four sections."
+| **4.1** Understanding of the science | §2 + §3 | Metric learning, triplet loss, Ledoit–Wolf shrinkage, Mahalanobis, EER/DET explained and applied. |
+| **4.2** Ethics and safety decisions | §6 | Typing data as GDPR special-category; consent, data minimisation, fail-safe design, disparate impact. |
+| **4.3** Creative thinking | §3.1 + §5.2 | The core idea: running a classical shrinkage-statistics ensemble *inside* a learned embedding space. |
+| **4.4** Identified and overcame problems | §7 | Thirteen problems in problem → root cause → fix → verified form, including a crash only the live system revealed. |
+| **4.5** Explained the project clearly | Whole report + App. A | Logical structure, labelled tables and figures, a glossary defining every term. |
 
 ---
 
-## Part 3 — Personal reflections
+## Personal reflections
 
-_(These answers are written from the real project history and are mine to refine — Devadit, read each through and adjust the phrasing so it reads in your own voice before transcribing onto the official form.)_
+*(These are written from the real project history and are mine to refine — read each through and adjust the phrasing into my own voice before transcribing onto the official form.)*
 
-**Why I chose this project.** It started from a real security incident: an account I cared about was accessed using stolen credentials, and it struck me that the password had "worked" perfectly for the attacker because a password proves only knowledge of a secret, not identity. I wanted to know whether *how* a person types — their rhythm — could become a quiet extra layer that a stolen password cannot defeat.
+**Why I chose this project.** It started from a real security incident: an account I cared about was accessed with stolen credentials, and the password had "worked" perfectly for the attacker — a password proves knowledge of a secret, not identity. I wanted to know whether *how* a person types could be a quiet extra layer a stolen password can't defeat.
 
-**How my project was / was not successful.** It succeeded in producing an honest, reproducible measured result (open-set EER 14.2 % primary / 10.2 % ensemble on 16 unseen subjects) and a working live system, and a nested-validation ablation later confirmed the configuration was near-optimal. It did *not* beat the 9.6 % published baseline on the headline metric — and I reported that honestly rather than hiding behind a more flattering protocol. The real success was the *rigour*: an evaluation that refuses to flatter itself.
+**How it was / wasn't successful.** It produced an honest, reproducible open-set result (14.2% primary / 10.2% ensemble EER on 16 unseen subjects) and a working live system, and a nested-validation ablation confirmed the configuration was near-optimal. It did *not* beat the 9.6% published baseline on the headline metric — and I reported that rather than switch to a more flattering protocol. The real success was the rigour of the evaluation.
 
-**What I learnt.** The difference between closed-set and open-set evaluation, and how easily a flawed protocol produces an impressive-but-meaningless number; why biometrics are measured by EER/DET rather than accuracy; that reproducibility (pinned data, fixed seeds, one-command rerun) is what turns a claim into a result; and — from the ablation — how selecting hyperparameters on a small validation fold can overfit noise, so that a number that "looks better" can generalise worse. Working without a mentor, I also learnt to be my own sceptic: to distrust a convenient result and audit the protocol that produced it.
+**What I learnt.** The difference between closed- and open-set evaluation, and how easily a flawed protocol produces an impressive-but-meaningless number; why biometrics are measured by EER/DET rather than accuracy; that reproducibility (pinned data, fixed seeds, one-command rerun) is what turns a claim into a result; and that selecting hyperparameters on a small validation fold can overfit noise, so a number that "looks better" can generalise worse. Working without a mentor, I learnt to be my own sceptic.
 
-**What impact the results might have on others.** Even a 10 % EER typing biometric is useful as a silent *second* factor against account-takeover at zero user effort, and as a future continuous check against session hijacking — provided it is built with consent and fail-safe safeguards. For a field where reproducibility is often weak, a fully pinned, one-command-rerun pipeline is itself a small contribution.
+**What impact it might have on others.** Even a 10% EER typing biometric is useful as a silent *second* factor against account-takeover at zero user effort, and as a future continuous check against session hijacking — provided it is built with consent and fail-safe safeguards. For a field where reproducibility is often weak, a fully pinned, one-command-rerun pipeline is itself a small contribution.
 
-**What I would do to improve the work.** Recalibrate the confidence scale (§7.6); run the free-text/continuous model on a real large corpus (Aalto); train at scale on GPU to test whether the hybrid's advantage holds as accuracy improves; collect a small *consented* dataset of real users to test cross-dataset generalisation; and — having worked entirely solo — seek a mentor or peer reviewer earlier next time, since explaining a result to another person catches errors that re-reading your own code does not.
-
-**What I would do to develop the project in future.** Turn it into a deployed, opt-in, user-controlled feature in the live product it grew from (consent and fail-safe behaviour built in from the first line), then extend from fixed-text login checks to *continuous* free-text verification during a session, and potentially add mouse-dynamics as a second behavioural channel.
+**What I would improve.** Calibrate the confidence scale; run the free-text model on a real large corpus (Aalto); train at scale on GPU; collect a small *consented* dataset of real users; and seek a mentor or peer reviewer earlier, since explaining a result to another person catches errors that re-reading your own code does not.
 
 ---
 
-## Part 4 — AI declaration
+## My mentor
 
-Per CREST's AI policy, I confirm that all AI-assisted content has been referenced and declared. The full disclosure — tool (Anthropic Claude via Claude Code), dates (2026 — development and report drafting), what it did, how I checked it, and a representative prompt — is in **Report §11 (AI Use Statement)**. The AI assisted with code scaffolding, debugging, literature-pointer finding, and drafting; I set the research direction, made every scientific decision, ran and tested all code, verified every result, and edited all prose into my own voice. I have **not attached raw session transcripts**; instead the originality of the work is evidenced by the §11 statement, the git history (which records the human decisions and edits at each step), and the fact that every result is reproducible from my own code. *(On the official application, remember to tick the AI-declaration box.)*
+This project was completed **independently, with no mentor or supervisor.** The role a mentor usually plays — the second person who distrusts a convenient result — I had to do myself by auditing my own work, which is how the closed-set mistake (§7) was eventually caught. AI assistance is disclosed in full in Report §11: I set the research direction, made every scientific decision, ran and tested all the code, and verified every result.
+
+> **Logistics note (check before submitting).** CREST Gold projects are normally submitted through a registered CREST provider or coordinator, and the official form has a section for a supervisor/teacher to verify the work. Because this is an independent submission with no mentor, **confirm the correct route with CREST first** — email `crest@britishscienceassociation.org` or check the "how to apply" guidance — as you may need to register as an independent participant or have an eligible adult act as the verifying coordinator. Do not leave the verification section blank without confirming what CREST requires.
 
 ---
 
-## Part 5 — Verification of own work (independent submission)
+## AI declaration
 
-This project was completed **independently, without a mentor or supervisor.** I confirm that the work described in this report and profile form is my own: I made every scientific decision, wrote and ran all the code, and verified every result, with AI assistance disclosed and bounded as described in Part 4 and Report §11.
+Per CREST's AI policy, I confirm all AI-assisted content has been referenced and declared. The full disclosure — tool, dates, what it did, how I checked it — is in **Report §11**. On the official application, remember to tick the AI-declaration box.
 
 | | |
 |---|---|
 | Student name | Devadit Jain |
 | Declaration | I confirm this is my own work. |
 | Signature / date | *(Sign and date on the official CREST form.)* |
-
-> **Logistics note (important — check before submitting):** CREST Gold projects are normally submitted through a registered CREST provider or coordinator (usually a teacher), and the official Student Profile Form has a section for a supervisor/teacher to verify the work. Because this is an independent submission with no mentor, **confirm the correct route with CREST before applying** — email `crest@britishscienceassociation.org` or check the "how to apply" guidance — as you may need to register as an independent participant or have an eligible adult (not necessarily a subject mentor) act as the verifying coordinator. Do not leave the verification section blank without first confirming what CREST requires for an independent entry.
