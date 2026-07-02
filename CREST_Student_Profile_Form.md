@@ -24,7 +24,7 @@
 | **1.1** Set a clear aim, broken into smaller objectives | §1.2 | One testable aim, split into six objectives each with a checkable success condition. |
 | **1.2** Explained a wider purpose | §1.1 | Account-takeover from stolen credentials as the real problem; who a silent second factor helps. |
 | **1.3** Identified a range of approaches | §3.1 | Three verifier designs compared (statistical / deep classifier / metric embedding) and the choice justified. |
-| **1.4** Described the plan and why I chose it | §3.1 | The three-part research/serve/product architecture and why that separation makes the science and the product trustworthy. |
+| **1.4** Described the plan and why I chose it | §3.1–3.2 | The three-part research / serve / product architecture and why that separation makes the science and the product trustworthy. |
 | **1.5** Planned and organised my time | §1.3 | Four dated stages, each gating the next, plus the two replanning decisions and their reasons. |
 
 ### 2 — Throughout your project
@@ -46,11 +46,11 @@
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **4.1** Understanding of the science | §2 + §3 | Metric learning, triplet loss, Ledoit–Wolf shrinkage, Mahalanobis, EER/DET explained and applied. |
+| **4.1** Understanding of the science | §2 + §3 + App. C | The science explained in plain terms in the body; the full model design, settings and statistics (metric learning, triplet loss, Ledoit–Wolf/Mahalanobis, EER) in the technical appendix. |
 | **4.2** Ethics and safety decisions | §6 | Typing data as GDPR special-category; consent, data minimisation, fail-safe design, disparate impact. |
 | **4.3** Creative thinking | §3.1 + §5.2 | The core idea: running a classical shrinkage-statistics ensemble *inside* a learned embedding space. |
 | **4.4** Identified and overcame problems | §7 | Thirteen problems in problem → root cause → fix → verified form, including a crash only the live system revealed. |
-| **4.5** Explained the project clearly | Whole report + App. A | Logical structure, labelled tables and figures, a glossary defining every term. |
+| **4.5** Explained the project clearly | Whole report + App. A | Written to be followed without a technical background (a "how to read" note, an everyday comparison for each hard idea, jargon in a glossary), with the depth kept in the technical appendix. |
 
 ---
 
