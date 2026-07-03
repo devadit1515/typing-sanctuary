@@ -21,18 +21,18 @@
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **1.1** Set a clear aim, broken into smaller objectives | §1 | One testable aim ("can a computer tell it's you from your typing rhythm?"), split into five checkable objectives. |
+| **1.1** Set a clear aim, broken into smaller objectives | §1 (+ scorecard in §5) | One testable aim ("can a computer tell it's you from your typing rhythm?"), split into five *numbered, measurable* objectives (O1–O5), each with an explicit "done when…" success test — then marked hit/miss honestly against the results in §5. |
 | **1.2** Explained a wider purpose | §1 | Account-takeover from stolen credentials as the real problem (88% of web-app attacks), plus the personal incident behind it. |
-| **1.3** Identified a range of approaches | §3 | Three designs compared (pure statistics / standard classifier / learned fingerprint) and the hybrid choice justified. |
+| **1.3** Identified a range of approaches | §3 | Three genuinely different designs (pure statistics / standard classifier / learned fingerprint) compared in a trade-off table across cost, phrase-independence, feasibility and deployment risk; the classifier ruled out and the hybrid choice justified. |
 | **1.4** Described the plan and why I chose it | §3 | The three-part research / serve / product design, and why running classical statistics inside a learned fingerprint is the core idea. |
-| **1.5** Planned and organised my time | §1 ("How the project ran") | Four dated stages, each gating the next, and the mid-project replan when the honesty test had to be rebuilt. |
+| **1.5** Planned and organised my time | §1 ("How the project ran") | A planned-vs-actual timeline (four dated stages) reconstructed from the commit history (Nov 2025–Jul 2026), with **two** documented deviations explained: the 8-week exam pause (Apr–May) and the mid-sprint rebuild of the broken honesty test (§4). |
 
 ### 2 — Throughout your project
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
 | **2.1** Made good use of materials and people | §9 (Acknowledgements) | Every dataset, library, tool and standard named; an independent project, so the research community stood in for a mentor. |
-| **2.2** Researched the background, acknowledged sources | §2 + References | The background woven into the story locates a specific gap, with 16 references (primary papers and standards). |
+| **2.2** Researched the background, acknowledged sources | §2 + References | The background synthesises the field's trajectory (hand-built detectors → learned representations, via the ACM survey), brackets it between the 2009 benchmark and TypeNet as two worlds that never meet, and derives the project from the un-asked question between them; 16 references, all primary papers or standards. |
 
 ### 3 — Finalising your project
 
@@ -46,10 +46,10 @@
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **4.1** Understanding of the science | §2 + §3 + App. C | The science explained in plain terms in the body; the full model design, settings and statistics (metric learning, triplet loss, Ledoit–Wolf/Mahalanobis, EER) in the technical appendix. |
+| **4.1** Understanding of the science | §2 + §3 + App. C | The science explained in plain terms in the body; the full model design, settings and statistics in the technical appendix — each deep mechanism (L2-normalisation, batch-hard triplets, Ledoit–Wolf shrinkage) explained in my own words as *why it works*, not just named and cited. |
 | **4.2** Ethics and safety decisions | §7 | Typing data as GDPR special-category; consent, data minimisation, fail-safe design, and the measured disparate impact (a 37× error spread). |
 | **4.3** Creative thinking | §3 | The core idea: running a classical shrinkage-statistics decision-maker *inside* a learned fingerprint. |
-| **4.4** Identified and overcame problems | §4 | The broken honesty test told in full, plus the live crash and the all-zero-columns bug; the full log of thirteen is in the repository. |
+| **4.4** Identified and overcame problems | §4 | Four problems told in full — the broken honesty test, the live crash on a too-consistent typist, the all-zero-columns bug, and the never-measured ensemble — each with root cause, fix and outcome; the full log of thirteen is in the repository. |
 | **4.5** Explained the project clearly | Whole report + App. A | Written to be followed without a technical background — an everyday comparison for each hard idea, jargon in a glossary, and the depth kept in a technical appendix. |
 
 ---
