@@ -8,7 +8,7 @@
 |---|---|
 | Student / team member's first name | Devadit |
 | CREST Award level | **Gold** |
-| Project title | Can you be recognised by the way you type? Building and testing an open-set keystroke-dynamics verification system |
+| Project title | Verifying Identity from Typing Rhythm: An Open-Set Deep Metric Learning Approach |
 | Mentor name | None — independent project (see the note at the end) |
 
 ---

@@ -1,6 +1,4 @@
-# Can You Be Recognised by the Way You Type?
-
-### Verifying who someone is from their typing rhythm alone
+# Verifying Identity from Typing Rhythm: An Open-Set Deep Metric Learning Approach
 
 |  |  |
 |----|----|
@@ -12,8 +10,6 @@
 ## Abstract
 
 Someone broke into an account I cared about using a stolen password, and the system raised no alarm. The password was correct, so as far as the system knew, the attacker was me. This project asks whether the *way* a person types, their rhythm, could serve as a quiet second check that a stolen password cannot fake. I built a system that turns a burst of typing into a kind of numerical fingerprint and decides whether a new burst matches. Tested on 51 people typing the same password, and judged only on people it had never seen, it was wrong about one attempt in seven: close to the best method from a well-known 2009 study, but short of beating it. This is an account of building it, of the mistake that nearly produced a far more impressive but false result, and of what an honest near-miss is actually worth.
-
-*(This can be followed without any background in code or AI. Where an idea becomes technical, I explain it first with an everyday comparison; the exact designs and figures are in Appendix C, and omitting it costs none of the argument.)*
 
 ## Contents
 
