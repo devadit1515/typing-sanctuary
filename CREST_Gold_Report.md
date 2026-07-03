@@ -7,11 +7,11 @@
 | Author | Devadit Jain |
 | Field | Machine learning · behavioural biometrics · online security |
 | Type | Research and build |
-| Dates | 25 November 2025 – 10 June 2026 |
+| Dates | November 2025 – July 2026 |
 
 ## Abstract
 
-Someone broke into an account I cared about using a stolen password, and the system raised no alarm. The password was correct, so as far as the system knew, the attacker was me. This project asks whether the *way* a person types, their rhythm, could serve as a quiet second check that a stolen password cannot fake. I built a system that turns a burst of typing into a kind of numerical fingerprint and decides whether a new burst matches. Tested on 51 people typing the same password, and judged only on people it had never seen, it was wrong about one decision in ten: good, but not quite good enough to beat the best method from a well-known 2009 study. This is an account of building it, of the mistake that nearly produced a far more impressive but false result, and of what an honest near-miss is actually worth.
+Someone broke into an account I cared about using a stolen password, and the system raised no alarm. The password was correct, so as far as the system knew, the attacker was me. This project asks whether the *way* a person types, their rhythm, could serve as a quiet second check that a stolen password cannot fake. I built a system that turns a burst of typing into a kind of numerical fingerprint and decides whether a new burst matches. Tested on 51 people typing the same password, and judged only on people it had never seen, it was wrong about one attempt in seven: close to the best method from a well-known 2009 study, but short of beating it. This is an account of building it, of the mistake that nearly produced a far more impressive but false result, and of what an honest near-miss is actually worth.
 
 *(This can be followed without any background in code or AI. Where an idea becomes technical, I explain it first with an everyday comparison; the exact designs and figures are in Appendix C, and omitting it costs none of the argument.)*
 
@@ -31,7 +31,7 @@ Someone broke into an account I cared about using a stolen password, and the sys
 
 Someone broke into an account I cared about using a stolen password, and the system raised no alarm. Why would it? The password was correct, so as far as the system was concerned, the person typing it *was* me. This is the quiet flaw beneath every password ever made: it checks what you *know*, not who you *are*. Steal the secret, and you inherit the identity.
 
-This is not a rare problem. Verizon's 2024 security report attributed about 88% of attacks on web applications to stolen passwords, most of them automated: attackers take millions of leaked passwords from one site and try them against the login pages of every other, on the assumption that people reuse them. Usually they do. Two-factor codes help, but they interrupt the user at every login, and anything that interrupts is eventually switched off.
+This is not a rare problem. Verizon's 2024 security report attributed about 88% of basic web-application attacks to stolen passwords, most of them automated: attackers take millions of leaked passwords from one site and try them against the login pages of every other, on the assumption that people reuse them. Usually they do. Two-factor codes help, but they interrupt the user at every login, and anything that interrupts is eventually switched off.
 
 So I asked a different question. What if the second check asked nothing of the user at all, and simply watched *how* they already type? Typing has a rhythm. The small pauses, the keys held a fraction longer than others, the slight hesitation before a capital: all of it is as personal as an accent, and it comes from motor habits that are hard to fake on purpose. The idea is old. A century ago, telegraph operators could recognise one another by the rhythm of their tapping. What is new is that computers can now do this from any text a person types, instead of one memorised phrase.
 
@@ -123,7 +123,7 @@ The most striking result is how greatly individuals differ. The easiest person t
 
 This can even be seen directly. I reduced the 128-number fingerprints to a two-dimensional picture (Figure B.2): several people form tight, clearly separated clusters even though the model never trained on them, while a blurred region in the centre matches the hard-to-recognise group. The picture and the numbers agree. And when I tried to improve matters, with more training and more samples per person, nothing helped; the model's internal measure showed it had already learned everything the short password *can* teach. More effort cannot pull out information that is not there. (The experiments behind all of this are in Appendix C.)
 
-Did the five objectives I set myself (§1) hold up? For the most part, and I can point to where. The fingerprint works and runs in milliseconds on an ordinary laptop (O1); it clusters strangers it never trained on, as Figure B.2 shows (O2); the score is honest, measured open-set on 16 unseen people, behind a guard that makes a leak impossible (O3); the simple and blended scorers both come from a single run, so the comparison is fair rather than selective (O4); and the whole system re-runs from one command on a pinned dataset, failing safe when it breaks (O5). The one objective I set out to meet and did *not* is the headline aim itself: to beat the best published result. I came close, honestly, and fell short. That shortfall is the finding, not a footnote to it.
+Did the five objectives I set myself (§1) hold up? For the most part, and I can point to where. The fingerprint works and runs in under a millisecond on an ordinary laptop (O1); it clusters strangers it never trained on, as Figure B.2 shows (O2); the score is honest, measured open-set on 16 unseen people, behind a guard that makes a leak impossible (O3); the simple and blended scorers both come from a single run, so the comparison is fair rather than selective (O4); and the whole system re-runs from one command on a pinned dataset, failing safe when it breaks (O5). The one objective I set out to meet and did *not* is the headline aim itself: to beat the best published result. I came close, honestly, and fell short. That shortfall is the finding, not a footnote to it.
 
 ## 6. Discussion
 
@@ -157,7 +157,7 @@ Where I would take it next follows straight from the ceiling being the *data*, n
 - **Train at scale** on appropriate hardware, in the manner of TypeNet, to test whether the hybrid's advantage holds as accuracy improves.
 - **Collect a small, consented set of real users** to test whether it generalises across datasets, with the §7 safeguards built in from the outset.
 
-I set out to find, honestly, whether the way a person types could be a quiet second lock on their identity. It can. Not a perfect one, and not yet better than a fifteen-year-old benchmark on a test this small, but a real one, measured and reproducible, built by someone who learned the hard way to stop trusting his own good news.
+I set out to find, honestly, whether the way a person types could be a quiet second lock on their identity. It can. Not a perfect one, and not yet better than the 2009 benchmark on a test this small, but a real one, measured and reproducible, built by someone who learned the hard way to stop trusting his own good news.
 
 ## Acknowledgements
 

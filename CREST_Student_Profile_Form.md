@@ -22,10 +22,10 @@
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
 | **1.1** Set a clear aim, broken into smaller objectives | §1 (+ scorecard in §5) | One testable aim ("can a computer tell it's you from your typing rhythm?"), split into five *numbered, measurable* objectives (O1–O5), each with an explicit "done when…" success test — then marked hit/miss honestly against the results in §5. |
-| **1.2** Explained a wider purpose | §1 | Account-takeover from stolen credentials as the real problem (88% of web-app attacks), plus the personal incident behind it. |
+| **1.2** Explained a wider purpose | §1 | Account-takeover from stolen credentials as the real problem (88% of basic web-application attacks), plus the personal incident behind it. |
 | **1.3** Identified a range of approaches | §3 | Three genuinely different designs (pure statistics / standard classifier / learned fingerprint) compared in a trade-off table across cost, phrase-independence, feasibility and deployment risk; the classifier ruled out and the hybrid choice justified. |
 | **1.4** Described the plan and why I chose it | §3 | The three-part research / serve / product design, and why running classical statistics inside a learned fingerprint is the core idea. |
-| **1.5** Planned and organised my time | §1 ("How the project ran") | A planned-vs-actual timeline (four dated stages) reconstructed from the commit history (Nov 2025–Jul 2026), with **two** documented deviations explained: the 8-week exam pause (Apr–May) and the mid-sprint rebuild of the broken honesty test (§4). |
+| **1.5** Planned and organised my time | §1 ("How the project ran") | A planned-vs-actual timeline of six dated build stages, reconstructed from the commit history (Nov 2025–Jul 2026): a +3-week slip on authentication, recovered by compressing the next stage; the exam period scheduled inside the research window; and a +2-week slip on the write-up from the mid-sprint rebuild of the broken honesty test (§4). |
 
 ### 2 — Throughout your project
 
