@@ -9,7 +9,7 @@
 | Type | Research and build |
 | Dates | 25 November 2025 – 10 June 2026 |
 
-## In brief
+## Abstract
 
 Someone broke into an account I cared about using a stolen password, and the system raised no alarm — the password was correct, so as far as the system knew, the attacker was me. This project asks whether the *way* a person types — their rhythm — could serve as a quiet second check that a stolen password cannot fake. I built a system that turns a burst of typing into a form of numerical fingerprint and decides whether a new burst matches. Tested on 51 people typing the same password, and judged only on people it had never seen, it was wrong about one decision in ten — good, but not quite good enough to beat the best method from a well-known 2009 study. This is an account of building it, of the mistake that nearly produced a far more impressive but entirely false result, and of what an honest near-miss is actually worth.
 
@@ -17,19 +17,19 @@ Someone broke into an account I cared about using a stolen password, and the sys
 
 ## Contents
 
-1. A password that defended nothing
-2. You type like nobody else
-3. Building a typing fingerprint
-4. The number that was too good to be true
-5. What I actually found
-6. What it means, and what it does not
-7. The ethics of a system that recognises you
-8. What I got wrong, and what I would change
+1. Introduction
+2. Background and related work
+3. Method
+4. Evaluation design
+5. Results
+6. Discussion
+7. Ethics and responsible use
+8. Reflection and future work
 9. Acknowledgements · AI use · References · Appendices
 
 ------------------------------------------------------------------------
 
-## 1. A password that defended nothing
+## 1. Introduction
 
 Someone broke into an account I cared about using a stolen password, and the system raised no alarm — why would it? The password was correct, so as far as the system was concerned, the person typing it *was* me. This is the quiet flaw beneath every password ever made: it checks what you *know*, not who you *are*. Steal the secret, and you inherit the identity.
 
@@ -39,7 +39,7 @@ So I asked a different question. What if the second check asked nothing of the u
 
 That's the whole project in a sentence:
 
-> **Can a computer tell it's really you from your typing rhythm alone — and how close can it get to the best published result?**
+> **Can a computer confirm a person's identity from their typing rhythm alone, and how close can it come to the best published benchmark?**
 
 To keep myself honest later, I set out five specific objectives, each with a test that would show plainly whether it had been met, rather than a vague sense that the work was "going well":
 
@@ -62,7 +62,7 @@ To keep myself honest later, I set out five specific objectives, each with a tes
 
 Two things slipped, both worth stating plainly. An eight-week exam pause over April and May stopped all work, so I settled every research decision on paper beforehand and ran the rebuild as one concentrated sprint in June. Then, midway through that sprint, I found the evaluation was flawed and had to rebuild it (§4), which meant re-running every figure that followed.
 
-## 2. You type like nobody else
+## 2. Background and related work
 
 Recognising someone by their typing is a *behavioural* biometric — it concerns how a person acts, like a signature or a gait, rather than what their body is, like a fingerprint or an iris. The raw signal is only timing: how long each key is held, and the gaps between one key and the next. Unremarkable in isolation. Surprisingly personal in aggregate.
 
@@ -72,7 +72,7 @@ How, then, should such a system be scored? Any such system makes two opposite er
 
 Two studies mark the boundaries, and the notable point is that they never actually meet. In 2009, Killourhy and Maxion built the exact dataset I use — 51 people each typing the password `.tie5Roanl` 400 times — and tested 14 hand-built methods; their best scored 9.6%. That is the benchmark, and it belongs to one world: small, fixed-text data scored by features a human designed by hand. At the other extreme, a 2021 system called TypeNet learned from 136 million keystrokes across roughly 168,000 people and reached 2.2% — but that belongs to the opposite world, web-scale free typing read by a fully learned model. A recent review in *ACM Computing Surveys* traces the field making precisely that journey, from hand-built statistical detectors in the 2000s to deep learned representations in the 2020s. What no one had examined is the crossing point between the two: take a *learned* fingerprint and bring it *down* to the small, fixed-text benchmark — does it beat the older hand-built method on its own ground, tested fairly on strangers? That un-examined question, in the gap between the two worlds, is where a student with a laptop can contribute.
 
-## 3. Building a typing fingerprint
+## 3. Method
 
 There were three genuinely different ways to build this, and I weighed them before choosing:
 
@@ -84,7 +84,7 @@ Judged on the factors that actually decide whether a design survives contact wit
 
 | Approach | Cost of a new user signing up | Tied to one fixed phrase? | Feasible on a laptop? | Main risk |
 |----|----|----|----|----|
-| Pure statistics *(the 2009 benchmark)* | Cheap — build one statistical profile | **Yes** — phrase-locked | Yes | A human must hand-pick the features; can't extend to free typing |
+| Pure statistics *(the 2009 benchmark)* | Cheap — build one statistical profile | **Yes** — phrase-locked | Yes | A human must hand-pick the features; cannot extend to free typing |
 | Standard classifier | **Ruinous** — retrain the whole network every signup | No | Trains on a laptop, but retraining kills it in production | Unusable as a live service; retraining latency grows with every user |
 | Learned fingerprint *(chosen)* | Cheap — record ~12 of their samples, no retraining | No | Yes (~23 min to train once, <1 ms per check) | Needs enough people up front to learn a good space |
 
@@ -96,9 +96,9 @@ Deciding whether a new sample is genuinely you then comes down to measuring how 
 
 Finally, I integrated it into a working application: the user consents, types a few times to enrol, and is verified on a new sample. If anything fails — the service is down, or the model is the wrong version — it responds "cannot tell; request another factor", and never "let them in". As a brief live check, I enrolled one held-out person and passed genuine and impostor samples through the system: genuine samples scored 3.10 on average, impostors 6.73 (a lower score means more genuine). The deployed system therefore does rank impostors below the real user. It also failed on its first run, in a revealing way — which I return to below.
 
-## 4. The number that was too good to be true
+## 4. Evaluation design
 
-My first result looked excellent, and I was genuinely pleased with it. Then I re-read my own code and realised what had happened: the network had trained on *all* 51 people — including the very ones I was then testing it on. I had been grading it on people it had already studied.
+My first evaluation produced a result I was pleased with. On re-reading the training code, I found the cause: the network had been trained on all 51 subjects — the very people it was then tested on. I had been grading the model on people it had already studied.
 
 It is one of the oldest mistakes in machine learning, and the analogy is exact: giving a student the exam questions the night before, then being impressed when they pass. The number was not a deliberate deception; the code had quietly produced a flattering result, and I had been willing to accept it. That was the point at which the project became science — the point at which I began treating a good result as something to *attack* rather than to celebrate.
 
@@ -106,7 +106,7 @@ The fix set the rule for everything that followed. I split the 51 people into 35
 
 Most of the real work was debugging of this kind — and the useful bugs were never the ones a test caught, but the ones I found by asking whether a *passing* test actually proved what it claimed. Three more stand out. The live service crashed for one unusually consistent typist: typing the same password almost identically each time drove their personal threshold close to zero and caused a later calculation to overflow — something none of my test data, which was artificially varied, could have triggered. Only a real person did. On the first day, the real data file trained on all-zero timings, because its columns were named differently from my test fixture and my code read straight past them, reporting a plausible number throughout. And for a time, the blended decision-maker I was most pleased with was being measured *nowhere*: the evaluation scored only the simple distance, so the ensemble ran in the live product while earning no result at all. I noticed only when I asked why my supposedly better method had no figure to its name — and correctly wiring it into the evaluation is the source of the 10.2% figure. A method you have not measured is not a method; it is a hope. (The full log of thirteen fixes is in the project repository.)
 
-## 5. What I actually found
+## 5. Results
 
 The headline result, measured on the 16 strangers and averaged over three runs, is below. Lower is better.
 
@@ -125,15 +125,15 @@ This can even be seen directly. I reduced the 128-number fingerprints to a two-d
 
 Did the five objectives I set myself (§1) hold up? For the most part, and I can point to where. The fingerprint works and runs in milliseconds on an ordinary laptop (O1); it clusters strangers it never trained on, as Figure B.2 shows (O2); the score is honest — measured open-set on 16 unseen people, behind a guard that makes a leak impossible (O3); the simple and blended scorers both come from a single run, so the comparison is fair rather than selective (O4); and the whole system re-runs from one command on a pinned dataset, failing safe when it breaks (O5). The one objective I set out to meet and did *not* is the headline aim itself — to beat the best published result. I came close, honestly, and fell short. That shortfall is the finding, not a footnote to it.
 
-## 6. What it means, and what it does not
+## 6. Discussion
 
-So, does typing rhythm prove who you are? In part, and honestly so. It works well enough to serve as a useful *second* check behind a password — an attacker holding your stolen password must still type as you do, at no extra effort to you; run continuously, it could even detect that the person mid-session had changed. It does not beat a good hand-built method on small, fixed-text data. And the genuinely useful finding is narrower, and more interesting, than "my model is good": placing classical statistics on top of a learned fingerprint makes the decision *more stable*, and I can identify exactly which component is responsible. The contribution here is not a new accuracy record — it is an honest, reproducible measurement that a classical verifier run *inside* a learned fingerprint is steadier than either half alone, with the single component responsible identified and every failure mode recorded rather than set aside. On a small public benchmark, tested only on strangers, that measurement did not exist before; now it does.
+Does typing rhythm prove who you are? In part, and honestly. It works well enough to serve as a useful *second* check behind a password — an attacker holding your stolen password must still type as you do, at no extra effort to you; run continuously, it could even detect that the person mid-session had changed. It does not beat a good hand-built method on small, fixed-text data. And the genuinely useful finding is narrower, and more interesting, than "my model is good": placing classical statistics on top of a learned fingerprint makes the decision *more stable*, and I can identify exactly which component is responsible. The contribution here is not a new accuracy record — it is an honest, reproducible measurement that a classical verifier run *inside* a learned fingerprint is steadier than either half alone, with the single component responsible identified and every failure mode recorded rather than set aside. On a small public benchmark, tested only on strangers, that measurement did not exist before; now it does.
 
 For context: my 14.2% sits above the 2009 method's 9.6% on its own ground, and far short of TypeNet's 2.2% — but that 2.2% is bought with internet-scale data I simply do not have. I also tested my design against a Transformer, the architecture behind most of today's best-known AI models, under identical conditions; it performed clearly worse, and less reliably (19.8%). On data this small, the built-in assumptions of my simpler design about timing and sequence outperform the more elaborate model's flexibility. That is a concrete reason to have chosen it, rather than a guess.
 
 The limitations are real, and I would rather state them than have an assessor find them. A single small dataset. One 11-key password. A small model on a laptop. Fixed text only — the free-typing version is built, but not yet measured on a large corpus. And the confidence *percentage* the product displays is not yet calibrated, although the accept-or-reject ordering is sound. None of this makes the result wrong; all of it is a reason not to overstate it.
 
-## 7. The ethics of a system that recognises you
+## 7. Ethics and responsible use
 
 Anything that can recognise people by their behaviour can also *monitor* them, so I treated the ethics as part of the design, not an afterthought.
 
@@ -144,7 +144,7 @@ Anything that can recognise people by their behaviour can also *monitor* them, s
 - **It fails some people more than others, and this is a fairness problem.** My own 37-fold spread in error rate (§5) is a textbook disparate-impact risk: the people it serves worst would be wrongly rejected far more often than the 14.2% average admits, and the average hides it completely. That is the concrete reason this must never be the *only* check, and why a real deployment needs a per-person error audit, not just an average. Those people are identifiable in advance (they are the least consistent typists), so a fair system can flag them and rely on a fallback rather than quietly failing them.
 - **The same technology, in the wrong hands.** What protects an account could equally track or de-anonymise people by their typing. I present it as opt-in protection the user controls, report the error rates rather than conceal them, and would never present a 10%-error system as infallible.
 
-## 8. What I got wrong, and what I would change
+## 8. Reflection and future work
 
 The single most important thing I learned was not a technique — it was to distrust my own results. My first evaluation produced a number I was delighted with, and it was worthless (§4). Recognising that meant training myself to ask "what would make this *wrong*?" before celebrating, and it is the habit I will keep long after I have forgotten the mathematics. It also taught me why biometrics depend on error-rate curves rather than plain accuracy: when a system can fail in two opposite ways, a single reassuring number conceals the trade-off that actually matters.
 
@@ -245,7 +245,7 @@ Average of these is 0.1421, matching the headline seed-42 figure. Aggregate over
 
 **Verification ensemble.** Enrolment stores the centroid, the enrolment embeddings (k-NN, k = 3), and the Ledoit–Wolf inverse-covariance matrix. Score = unweighted mean of (i) L1 distance to the centroid, (ii) mean L1 distance to the 3 nearest enrolment embeddings, (iii) Ledoit–Wolf Mahalanobis distance; singular covariance falls back to the centroid distance. Per-user threshold = 90th percentile of leave-one-out genuine distances × 1.15, floored at 10⁻³ — the exact floor whose absence caused the live crash of §4. Note the two enrolment regimes: the *benchmark* enrols with 200 windows (half a subject's data) to measure what the representation can do; the *product* enrols with about a dozen, which is workable only because the leave-one-out threshold adapts to however consistent that user's dozen turns out to be.
 
-**Why these pieces work — the mechanism, not just the name.** *L2-normalisation* divides each fingerprint by its own length so every one lands on the surface of a unit sphere; that makes "how far apart" depend on the *direction* of the rhythm pattern rather than its *magnitude* (roughly, its shape rather than how fast someone types overall) — the right thing when you're comparing patterns. *Batch-hard triplet loss* trains on triples of (same, same, different): for each anchor it seeks out the *hardest* pair actually present in the mini-batch — the same-person sample that landed farthest away and the different-person sample that landed closest — and pushes them apart by a fixed margin, so the training spends its effort on the genuinely confusable cases instead of the easy ones. *Ledoit–Wolf shrinkage* solves a concrete small-sample problem: with only ~12 enrolment samples living in 128 dimensions, the ordinary covariance matrix that a Mahalanobis distance needs is wildly unstable and often not even invertible, so I blend it toward a well-behaved target — just enough to guarantee a stable, invertible matrix, which is exactly the few-samples-in-many-dimensions situation every new user's enrolment sits in. That third point is *why* the Mahalanobis term ends up carrying the ensemble (see below): it is the only one of the three distances that models how a person's typing dimensions **co-vary**, not merely how far each one sits from their average.
+**Why these pieces work — the mechanism, not just the name.** *L2-normalisation* divides each fingerprint by its own length so every one lands on the surface of a unit sphere; that makes "how far apart" depend on the *direction* of the rhythm pattern rather than its *magnitude* (roughly, its shape rather than how fast someone types overall) — the right thing when comparing patterns. *Batch-hard triplet loss* trains on triples of (same, same, different): for each anchor it seeks out the *hardest* pair actually present in the mini-batch — the same-person sample that landed farthest away and the different-person sample that landed closest — and pushes them apart by a fixed margin, so the training spends its effort on the genuinely confusable cases instead of the easy ones. *Ledoit–Wolf shrinkage* solves a concrete small-sample problem: with only ~12 enrolment samples living in 128 dimensions, the ordinary covariance matrix that a Mahalanobis distance needs is wildly unstable and often not even invertible, so I blend it toward a well-behaved target — just enough to guarantee a stable, invertible matrix, which is exactly the few-samples-in-many-dimensions situation every new user's enrolment sits in. That third point is *why* the Mahalanobis term ends up carrying the ensemble (see below): it is the only one of the three distances that models how a person's typing dimensions **co-vary**, not merely how far each one sits from their average.
 
 **Evaluation.** Open-set 35/16 subject split (seeded). Per test subject, the *earlier* 200 of their 400 windows enrol and the *later* 200 are tested — a positional split, chosen deliberately so enrolment never sees the future (mildly pessimistic under session drift, never flattering). Impostors = all 400 windows of each of the other 15 test subjects (6,000 impostor scores per subject). The evaluator raises an error rather than invent a number if a test set would be empty. The headline is the *mean of per-subject EERs*, matching the 2009 baseline's methodology — not the pooled-score EER, which mixes subjects with different score scales (pooled, seed 42: 16.1%). Two scorers (scaled-Manhattan headline; full ensemble secondary), never cross-compared. Seeds 42/43/44 for the headline; 14 seeds for the ensemble-vs-primary comparison — the ensemble wins 14/14 (Wilcoxon signed-rank *p* ≈ 0.0001). Subject-level bootstrap (20,000 draws) gives a 95% CI of [9.5%, 19.2%] on the seed-42 14.2%. Separability (nearest-impostor distance ÷ within-subject scatter) vs. per-subject EER: Spearman ρ = −0.84, *p* = 0.0001. 14-seed means: primary ≈ 18.7%, ensemble ≈ 13.3%.
 
