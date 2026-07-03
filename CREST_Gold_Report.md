@@ -54,13 +54,13 @@ To keep myself honest later, I set out five specific objectives, each with a tes
 | Stage | Planned | Actual | Slip | Focus and outcome |
 |----|----|----|----|----|
 | 1. Typing platform and keystroke-capture engine | Nov–Dec 2025 | Nov–Dec 2025 | on time | The full-stack site that records every keystroke; it became the project's data source. |
-| 2. User accounts and secure authentication | Jan–Feb 2026 | Feb 2026 | on time | Google logins and session handling, the gate in front of the biometric layer. |
-| 3. First biometric engine and the research/serving architecture | Feb–Mar 2026 | Mar 2026 | on time | Two statistical keystroke recognisers (v1/v2), and the clean split between research code and the live product. |
+| 2. User accounts and secure authentication | Jan 2026 | Feb 2026 | +3 wks | Google logins and session handling, the gate in front of the biometric layer; OAuth and session bugs cost three weeks here. |
+| 3. First biometric engine and the research/serving architecture | Feb–Mar 2026 | Mar 2026 | recovered | Two statistical keystroke recognisers (v1/v2), and the clean split between research code and the live product; compressed to recover the three weeks lost in stage 2. |
 | 4. Deep metric-learning model: encoder, training, verifier | Apr–Jun 2026 | Jun 2026 | on time | The learned 128-number fingerprint, the triplet-loss training pipeline and the three-distance verifier. |
 | 5. Open-set evaluation harness and validation | May–Jun 2026 | Jun 2026 | on time | The honest test protocol, the mid-sprint rebuild after the training/test leak (§4), and the checks: 14 seeds, nested validation, a Transformer baseline. |
 | 6. Analysis, figures, and the scientific write-up | Jun 2026 | Jun–Jul 2026 | +2 wks | The results and figures, the ethics review, and this report. |
 
-The research phase (stages 4 and 5) was scheduled from April through June, so the April–May exam period fell inside the plan rather than derailing it. I spent those weeks settling every research decision on paper, then built the model and ran the evaluation in one concentrated June sprint. The one change I could not plan for came mid-sprint, when I found the evaluation was flawed (§4) and had to re-run every figure that followed. That rework pushed the write-up about two weeks into July.
+Authentication in stage 2 ran three weeks over on OAuth and session bugs. I recovered that time by compressing the recogniser work in stage 3, so I entered the research phase on schedule. That phase (stages 4 and 5) was scheduled from April through June, which put the April–May exam period inside the plan rather than derailing it: I spent those weeks settling every research decision on paper, then built the model and ran the evaluation in one concentrated June sprint. The one change I could not plan for came mid-sprint, when I found the evaluation was flawed (§4) and had to re-run every figure that followed. That rework pushed the write-up about two weeks into July.
 
 ## 2. Background and related work
 
