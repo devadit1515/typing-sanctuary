@@ -49,16 +49,18 @@ To keep myself honest later, I set out five specific objectives, each with a tes
 
 (I return to these five objectives at the end and assess each one honestly, in §5 and §8.)
 
-**How the project ran.** The work ran in four stages across seven months, about 84 hours in total. The dates come from the commit history, not from memory.
+**How the project ran.** The work ran across seven months, about 84 hours in total. I have split it into six stages below; the dates come from the commit history, not from memory.
 
 | Stage | Planned | Actual | Slip | Focus and outcome |
 |----|----|----|----|----|
-| 1. Typing app and keystroke capture | Nov–Dec 2025 | Nov–Dec 2025 | on time | The web app that records typing; it became the data source everything else runs on. |
-| 2. Accounts and first recognisers | Jan–Feb 2026 | Feb–Mar 2026 | +3 wks | Logins and two simple statistical checks; the slip went on authentication bugs. |
-| 3. Deep-learning rebuild and open-set test | Mar–Apr 2026 | Jun 2026 | +8 wks | The core research: the learned fingerprint, the honest test, the ablations. |
-| 4. Analysis and write-up | May 2026 | Jun–Jul 2026 | +6 wks | Figures, ethics, and this report; overlapped with re-running numbers after the §4 rebuild. |
+| 1. Typing web app + keystroke capture | Nov–Dec 2025 | Nov–Dec 2025 | on time | The site that records every keystroke; it became the project's data source. |
+| 2. Accounts and authentication | Jan 2026 | Feb 2026 | +3 wks | Google logins and sessions; the slip went on OAuth and session bugs. |
+| 3. First statistical recognisers + research/serve seam | Feb 2026 | Mar 2026 | +2 wks | Two simple keystroke checks (v1/v2), and the clean split between research code and the live product. |
+| 4. Deep rebuild: encoder, training, verifier | Mar–Apr 2026 | Jun 2026 | +8 wks | The learned 128-number fingerprint, the triplet training and the three-distance verifier, built in one June sprint after the exam pause. |
+| 5. Honest evaluation and the closed-set fix | Apr 2026 | Jun 2026 | +8 wks | The open-set protocol, the mid-sprint rebuild after the training/test leak (§4), and the checks: 14 seeds, nested validation, a Transformer baseline. |
+| 6. Analysis, figures, ethics, write-up | May 2026 | Jun–Jul 2026 | +6 wks | The results and figures, the ethics review, and this report. |
 
-The eight-week slip on stage 3 was an exam pause over April and May. I used it to settle every research decision on paper, so June was one concentrated sprint instead of improvisation. The deviation I could not plan for came mid-sprint: I found the evaluation was flawed (§4) and had to re-run every figure that followed.
+The eight-week slip in spring was an exam pause over April and May. I used it to settle every research decision on paper, so June became one concentrated sprint rather than improvisation. The deviation I could not plan for came mid-sprint: I found the evaluation was flawed (§4), which forced me to re-run every figure that followed.
 
 ## 2. Background and related work
 
