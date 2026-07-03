@@ -165,7 +165,7 @@ This was an independent project with no mentor, so the "people" who helped were 
 
 ## A note on AI use
 
-I used Anthropic's Claude (via the Claude Code assistant), across the project's whole span (November 2025 – July 2026; the dated trail is in the commit history), for: first drafts of some functions, which I reviewed, ran and tested; help hunting bugs; surfacing papers, each of which I checked against the original before citing; and drafting and tightening this report, which I edited into my own voice. It produced no number in this report; every figure comes from code I ran and verified myself. I set the direction, made every scientific decision, and the mistakes in §4 are entirely my own.
+I used Anthropic's Claude (via the Claude Code assistant) as a coding aid across the project's whole span (November 2025 – July 2026; the dated trail is in the commit history): first drafts of some functions, which I reviewed, ran and tested, and help tracking down bugs. It also surfaced candidate papers, each of which I checked against the original before citing. The report itself is entirely my own writing; Claude drafted none of it. It produced no number here either; every figure comes from code I ran and verified myself. I set the direction, made every scientific decision, and the mistakes in §4 are entirely my own.
 
 ## References
 

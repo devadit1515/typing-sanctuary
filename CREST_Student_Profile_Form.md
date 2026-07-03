@@ -72,7 +72,7 @@
 
 ## My mentor
 
-This project was completed **independently, with no mentor or supervisor.** The role a mentor usually plays — the second person who distrusts a convenient result — I had to do myself by auditing my own work, which is how the broken-test mistake (§4) was eventually caught. AI assistance is disclosed in the report's AI-use note: I set the research direction, made every scientific decision, ran and tested all the code, and verified every result.
+This project was completed **independently, with no mentor or supervisor.** The role a mentor usually plays — the second person who distrusts a convenient result — I had to do myself by auditing my own work, which is how the broken-test mistake (§4) was eventually caught. AI assistance is disclosed in the report's AI-use note: Claude was used as a coding aid, but I wrote the entire report myself. I set the research direction, made every scientific decision, ran and tested all the code, and verified every result.
 
 > **Logistics note (check before submitting).** CREST Gold projects are normally submitted through a registered CREST provider or coordinator, and the official form has a section for a supervisor/teacher to verify the work. Because this is an independent submission with no mentor, **confirm the correct route with CREST first** — email `crest@britishscienceassociation.org` or check the "how to apply" guidance — as you may need to register as an independent participant or have an eligible adult act as the verifying coordinator. Do not leave the verification section blank without confirming what CREST requires.
 
