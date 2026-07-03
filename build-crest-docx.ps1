@@ -17,8 +17,7 @@ pandoc (Join-Path $root "CREST_Gold_Report.md") `
     -o (Join-Path $root "CREST_Gold_Report.docx") `
     --from markdown-implicit_figures `
     --resource-path $root `
-    --metadata title="Verifying Identity from Typing Rhythm - CREST Gold Report" `
-    --metadata author="Devadit Jain"
+    --metadata title="CREST Gold Report"
 Write-Host "Rebuilt CREST_Gold_Report.docx"
 
 pandoc (Join-Path $root "CREST_Student_Profile_Form.md") `

@@ -9,7 +9,7 @@
 
 ## Abstract
 
-Someone broke into an account I cared about using a stolen password, and the system raised no alarm. The password was correct, so as far as the system knew, the attacker was me. This project asks whether the *way* a person types, their rhythm, could serve as a quiet second check that a stolen password cannot fake. I built a system that turns a burst of typing into a kind of numerical fingerprint and decides whether a new burst matches. Tested on 51 people typing the same password, and judged only on people it had never seen, it was wrong about one attempt in seven: close to the best method from a well-known 2009 study, but short of beating it. This is an account of building it, of the mistake that nearly produced a far more impressive but false result, and of what an honest near-miss is actually worth.
+Someone broke into one of my accounts using a stolen password, and the system raised no alarm. The password was correct, so as far as the system knew, the attacker was me. This project asks whether the *way* a person types, their rhythm, could serve as a quiet second check that a stolen password cannot fake. I built a system that turns a burst of typing into a kind of numerical fingerprint and decides whether a new burst matches. Tested on 51 people typing the same password, and judged only on people it had never seen, it was wrong about one attempt in seven: close to the best method from a well-known 2009 study, but short of beating it. This is an account of building it, of the mistake that nearly produced a far more impressive but false result, and of what an honest near-miss is actually worth.
 
 ## Contents
 
@@ -25,25 +25,19 @@ Someone broke into an account I cared about using a stolen password, and the sys
 
 ## 1. Introduction
 
-Someone broke into an account I cared about using a stolen password, and the system raised no alarm. Why would it? The password was correct, so as far as the system was concerned, the person typing it *was* me. This is the quiet flaw beneath every password ever made: it checks what you *know*, not who you *are*. Steal the secret, and you inherit the identity.
+Someone broke into one of my accounts using a stolen password, and the system raised no alarm. Why would it? The password was correct, so as far as the system was concerned, the person typing it *was* me. This is the quiet flaw beneath every password ever made: it checks what you *know*, not who you *are*. Steal the secret, and you inherit the identity.
 
 This is not a rare problem. Verizon's 2024 security report attributed about 88% of basic web-application attacks to stolen passwords, most of them automated: attackers take millions of leaked passwords from one site and try them against the login pages of every other, on the assumption that people reuse them. Usually they do. Two-factor codes help, but they interrupt the user at every login, and anything that interrupts is eventually switched off.
 
-So I asked a different question. What if the second check asked nothing of the user at all, and simply watched *how* they already type? Typing has a rhythm. The small pauses, the keys held a fraction longer than others, the slight hesitation before a capital: all of it is as personal as an accent, and it comes from motor habits that are hard to fake on purpose. The idea is old. A century ago, telegraph operators could recognise one another by the rhythm of their tapping. What is new is that computers can now do this from any text a person types, instead of one memorised phrase.
-
-The whole project, in a sentence:
-
-> **Can a computer confirm a person's identity from their typing rhythm alone, and how close can it come to the best published benchmark?**
+So I asked a different question. What if the second check asked nothing of the user at all, and simply watched *how* they already type? Typing has a rhythm. The small pauses, the keys held a fraction longer than others, the slight hesitation before a capital: all of it is as personal as an accent, and it comes from motor habits that are hard to fake on purpose. The idea is old. A century ago, telegraph operators could recognise one another by the rhythm of their tapping. What is new is that computers can now do this from any text a person types, instead of one memorized phrase.
 
 To keep myself honest later, I set out five specific objectives, each with a test that would show plainly whether it had been met, rather than a vague sense that the work was "going well":
 
 1. **A working fingerprint.** Build a network that turns a burst of typing into a fixed-size list of numbers, on an ordinary laptop. *Done when* it fingerprints one sample in under a millisecond on a CPU and trains with no GPU.
 2. **Fingerprints that cluster by person.** Train it so the same person's samples land close together and different people land far apart. *Done when* two samples from the same held-out person are reliably closer than two from different people.
-3. **An honest score.** Test it only on people it has never seen, with the code refusing to grade itself on anyone it studied. *Done when* a runtime check makes a training/test overlap impossible, and I have an equal-error rate measured on at least 16 unseen people.
+3. **A clean score.** Test it only on people it has never seen, with the code refusing to grade itself on anyone it studied. *Done when* a runtime check makes a training/test overlap impossible, and I have an equal-error rate measured on at least 16 unseen people.
 4. **A fair comparison built in.** Add a classical statistical decision-maker on top, so I can weigh a simple method against an elaborate one from the same run. *Done when* both scorers run on identical splits and I can report both error rates side by side.
 5. **Reproducible and safe.** Make the whole thing rerun from one command, and show it running live and failing safely. *Done when* a pinned dataset (fixed fingerprint hash) and fixed random seeds reproduce the numbers, and the live service answers "ask for another factor", never "let them in", on any breakage.
-
-(I return to these five objectives at the end and assess each one honestly, in §5 and §8.)
 
 **How the project ran.** The build ran across seven months, about 84 hours in total. I have split it into six stages below; the dates come from the commit history, not from memory.
 
@@ -53,7 +47,7 @@ To keep myself honest later, I set out five specific objectives, each with a tes
 | 2. User accounts and secure authentication | Jan 2026 | Feb 2026 | +3 wks | Google logins and session handling, the gate in front of the biometric layer; OAuth and session bugs cost three weeks here. |
 | 3. First biometric engine and the research/serving architecture | Feb–Mar 2026 | Mar 2026 | recovered | Two statistical keystroke recognisers (v1/v2), and the clean split between research code and the live product; compressed to recover the three weeks lost in stage 2. |
 | 4. Deep metric-learning model: encoder, training, verifier | Apr–Jun 2026 | Jun 2026 | on time | The learned 128-number fingerprint, the triplet-loss training pipeline and the three-distance verifier. |
-| 5. Open-set evaluation harness and validation | May–Jun 2026 | Jun 2026 | on time | The honest test protocol, the mid-sprint rebuild after the training/test leak (§4), and the checks: 14 seeds, nested validation, a Transformer baseline. |
+| 5. Open-set evaluation harness and validation | May–Jun 2026 | Jun 2026 | on time | The open-set test protocol, the mid-sprint rebuild after the training/test leak (§4), and the checks: 14 seeds, nested validation, a Transformer baseline. |
 | 6. Analysis, figures, and the scientific write-up | Jun 2026 | Jun–Jul 2026 | +2 wks | The results and figures, the ethics review, and this report. |
 
 Authentication in stage 2 ran three weeks over on OAuth and session bugs. I recovered that time by compressing the recogniser work in stage 3, so I entered the research phase on schedule. That phase (stages 4 and 5) was scheduled from April through June, which put the April–May exam period inside the plan rather than derailing it: I spent those weeks settling every research decision on paper, then built the model and ran the evaluation in one concentrated June sprint. The one change I could not plan for came mid-sprint, when I found the evaluation was flawed (§4) and had to re-run every figure that followed. That rework pushed the write-up about two weeks into July.
@@ -98,7 +92,7 @@ My first evaluation produced a result I was pleased with. On re-reading the trai
 
 It is one of the oldest mistakes in machine learning, and the analogy is exact: giving a student the exam questions the night before, then being impressed when they pass. This was not deliberate deception. The code had quietly produced a flattering result, and I had been willing to take it. That is the point at which the project became science, the point at which I started treating a good result as something to *attack* rather than celebrate.
 
-The fix set the rule for everything that followed. I split the 51 people into 35 for training and 16 held back. The network sees only the 35, and is judged only on the 16 strangers, with a runtime check that makes it *impossible* for a test subject to leak into training. This is the honest test for authentication, because the only thing that matters is whether the system recognises people it has never met. It also cost me that flattering number: the honest error rate proved far higher than the leaked one. It was worth every point.
+The fix set the rule for everything that followed. I split the 51 people into 35 for training and 16 held back. The network sees only the 35, and is judged only on the 16 strangers, with a runtime check that makes it *impossible* for a test subject to leak into training. This is the real test for authentication, because the only thing that matters is whether the system recognises people it has never met. It also cost me that flattering number: the true error rate proved far higher than the leaked one. It was worth every point.
 
 Most of the real work was debugging of this kind, and the useful bugs were never the ones a test caught. They were the ones I found by asking whether a *passing* test actually proved what it claimed. Three more stand out. The live service crashed for one unusually consistent typist: typing the same password almost identically each time drove their personal threshold close to zero and overflowed a later calculation. None of my test data, which was artificially varied, could have triggered it; only a real person did. On the first day, the real data file trained on all-zero timings, because its columns were named differently from my test fixture and my code read straight past them, reporting a plausible number the whole time. And for a while the blended decision-maker I was most pleased with was being measured *nowhere*: the evaluation scored only the simple distance, so the ensemble ran in the live product while earning no result at all. I noticed only when I asked why my supposedly better method had no figure to its name, and wiring it correctly into the evaluation is where the 10.2% comes from. A method you have not measured is not a method; it is a hope. (The full log of thirteen fixes is in the project repository.)
 
@@ -111,7 +105,7 @@ The headline result, measured on the 16 strangers and averaged over three runs, 
 | Simple distance (the fair comparison) | **14.2%** | the 2009 benchmark's 9.6% |
 | Full blended method | **10.2%** | (no direct baseline) |
 
-In plain terms, it works: it recognises strangers far better than chance, live and end to end. But on this small, fixed-password test it does *not* beat the 2009 hand-built method, scoring 14.2% against 9.6%. An honest near-miss. (That single figure is the balanced point on a whole range of trade-offs; the full curve, from the strictest setting to the most lenient, is Figure B.1.)
+In plain terms, it works: it recognises strangers far better than chance, live and end to end. But on this small, fixed-password test it does *not* beat the 2009 hand-built method, scoring 14.2% against 9.6%. A near-miss. (That single figure is the balanced point on a whole range of trade-offs; the full curve, from the strictest setting to the most lenient, is Figure B.1.)
 
 Two things make the near-miss interesting. First, the blended method (10.2%) is not only more accurate than the simple one (14.2%); it is far *steadier*, barely moving between runs. I re-ran the whole test over 14 different random splits, and the blended method won on every one, which is very unlikely to be chance. That steadiness comes almost entirely from one of the three distance measures, the more sophisticated one: a specific finding, not a vague impression, and one that points to a straightforward improvement. Second, I will be direct about the uncertainty. Those headline runs fall on the favourable side: across all 14 splits the averages are higher (about 18.7% and 13.3%), so the true gap to 9.6% is somewhat wider than the headline suggests.
 
@@ -119,11 +113,11 @@ The most striking result is how greatly individuals differ. The easiest person t
 
 This can even be seen directly. I reduced the 128-number fingerprints to a two-dimensional picture (Figure B.2): several people form tight, clearly separated clusters even though the model never trained on them, while a blurred region in the centre matches the hard-to-recognise group. The picture and the numbers agree. And when I tried to improve matters, with more training and more samples per person, nothing helped; the model's internal measure showed it had already learned everything the short password *can* teach. More effort cannot pull out information that is not there. (The experiments behind all of this are in Appendix C.)
 
-Did the five objectives I set myself (§1) hold up? For the most part, and I can point to where. The fingerprint works and runs in under a millisecond on an ordinary laptop (O1); it clusters strangers it never trained on, as Figure B.2 shows (O2); the score is honest, measured open-set on 16 unseen people, behind a guard that makes a leak impossible (O3); the simple and blended scorers both come from a single run, so the comparison is fair rather than selective (O4); and the whole system re-runs from one command on a pinned dataset, failing safe when it breaks (O5). The one objective I set out to meet and did *not* is the headline aim itself: to beat the best published result. I came close, honestly, and fell short. That shortfall is the finding, not a footnote to it.
+Did the five objectives I set myself (§1) hold up? For the most part, and I can point to where. The fingerprint works and runs in under a millisecond on an ordinary laptop (O1); it clusters strangers it never trained on, as Figure B.2 shows (O2); the score is measured open-set on 16 unseen people, behind a guard that makes a leak impossible (O3); the simple and blended scorers both come from a single run, so the comparison is fair rather than selective (O4); and the whole system re-runs from one command on a pinned dataset, failing safe when it breaks (O5). The one objective I set out to meet and did *not* is the headline aim itself: to beat the best published result. I came close and fell short. That shortfall is the finding, not a footnote to it.
 
 ## 6. Discussion
 
-Does typing rhythm prove who you are? In part, and honestly. It works well enough to serve as a useful *second* check behind a password. An attacker holding your stolen password must still type as you do, at no extra effort to you; run continuously, it could even notice that the person mid-session had changed. It does not beat a good hand-built method on small, fixed-text data. The more interesting finding is narrower than "my model is good": putting classical statistics on top of a learned fingerprint makes the decision *more stable*, and I can say exactly which component is responsible. The contribution is not a new accuracy record. It is an honest, reproducible measurement that a classical verifier run *inside* a learned fingerprint is steadier than either half alone, with the component responsible identified and every failure mode written down rather than set aside. On a small public benchmark, tested only on strangers, that measurement did not exist before. Now it does.
+Does typing rhythm prove who you are? In part. It works well enough to serve as a useful *second* check behind a password. An attacker holding your stolen password must still type as you do, at no extra effort to you; run continuously, it could even notice that the person mid-session had changed. It does not beat a good hand-built method on small, fixed-text data. The more interesting finding is narrower than "my model is good": putting classical statistics on top of a learned fingerprint makes the decision *more stable*, and I can say exactly which component is responsible. The contribution is not a new accuracy record. It is a reproducible measurement that a classical verifier run *inside* a learned fingerprint is steadier than either half alone, with the component responsible identified and every failure mode written down rather than set aside. On a small public benchmark, tested only on strangers, that measurement did not exist before. Now it does.
 
 For context: my 14.2% sits above the 2009 method's 9.6% on its own ground, and far short of TypeNet's 2.2%. That 2.2%, though, is bought with internet-scale data I simply do not have. I also tested my design against a Transformer, the architecture behind most of today's best-known AI models, under identical conditions; it did clearly worse, and less reliably, at 19.8%. On data this small, the built-in assumptions of my simpler design about timing and sequence beat the more elaborate model's flexibility. That is a concrete reason to have chosen it, rather than a guess.
 
@@ -153,7 +147,7 @@ Where I would take it next follows straight from the ceiling being the *data*, n
 - **Train at scale** on appropriate hardware, in the manner of TypeNet, to test whether the hybrid's advantage holds as accuracy improves.
 - **Collect a small, consented set of real users** to test whether it generalises across datasets, with the §7 safeguards built in from the outset.
 
-I set out to find, honestly, whether the way a person types could be a quiet second lock on their identity. It can. Not a perfect one, and not yet better than the 2009 benchmark on a test this small, but a real one, measured and reproducible, built by someone who learned the hard way to stop trusting his own good news.
+I set out to find whether the way a person types could be a quiet second lock on their identity. It can. Not a perfect one, and not yet better than the 2009 benchmark on a test this small, but a real one, measured and reproducible, built by someone who learned the hard way to stop trusting his own good news.
 
 ## Acknowledgements
 
@@ -161,7 +155,7 @@ This was an independent project with no mentor, so the "people" who helped were 
 
 ## A note on AI use
 
-I used Anthropic's Claude (via the Claude Code assistant) as a coding aid across the project's whole span (November 2025 – July 2026; the dated trail is in the commit history): first drafts of some functions, which I reviewed, ran and tested, and help tracking down bugs. It also surfaced candidate papers, each of which I checked against the original before citing. The report itself is entirely my own writing; Claude drafted none of it. It produced no number here either; every figure comes from code I ran and verified myself. I set the direction, made every scientific decision, and the mistakes in §4 are entirely my own.
+I used Anthropic's Claude (via the Claude Code assistant) as a coding aid across the project's whole span (November 2025 – July 2026; the dated trail is in the commit history): first drafts of some functions, which I reviewed, ran and tested, and help tracking down bugs.
 
 ## References
 
@@ -189,23 +183,23 @@ I used Anthropic's Claude (via the Claude Code assistant) as a coding aid across
 - **Biometric.** Recognising a person from a trait; typing rhythm is a *behavioural* one.
 - **Fingerprint / embedding.** The 128 numbers the model produces for one typing sample; same-person fingerprints land close together.
 - **Equal error rate (EER).** The balanced setting where "impostor gets in" and "real user locked out" are equally likely; 10% ≈ wrong one time in ten.
-- **Open-set test.** Judged only on people not seen in training; the honest test for authentication.
+- **Open-set test.** Judged only on people not seen in training; the correct test for authentication.
 - **Mahalanobis / Ledoit–Wolf.** A distance measure that accounts for how much a person's own typing naturally varies, kept stable when enrolment samples are few.
 
 ### Appendix B: Full results, figures and provenance
 
 Per-subject error rate (simple distance, seed 42), 16 held-out people, most to least distinctive:
 
-| Rank | Subject | EER   |     | Rank | Subject | EER   |
-|------|---------|-------|-----|------|---------|-------|
-| 1    | s036    | 0.009 |     | 9    | s050    | 0.179 |
-| 2    | s017    | 0.020 |     | 10   | s056    | 0.190 |
-| 3    | s022    | 0.035 |     | 11   | s030    | 0.190 |
-| 4    | s005    | 0.045 |     | 12   | s018    | 0.205 |
-| 5    | s012    | 0.051 |     | 13   | s054    | 0.215 |
-| 6    | s010    | 0.090 |     | 14   | s037    | 0.234 |
-| 7    | s038    | 0.090 |     | 15   | s007    | 0.295 |
-| 8    | s053    | 0.090 |     | 16   | s047    | 0.335 |
+| Rank | Subject | EER   | Rank | Subject | EER   |
+|------|---------|-------|------|---------|-------|
+| 1    | s036    | 0.009 | 9    | s050    | 0.179 |
+| 2    | s017    | 0.020 | 10   | s056    | 0.190 |
+| 3    | s022    | 0.035 | 11   | s030    | 0.190 |
+| 4    | s005    | 0.045 | 12   | s018    | 0.205 |
+| 5    | s012    | 0.051 | 13   | s054    | 0.215 |
+| 6    | s010    | 0.090 | 14   | s037    | 0.234 |
+| 7    | s038    | 0.090 | 15   | s007    | 0.295 |
+| 8    | s053    | 0.090 | 16   | s047    | 0.335 |
 
 Average of these is 0.1421, matching the headline seed-42 figure. Aggregate over the three runs (seeds 42/43/44): simple distance 0.1422 ± 0.0279; full blend 0.1016 ± 0.0097; benchmark 0.0962. The 0.9%–33.5% spread is the §5 fairness finding.
 
