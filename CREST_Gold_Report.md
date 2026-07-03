@@ -49,18 +49,18 @@ To keep myself honest later, I set out five specific objectives, each with a tes
 
 (I return to these five objectives at the end and assess each one honestly, in §5 and §8.)
 
-**How the project ran.** The work ran across seven months, about 84 hours in total. I have split it into six stages below; the dates come from the commit history, not from memory.
+**How the project ran.** The build ran across seven months, about 84 hours in total. I have split it into six stages below; the dates come from the commit history, not from memory.
 
 | Stage | Planned | Actual | Slip | Focus and outcome |
 |----|----|----|----|----|
-| 1. Typing web app + keystroke capture | Nov–Dec 2025 | Nov–Dec 2025 | on time | The site that records every keystroke; it became the project's data source. |
-| 2. Accounts and authentication | Jan 2026 | Feb 2026 | +3 wks | Google logins and sessions; the slip went on OAuth and session bugs. |
-| 3. First statistical recognisers + research/serve seam | Feb 2026 | Mar 2026 | +2 wks | Two simple keystroke checks (v1/v2), and the clean split between research code and the live product. |
-| 4. Deep rebuild: encoder, training, verifier | Mar–Apr 2026 | Jun 2026 | +8 wks | The learned 128-number fingerprint, the triplet training and the three-distance verifier, built in one June sprint after the exam pause. |
-| 5. Honest evaluation and the closed-set fix | Apr 2026 | Jun 2026 | +8 wks | The open-set protocol, the mid-sprint rebuild after the training/test leak (§4), and the checks: 14 seeds, nested validation, a Transformer baseline. |
-| 6. Analysis, figures, ethics, write-up | May 2026 | Jun–Jul 2026 | +6 wks | The results and figures, the ethics review, and this report. |
+| 1. Typing platform and keystroke-capture engine | Nov–Dec 2025 | Nov–Dec 2025 | on time | The full-stack site that records every keystroke; it became the project's data source. |
+| 2. User accounts and secure authentication | Jan–Feb 2026 | Feb 2026 | on time | Google logins and session handling, the gate in front of the biometric layer. |
+| 3. First biometric engine and the research/serving architecture | Feb–Mar 2026 | Mar 2026 | on time | Two statistical keystroke recognisers (v1/v2), and the clean split between research code and the live product. |
+| 4. Deep metric-learning model: encoder, training, verifier | Apr–Jun 2026 | Jun 2026 | on time | The learned 128-number fingerprint, the triplet-loss training pipeline and the three-distance verifier. |
+| 5. Open-set evaluation harness and validation | May–Jun 2026 | Jun 2026 | on time | The honest test protocol, the mid-sprint rebuild after the training/test leak (§4), and the checks: 14 seeds, nested validation, a Transformer baseline. |
+| 6. Analysis, figures, and the scientific write-up | Jun 2026 | Jun–Jul 2026 | +2 wks | The results and figures, the ethics review, and this report. |
 
-The eight-week slip in spring was an exam pause over April and May. I used it to settle every research decision on paper, so June became one concentrated sprint rather than improvisation. The deviation I could not plan for came mid-sprint: I found the evaluation was flawed (§4), which forced me to re-run every figure that followed.
+The research phase (stages 4 and 5) was scheduled from April through June, so the April–May exam period fell inside the plan rather than derailing it. I spent those weeks settling every research decision on paper, then built the model and ran the evaluation in one concentrated June sprint. The one change I could not plan for came mid-sprint, when I found the evaluation was flawed (§4) and had to re-run every figure that followed. That rework pushed the write-up about two weeks into July.
 
 ## 2. Background and related work
 
