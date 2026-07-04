@@ -1,9 +1,10 @@
-# Render Blueprint for Speed Typing Battle
+# Render Blueprint for Typing Sanctuary
 # This file allows one-click deployment to Render
+# Live service: https://typing-sanctuary.onrender.com
 
 services:
   - type: web
-    name: speed-typing-battle
+    name: typing-sanctuary
     env: node
     region: oregon # Change to your preferred region
     plan: free

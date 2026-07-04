@@ -1,8 +1,10 @@
-# Deployment Guide - Speed Typing Battle
+# Deployment Guide - Typing Sanctuary
+
+> **Status: deployed.** The app is live on Render at <https://typing-sanctuary.onrender.com>; `render.yaml` at the repo root is the blueprint. This guide is kept for redeployment or migration.
 
 ## IMPORTANT: Why Not Netlify?
 
-**Netlify is for static sites only.** Your Speed Typing Battle app requires:
+**Netlify is for static sites only.** This app requires:
 - Node.js server running 24/7
 - Socket.IO for real-time multiplayer
 - Express.js backend with session management

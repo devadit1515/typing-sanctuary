@@ -1,5 +1,7 @@
 # PROJECT HANDOFF — Typing Sanctuary / Keystroke-Biometric Verification
 
+> **Update (4 July 2026).** The CREST Gold submission is complete: the final report, Profile Form and exported PDF live in [`crest/`](../crest/), the app is deployed at <https://typing-sanctuary.onrender.com>, and the independent-submission route is confirmed with CREST. Note the report's markdown source no longer exists — `crest/CREST_Gold_Report.docx` is the single source of truth and must never be regenerated from markdown. The snapshot below predates all of this and is kept as historical context.
+
 > **Read this first.** This file is the single entry point for a fresh session. It tells you
 > what this project is, *why* it exists (a CREST Gold research award), what has been built and
 > tested, what is deliberately **deferred** (and costs money — do not run it without explicit

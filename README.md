@@ -1,269 +1,66 @@
-# ⚡ Speed Typing Battle
+# Typing Sanctuary — keystroke-dynamics identity verification
 
-A real-time multiplayer typing game with premium UI/UX design. Challenge your friends or race against AI in this immersive typing experience!
+**Live at [typing-sanctuary.onrender.com](https://typing-sanctuary.onrender.com)**
 
-## ✨ Features
+Typing Sanctuary verifies *who is typing* from typing rhythm alone: how long each key is held and the gaps between keys. A password proves you know a secret; typing rhythm is a behavioural biometric that a stolen password cannot fake. This repository holds the full system — the deep metric-learning model, the research pipeline that measures it honestly, and the live web service that runs it end to end.
 
-- **🎮 Multiplayer Mode** - Play with up to 5 friends in real-time
-- **🤖 Solo Mode** - Practice against AI bots with 5 difficulty levels
-- **👤 User Accounts** - Register, login, and track your progress
-- **📊 Real-time Stats** - Live WPM, accuracy, and progress tracking
-- **🎨 Premium UI** - Apple-inspired glassmorphic design
-- **📱 Fully Responsive** - Play on desktop, tablet, or mobile
-- **🔒 Secure Authentication** - Password hashing with bcrypt
-- **📧 Password Reset** - Email-based password recovery
-- **⚡ Real-time Updates** - Powered by Socket.IO WebSockets
+## Results
 
-## 🚀 Quick Start
+Measured open-set on the public CMU keystroke benchmark (51 subjects typing the same password 400 times), scored **only on subjects withheld from training**, averaged over three seeds:
 
-### Prerequisites
-- Node.js 18.x or higher
-- MongoDB (local or Atlas)
-- Gmail account (for email features)
+| Decision method | Equal error rate | Reference point |
+|---|---|---|
+| Simple distance (fair comparison) | **14.2%** | 2009 benchmark's best hand-built method: 9.6% |
+| Full blended verifier | **10.2%** | no direct baseline |
 
-### Installation
+It does not beat the 2009 hand-built method on its own ground — and that is reported as the finding, not hidden. The blended verifier's advantage is stability: it won on all 14 random splits tested (Wilcoxon p ≈ 0.0001), and an ablation attributes that to the Ledoit–Wolf Mahalanobis component. The full write-up, with every number, figure and limitation, is in [`crest/`](crest/).
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd timepass-vibecode
-   ```
+## How it works
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+1. **Fingerprint.** A small CNN + BiGRU encoder (83k parameters, trains on a laptop CPU in ~23 minutes) reduces one burst of typing to a 128-number embedding. Same-person embeddings cluster; different people sit apart. Trained with batch-hard triplet loss, the method behind face recognition.
+2. **Verify.** Classical distance statistics run inside that learned space: distance to the enrolled centroid, to the nearest enrolled samples, and a Ledoit–Wolf Mahalanobis distance that models how a person's own typing varies. Enrolling a new user takes about a dozen samples and no retraining.
+3. **Fail safe.** On any failure the service answers "ask for another factor", never "let them in".
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-
-   Edit `.env` and configure:
-   - `MONGODB_URI` - Your MongoDB connection string
-   - `SESSION_SECRET` - Random secret key (generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
-   - `EMAIL_USER` - Your Gmail address
-   - `EMAIL_PASS` - Gmail app password
-
-4. **Run the server**
-   ```bash
-   npm start
-   ```
-
-5. **Open your browser**
-   ```
-   http://localhost:3000
-   ```
-
-## 🎯 How to Play
-
-### Multiplayer Mode
-1. Enter your username
-2. Click "Play Multiplayer"
-3. **Create Room**: Choose passage length and create a room
-4. **Join Room**: Enter a 6-digit room code to join a friend
-5. Wait for host to start the game
-6. Type the passage as fast and accurately as possible!
-
-### Solo Mode
-1. Enter your username
-2. Click "Play Solo"
-3. Choose passage length and difficulty (Level 1-5)
-4. Race against the AI bot
-5. Beat your high score!
-
-## 📁 Project Structure
+## Repository layout
 
 ```
-timepass-vibecode/
-├── config/
-│   ├── database.js          # MongoDB connection
-│   └── email.js             # Email configuration
-├── controllers/
-│   └── passwordResetController.js
-├── models/
-│   ├── User.js              # User schema
-│   └── PasswordReset.js     # Password reset tokens
-├── routes/
-│   ├── authRoutes.js        # Login/Register
-│   ├── profileRoutes.js     # User profile
-│   ├── gameRoutes.js        # Game stats
-│   └── passwordResetRoutes.js
-├── public/
-│   ├── index.html           # Main game page
-│   ├── login.html           # Login page
-│   ├── register.html        # Registration page
-│   ├── forgot-password.html
-│   ├── reset-password.html
-│   ├── game.js              # Game logic + Socket.IO
-│   ├── styles.css           # Game styles
-│   └── auth-styles.css      # Auth pages styles
-├── server.js                # Express + Socket.IO server
-├── package.json
-├── .env.example
-├── netlify.toml             # Netlify configuration
-├── DEPLOYMENT.md            # Deployment guide
-└── README.md
+server.js, routes/, services/, ...   Express app: accounts, sessions, the typing
+                                     platform that collects consented keystroke data
+ml-service/                          Stateless FastAPI inference service (embed + verify)
+research/                            Training, evaluation and reproduction pipeline
+crest/                               Research report (CREST Gold submission) + form
+docs/                                Deployment and project documentation
 ```
 
-## 🛠️ Technology Stack
+## Reproduce the result
 
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **Socket.IO** - Real-time WebSocket communication
-- **MongoDB** - Database
-- **Mongoose** - MongoDB ODM
-- **bcrypt** - Password hashing
-- **express-session** - Session management
-- **nodemailer** - Email sending
+The headline numbers re-run from one command on a pinned dataset (SHA-256 checked) with fixed seeds:
 
-### Frontend
-- **Vanilla JavaScript** - No frameworks needed!
-- **Socket.IO Client** - Real-time communication
-- **CSS3** - Modern animations and glassmorphism
-- **HTML5** - Semantic markup
+```
+cd research
+pwsh -File scripts/reproduce.ps1   # verify data hash -> train 3 seeds -> assert EERs -> figures
+```
 
-## 🎨 Design Features
+CPU-only, roughly 25 minutes, no spend. Versions are pinned in `research/requirements.txt`; see [`research/README.md`](research/README.md) for the manual steps.
 
-- **Glassmorphic UI** - Modern frosted glass effect with backdrop blur
-- **Animated Particles** - Dynamic background with floating particles
-- **Gradient Borders** - Animated cyan/purple gradient effects
-- **Responsive Design** - Mobile-first approach
-- **Split-Screen Auth** - Immersive login/register experience
-- **Smooth Animations** - Hardware-accelerated CSS transitions
-- **Premium Typography** - Large, readable fonts
+## Run the app locally
 
-## 🌐 Deployment
+```
+npm install
+cp .env.example .env    # set MONGODB_URI, SESSION_SECRET, email credentials
+npm start               # Express on :3000
+```
 
-This app is optimized for **Netlify** deployment. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+The ML service runs separately (`cd ml-service`, see its [README](ml-service/README.md)); the Node app degrades gracefully when it is absent.
 
-### Quick Deploy to Netlify
+## Deployment
 
-1. Push to GitHub
-2. Connect GitHub repo to Netlify
-3. Set environment variables in Netlify
-4. Deploy!
+Hosted on **Render** (`render.yaml`), with MongoDB Atlas. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-**Important**: You'll need MongoDB Atlas (free tier available) for production deployment.
+## Ethics, in brief
 
-## 🔧 Configuration
+Biometric consent is opt-in and revocable. The service stores the derived fingerprint, never the raw typing. The reported model is trained only on the public, anonymised research dataset, not on real users. Verification failures fall back to another factor. The full ethics discussion, including a measured 37× per-person spread in error rate and why that matters for fairness, is in the report.
 
-### Environment Variables
+## Author
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `PORT` | Server port | `3000` |
-| `NODE_ENV` | Environment | `production` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://...` |
-| `SESSION_SECRET` | Session encryption key | Random 32+ chars |
-| `SESSION_MAX_AGE` | Session duration (ms) | `86400000` (24h) |
-| `BCRYPT_ROUNDS` | Password hashing rounds | `10` |
-| `CLIENT_URL` | Frontend URL (CORS) | `https://your-site.netlify.app` |
-| `EMAIL_USER` | Gmail for password reset | `your-email@gmail.com` |
-| `EMAIL_PASS` | Gmail app password | 16-char password |
-
-## 🎮 Game Modes
-
-### Solo Mode
-Race against AI bots with different skill levels:
-- **Level 1**: 30 WPM - Beginner
-- **Level 2**: 40 WPM - Casual
-- **Level 3**: 50 WPM - Intermediate ⭐ (Default)
-- **Level 4**: 60 WPM - Advanced
-- **Level 5**: 70 WPM - Expert
-
-### Multiplayer Mode
-- Up to **5 players** per room
-- Real-time progress tracking
-- 6-digit room codes for easy joining
-- Host controls game start
-- Instant rematch feature
-
-## 📊 Stats Tracking
-
-Players with accounts can track:
-- Games played
-- Total WPM (Words Per Minute)
-- Average accuracy
-- Win/loss record
-- Personal bests
-
-## 🔒 Security Features
-
-- ✅ Password hashing with bcrypt (10 rounds)
-- ✅ Secure session management with MongoDB store
-- ✅ HTTPS-only cookies in production
-- ✅ CORS protection
-- ✅ Input validation
-- ✅ SQL injection prevention (NoSQL with Mongoose)
-- ✅ XSS protection
-- ✅ Email verification for password reset
-
-## 📱 Browser Compatibility
-
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
-- ✅ Mobile browsers (iOS Safari, Chrome Mobile)
-
-## 🐛 Troubleshooting
-
-### "Cannot connect to server"
-- Check if server is running (`npm start`)
-- Verify PORT is not in use
-- Check firewall settings
-
-### "MongoDB connection failed"
-- Verify `MONGODB_URI` is correct
-- Check MongoDB is running (local) or accessible (Atlas)
-- Verify network access in MongoDB Atlas
-
-### "Socket.IO not connecting"
-- Check browser console for errors
-- Verify server URL is correct
-- Check CORS settings
-
-### "Password reset email not sending"
-- Verify Gmail credentials in `.env`
-- Check Gmail app password (not regular password)
-- Ensure 2FA is enabled on Gmail
-
-## 🤝 Contributing
-
-Feel free to:
-- Report bugs
-- Suggest features
-- Submit pull requests
-- Improve documentation
-
-## 📝 License
-
-MIT License - feel free to use this project for learning or your own games!
-
-## 🎯 Roadmap
-
-Future features planned:
-- [ ] Global leaderboard
-- [ ] Daily challenges
-- [ ] More typing passages
-- [ ] Custom passages
-- [ ] Practice mode with lessons
-- [ ] Achievements system
-- [ ] Profile customization
-- [ ] Tournament mode
-
-## 👨‍💻 Author
-
-Made by **Devadit**
-
-## 🙏 Acknowledgments
-
-- Typing passages curated for variety
-- Design inspired by Apple, Stripe, and Vercel
-- Built with modern web technologies
-
----
-
-**Ready to test your typing speed? Let's go! ⚡**
+Devadit Jain. AI assistance (Claude, as a coding aid) is disclosed in the report's AI-use note. MIT licence.
