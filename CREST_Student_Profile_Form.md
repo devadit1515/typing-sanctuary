@@ -1,6 +1,6 @@
 # CREST Gold Award — Student Profile Form
 
-> **What this is.** CREST requires a Student Profile Form submitted *alongside* the report — one per student. It is the assessor's map: for each of the 15 criteria you point to *where in the report* you show it, with an optional short note. This file mirrors the official form (download and transcribe at <https://www.crestawards.org/resources/crest-gold-student-profile-form/>). The "Where" column cites report **sections**; after you export the report to PDF, add the page (and paragraph) numbers the official form asks for, because pagination shifts on export.
+> **What this is.** CREST requires a Student Profile Form submitted *alongside* the report — one per student. It is the assessor's map: for each of the 15 criteria you point to *where in the report* you show it, with an optional short note. This file mirrors the official form (download and transcribe at <https://www.crestawards.org/resources/crest-gold-student-profile-form/>). The "Where" column cites report **sections and page numbers**, matched to the final exported PDF (draft v6, 16 pages). If the report is re-exported after any layout change, re-check the page numbers before transcribing.
 
 ---
 
@@ -21,36 +21,36 @@
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **1.1** Set a clear aim, broken into smaller objectives | §1 (+ scorecard in §5) | One testable aim ("can a computer tell it's you from your typing rhythm?"), split into five *numbered, measurable* objectives (O1–O5), each with an explicit "done when…" success test — then marked hit/miss against the results in §5. |
-| **1.2** Explained a wider purpose | §1 | Account-takeover from stolen credentials as the real problem (88% of basic web-application attacks), plus the personal incident behind it. |
-| **1.3** Identified a range of approaches | §3 | Three genuinely different designs (pure statistics / standard classifier / learned fingerprint) compared in a trade-off table across cost, phrase-independence, feasibility and deployment risk; the classifier ruled out and the hybrid choice justified. |
-| **1.4** Described the plan and why I chose it | §3 | The three-part research / serve / product design, and why running classical statistics inside a learned fingerprint is the core idea. |
-| **1.5** Planned and organised my time | §1 ("How the project ran") | A planned-vs-actual timeline of six dated build stages, reconstructed from the commit history (Nov 2025–Jul 2026): a +3-week slip on authentication, recovered by compressing the next stage; the exam period scheduled inside the research window; and a +2-week slip on the write-up from the mid-sprint rebuild after the training/test leak (§4). |
+| **1.1** Set a clear aim, broken into smaller objectives | §1, p. 2 (+ scorecard in §5, p. 7) | One testable aim, split into five numbered objectives, each with an explicit "done when" test, then assessed against the results in §5. |
+| **1.2** Explained a wider purpose | §1, p. 2 | Account-takeover from stolen credentials as the real problem (88% of basic web-application attacks), plus the personal incident behind it. |
+| **1.3** Identified a range of approaches | §3, p. 5 | Three genuinely different designs (pure statistics / standard classifier / learned fingerprint) compared in a trade-off table across cost, phrase-independence, feasibility and deployment risk; the classifier ruled out and the hybrid choice justified. |
+| **1.4** Described the plan and why I chose it | §3, pp. 5–6 | The three-part research / serve / product design, and why running classical statistics inside a learned fingerprint is the core idea. |
+| **1.5** Planned and organised my time | §1, "How the project ran", p. 3 | A planned-vs-actual timeline of six dated build stages, reconstructed from the commit history (Nov 2025–Jul 2026): four-week slips on authentication and on the first biometric engine, absorbed by a planned April–May exam pause, and a two-week overrun on the write-up after the evaluation flaw forced every figure to be re-run (§4). |
 
 ### 2 — Throughout your project
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **2.1** Made good use of materials and people | §9 (Acknowledgements) | Every dataset, library, tool and standard named; an independent project, so the research community stood in for a mentor. |
-| **2.2** Researched the background, acknowledged sources | §2 + References | The background synthesises the field's trajectory (hand-built detectors → learned representations, via the ACM survey), brackets it between the 2009 benchmark and TypeNet as two worlds that never meet, and derives the project from the un-asked question between them; 16 references, all primary papers or standards. |
+| **2.1** Made good use of materials and people | Acknowledgements, p. 10 + App. B provenance, p. 12 | Every dataset, library, tool and standard named; an independent project, so the research community stood in for a mentor. |
+| **2.2** Researched the background, acknowledged sources | §2, p. 4 + References, pp. 10–11 | The background synthesises the field's trajectory (hand-built detectors → learned representations, via the ACM survey), brackets it between the 2009 benchmark and TypeNet as two worlds that never meet, and derives the project from the un-asked question between them; 16 references, all primary papers or standards. |
 
 ### 3 — Finalising your project
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **3.1** Logical conclusions + implications for the wider world | §6 | The result answers the aim directly; implications drawn for account security, research, and (hedged) accessibility. |
-| **3.2** How my actions/decisions affected the outcome | §4 + §8 | The broken-test fix changed every number; and when tuning looked slightly better it failed on the real test, so I kept the original (§5). |
-| **3.3** What I learnt and would improve | §8 | Learning to distrust my own results as the key lesson, working solo, and what I'd change next time. |
+| **3.1** Logical conclusions + implications for the wider world | §6, p. 8 | The result answers the aim directly; implications drawn for account security, research, and (hedged) accessibility. |
+| **3.2** How my actions/decisions affected the outcome | §4, p. 6 + §8, p. 9 | The broken-test fix changed every number; and when tuning looked slightly better it failed on the real test, so I kept the original (App. C). |
+| **3.3** What I learnt and would improve | §8, p. 9 | Learning to distrust my own results as the key lesson, working solo, and what I'd change next time. |
 
 ### 4 — Project-wide
 
 | Criterion | Where I show this | Note to the assessor |
 |---|---|---|
-| **4.1** Understanding of the science | §2 + §3 + App. C | The science explained in plain terms in the body; the full model design, settings and statistics in the technical appendix — each deep mechanism (L2-normalisation, batch-hard triplets, Ledoit–Wolf shrinkage) explained in my own words as *why it works*, not just named and cited. |
-| **4.2** Ethics and safety decisions | §7 | Typing data as GDPR special-category; consent, data minimisation, fail-safe design, and the measured disparate impact (a 37× error spread). |
-| **4.3** Creative thinking | §3 | The core idea: running a classical shrinkage-statistics decision-maker *inside* a learned fingerprint. |
-| **4.4** Identified and overcame problems | §4 | Four problems told in full — the training/test leak, the live crash on a too-consistent typist, the all-zero-columns bug, and the never-measured ensemble — each with root cause, fix and outcome; the full log of thirteen is in the repository. |
-| **4.5** Explained the project clearly | Whole report + App. A | Written to be followed without a technical background — an everyday comparison for each hard idea, jargon in a glossary, and the depth kept in a technical appendix. |
+| **4.1** Understanding of the science | §2–§3, pp. 4–6 + App. C, pp. 14–16 | The science explained in plain terms in the body; the full model design, settings and statistics in the technical appendix — each deep mechanism (L2-normalisation, batch-hard triplets, Ledoit–Wolf shrinkage) explained in my own words as *why it works*, not just named and cited. |
+| **4.2** Ethics and safety decisions | §7, pp. 8–9 | Typing data as GDPR special-category; consent, data minimisation, fail-safe design, and the measured disparate impact (a 37× error spread). |
+| **4.3** Creative thinking | §3, p. 5 | The core idea: running a classical shrinkage-statistics decision-maker *inside* a learned fingerprint. |
+| **4.4** Identified and overcame problems | §4, p. 6 | Four problems told in full — the training/test leak, the live crash on a too-consistent typist, the all-zero-columns bug, and the never-measured ensemble — each with root cause, fix and outcome; the full log of thirteen is in the repository. |
+| **4.5** Explained the project clearly | Whole report + glossary, App. A, p. 11 | Written to be followed without a technical background — an everyday comparison for each hard idea, jargon in a glossary, and the depth kept in a technical appendix. |
 
 ---
 

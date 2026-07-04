@@ -1,6 +1,10 @@
-# Rebuild the CREST Word documents from their markdown sources.
-# Run after editing CREST_Gold_Report.md or CREST_Student_Profile_Form.md
-# to keep the .docx files in sync. Requires pandoc (https://pandoc.org).
+# Rebuild the CREST Student Profile Form .docx from its markdown source.
+# Run after editing CREST_Student_Profile_Form.md to keep the .docx in sync.
+# Requires pandoc (https://pandoc.org).
+#
+# NOTE: CREST_Gold_Report.docx is edited directly in Word and has NO markdown
+# source any more (the stale CREST_Gold_Report.md was deleted). Never
+# regenerate the report .docx from this script or from any markdown file.
 #
 #   ./build-crest-docx.ps1
 #
@@ -13,16 +17,7 @@ if (-not (Get-Command pandoc -ErrorAction SilentlyContinue)) {
 
 $root = $PSScriptRoot
 
-pandoc (Join-Path $root "CREST_Gold_Report.md") `
-    -o (Join-Path $root "CREST_Gold_Report.docx") `
-    --from markdown-implicit_figures `
-    --resource-path $root `
-    --metadata title="CREST Gold Report"
-Write-Host "Rebuilt CREST_Gold_Report.docx"
-
 pandoc (Join-Path $root "CREST_Student_Profile_Form.md") `
     -o (Join-Path $root "CREST_Student_Profile_Form.docx") `
     --from gfm
 Write-Host "Rebuilt CREST_Student_Profile_Form.docx"
-
-Write-Host "Done. Both Word documents are now in sync with their markdown sources."
