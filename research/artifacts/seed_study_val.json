@@ -1,0 +1,27 @@
+{
+  "n_seeds": 1,
+  "seeds": [
+    42
+  ],
+  "primary_mean": 0.14206249999999998,
+  "primary_sd": 0.0,
+  "full_mean": 0.10863541666666668,
+  "full_sd": 0.0,
+  "drop_centroid_mean": 0.10863541666666668,
+  "drop_centroid_sd": 0.0,
+  "drop_knn_mean": 0.10863541666666668,
+  "drop_knn_sd": 0.0,
+  "drop_maha_mean": 0.13747395833333334,
+  "drop_maha_sd": 0.0,
+  "results": [
+    {
+      "seed": 42,
+      "primary": 0.14206249999999998,
+      "full": 0.10863541666666668,
+      "drop_centroid": 0.10863541666666668,
+      "drop_knn": 0.10863541666666668,
+      "drop_maha": 0.13747395833333334,
+      "secs": 589.1
+    }
+  ]
+}

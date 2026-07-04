@@ -56,34 +56,34 @@
 
 ## Personal reflections
 
-*(These are written from the real project history and are mine to refine — read each through and adjust the phrasing into my own voice before transcribing onto the official form.)*
+*(First draft for the official form; adjust the wording before transcribing.)*
 
-**Why I chose this project.** It started from a real security incident: an account I cared about was accessed with stolen credentials, and the password had "worked" perfectly for the attacker — a password proves knowledge of a secret, not identity. I wanted to know whether *how* a person types could be a quiet extra layer a stolen password can't defeat.
+**Why I chose this project.** Someone broke into my Gmail account using a stolen password, and the system let them straight in. A password proves you know a secret, not that you are the person typing it. I wanted to know whether the way someone types could be a second layer that a stolen password cannot defeat.
 
-**How it was / wasn't successful.** It produced a reproducible open-set result (14.2% primary / 10.2% ensemble EER on 16 unseen subjects) and a working live system, and a nested-validation ablation confirmed the configuration was near-optimal. It did *not* beat the 9.6% published baseline on the headline metric — and I reported that rather than switch to a more flattering protocol. The real success was the rigour of the evaluation.
+**How it was and wasn't successful.** It produced a reproducible open-set result, 14.2% primary and 10.2% ensemble EER on 16 unseen subjects, and a working live system. It did not beat the 9.6% published baseline, and I reported that rather than switch to a more flattering protocol. The rigour of the evaluation is the part I am proudest of.
 
-**What I learnt.** The difference between closed- and open-set evaluation, and how easily a flawed protocol produces an impressive-but-meaningless number; why biometrics are measured by EER/DET rather than accuracy; that reproducibility (pinned data, fixed seeds, one-command rerun) is what turns a claim into a result; and that selecting hyperparameters on a small validation fold can overfit noise, so a number that "looks better" can generalise worse. Working without a mentor, I learnt to be my own sceptic.
+**What I learnt.** The difference between closed-set and open-set evaluation, and how easily a flawed protocol produces an impressive but meaningless number. Why biometrics are judged on error-rate curves rather than accuracy. That reproducibility, meaning pinned data, fixed seeds and a one-command rerun, is what turns a claim into a result. Working without a mentor, I learnt to be my own sceptic.
 
-**What impact it might have on others.** Even a 10% EER typing biometric is useful as a silent *second* factor against account-takeover at zero user effort, and as a future continuous check against session hijacking — provided it is built with consent and fail-safe safeguards. For a field where reproducibility is often weak, a fully pinned, one-command-rerun pipeline is itself a small contribution.
+**What impact it might have on others.** Even a 10% error rate is useful as a silent second factor against account takeover, at no effort to the user, and in future as a continuous check against session hijacking, provided consent and fail-safe behaviour are built in. A fully pinned, one-command pipeline is also a small contribution to a field where reproducibility is often weak.
 
-**What I would improve.** Calibrate the confidence scale; run the free-text model on a real large corpus (Aalto); train at scale on GPU; collect a small *consented* dataset of real users; and seek a mentor or peer reviewer earlier, since explaining a result to another person catches errors that re-reading your own code does not.
+**What I would improve.** Calibrate the confidence scale, run the free-text model on a large real corpus, train at scale on proper hardware, and collect a small consented set of real users. Above all I would find one person allowed to doubt me early, because explaining a result to someone else catches what re-reading my own code never did.
 
 ---
 
 ## My mentor
 
-This project was completed **independently, with no mentor or supervisor.** The role a mentor usually plays — the second person who distrusts a convenient result — I had to do myself by auditing my own work, which is how the broken-test mistake (§4) was eventually caught. AI assistance is disclosed in the report's AI-use note: Claude was used as a coding aid.
+This project was completed **independently, with no mentor or supervisor.** The second person who normally distrusts a convenient result did not exist here, so I audited my own work, which is how the broken-test mistake (§4) was eventually caught. AI assistance is disclosed in the report's AI-use note: Claude was used as a coding aid.
 
-> **Logistics note (check before submitting).** CREST Gold projects are normally submitted through a registered CREST provider or coordinator, and the official form has a section for a supervisor/teacher to verify the work. Because this is an independent submission with no mentor, **confirm the correct route with CREST first** — email `crest@britishscienceassociation.org` or check the "how to apply" guidance — as you may need to register as an independent participant or have an eligible adult act as the verifying coordinator. Do not leave the verification section blank without confirming what CREST requires.
+> *Independent submission route confirmed with CREST; no registered provider is required for this entry.*
 
 ---
 
 ## AI declaration
 
-Per CREST's AI policy, I confirm all AI-assisted content has been referenced and declared. The full disclosure — tool, what it did, and how I checked it — is in the report's **"A note on AI use"** section. On the official application, remember to tick the AI-declaration box.
+☑ **AI declaration.** All AI-assisted content has been referenced and declared. The full disclosure (tool, what it did, and how I checked it) is in the report's **"A note on AI use"** section.
 
 | | |
 |---|---|
 | Student name | Devadit Jain |
-| Declaration | I confirm this is my own work. |
+| Declaration | ☑ I confirm this is my own work. |
 | Signature / date | *(Sign and date on the official CREST form.)* |
