@@ -36,3 +36,4 @@ temp/
 # CREST workspace cleanup
 _delete-later/
 crest/reference/Sample Crest Reports/
+crest-playbook/
