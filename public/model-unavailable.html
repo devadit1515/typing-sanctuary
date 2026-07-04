@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Unavailable · Typing Sanctuary</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .unavailable-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 60px 40px;
+        }
+
+        .unavailable-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            padding: 56px 48px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            max-width: 560px;
+            width: 100%;
+        }
+
+        .unavailable-card .card-icon {
+            font-size: 44px;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .unavailable-card h1 {
+            font-size: 34px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, #b74dff, #ff3264);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .unavailable-card p {
+            font-size: 17px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 32px;
+        }
+
+        .unavailable-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .unavailable-actions .btn {
+            min-width: 180px;
+        }
+
+        .btn-game {
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            color: white;
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-game:hover {
+            box-shadow: 0 8px 24px rgba(0, 180, 216, 0.45);
+            transform: scale(1.04);
+        }
+    </style>
+</head>
+<body>
+    <div class="unavailable-container">
+        <div class="unavailable-card">
+            <span class="card-icon">🧠</span>
+            <h1>Model training is offline right now</h1>
+            <p>Biometric profile training is temporarily unavailable while it gets some work done behind the scenes. The typing game is fully open in the meantime — check back soon.</p>
+            <div class="unavailable-actions">
+                <a href="/game.html"><button class="btn btn-large btn-game">Play the Game →</button></a>
+                <a href="/"><button class="btn btn-large">← Back Home</button></a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

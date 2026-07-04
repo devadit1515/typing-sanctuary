@@ -233,7 +233,7 @@
             <!-- Train Model Card -->
             <div class="landing-card train-card">
                 <span class="card-icon">🧠</span>
-                <span class="card-badge badge-signin">Sign-in required</span>
+                <span class="card-badge badge-signin">Temporarily offline</span>
                 <h2>Train My Model</h2>
                 <p>Build your unique keystroke biometric profile. Your typing rhythm becomes your digital fingerprint.</p>
                 <button class="btn btn-large btn-train" id="trainModelBtn" style="width: 100%;">Start Training →</button>
@@ -273,19 +273,10 @@
         }
         window.addEventListener('DOMContentLoaded', createParticles);
 
-        // Train My Model — auth check before navigation
-        document.getElementById('trainModelBtn').addEventListener('click', async () => {
-            try {
-                const res = await fetch('/api/auth/me');
-                const data = await res.json();
-                if (data.success && data.user) {
-                    window.location.href = '/keystroke-auth.html';
-                } else {
-                    window.location.href = '/login.html';
-                }
-            } catch (_) {
-                window.location.href = '/login.html';
-            }
+        // Train My Model — training flow is temporarily offline; route to the notice page.
+        // (Restore the auth check + /keystroke-auth.html redirect when it comes back.)
+        document.getElementById('trainModelBtn').addEventListener('click', () => {
+            window.location.href = '/model-unavailable.html';
         });
     </script>
 </body>
