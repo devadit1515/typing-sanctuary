@@ -121,8 +121,101 @@ def verification_logic():
     plt.close(fig)
 
 
+def architecture():
+    fig, ax = plt.subplots(figsize=(11.4, 3.0))
+    ax.set_xlim(0, 11.4)
+    ax.set_ylim(0, 3.0)
+    ax.axis("off")
+
+    y = 1.85
+    box(ax, 1.95, y, 3.3, 1.15,
+        "Research pipeline\ntrains, evaluates, and\npublishes a versioned model")
+    box(ax, 5.85, y, 2.9, 1.15,
+        "Inference service\nstateless: fingerprint\nand score only")
+    box(ax, 9.55, y, 2.9, 1.15,
+        "Product\naccounts, consent,\nenrolments, decisions")
+
+    arrow(ax, 3.62, y, 4.38, y, "versioned\nmodel", ly=-0.52)
+    arrow(ax, 8.08, y + 0.18, 7.32, y + 0.18, "sample", ly=0.16)
+    arrow(ax, 7.32, y - 0.18, 8.08, y - 0.18, "score", ly=-0.18)
+
+    ax.text(9.55, 0.72,
+            "checks the model version on every call;\na mismatch is a failure, and failure asks for another factor",
+            ha="center", va="center", fontsize=FS - 0.5, color=TEXT,
+            style="italic")
+
+    fig.savefig(OUT / "system_architecture.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def keystroke_anatomy():
+    """The four timings the model reads, drawn on two real key presses."""
+    fig, ax = plt.subplots(figsize=(9.6, 3.1))
+    ax.set_xlim(-0.3, 9.6)
+    ax.set_ylim(0, 3.1)
+    ax.axis("off")
+
+    # press intervals (arbitrary but realistic proportions)
+    k1d, k1u = 0.6, 2.6   # key 1 down / up
+    k2d, k2u = 3.4, 6.0   # key 2 down / up
+    y1, y2 = 2.30, 1.72
+    for (a, b, y, lab) in [(k1d, k1u, y1, "key 1 held"), (k2d, k2u, y2, "key 2 held")]:
+        ax.plot([a, b], [y, y], lw=10, color=BOX_EDGE, solid_capstyle="butt", alpha=0.55)
+        ax.text(a - 0.15, y, lab, ha="right", va="center", fontsize=FS, color=TEXT)
+
+    def dim(x0, x1, y, label):
+        ax.annotate("", xy=(x1, y), xytext=(x0, y),
+                    arrowprops=dict(arrowstyle="<|-|>", color="#8a6a30", lw=1.3))
+        ax.plot([x0, x0], [y - 0.07, y + 0.07], color="#8a6a30", lw=1)
+        ax.plot([x1, x1], [y - 0.07, y + 0.07], color="#8a6a30", lw=1)
+        ax.text((x0 + x1) / 2, y - 0.21, label, ha="center", va="top",
+                fontsize=FS - 0.5, color=TEXT)
+
+    dim(k1d, k1u, 1.30, "hold  (down 1 → up 1)")
+    dim(k1u, k2d, 0.86, "flight  (up 1 → down 2)")
+    dim(k1d, k2d, 0.42, "down–down")
+    dim(k1u, k2u, 2.86, "up–up")
+    ax.annotate("time →", xy=(9.4, 0.06), ha="right", fontsize=FS - 0.5, color=TEXT)
+
+    fig.savefig(OUT / "keystroke_anatomy.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def per_subject_chart():
+    """Per-subject EER bars from the recorded run's metrics artifact."""
+    import json
+    m = json.loads((OUT / "metrics.json").read_text())
+    per = m["per_subject_eer"]  # list of {subject, eer}
+    items = sorted(((r["subject"], r["eer"]) for r in per), key=lambda kv: kv[1])
+    names = [k for k, _ in items]
+    vals = [v * 100 for _, v in items]
+
+    fig, ax = plt.subplots(figsize=(8.6, 4.4))
+    ax.barh(range(len(vals)), vals, color=BOX_EDGE, alpha=0.75, height=0.62)
+    ax.set_yticks(range(len(names)), names, fontsize=7.5, family="monospace")
+    ax.invert_yaxis()
+    ax.axvline(m["baseline_eer_published_scaled_manhattan"] * 100, ls=(0, (4, 3)),
+               color="#8a6a30", lw=1.4)
+    ax.axvline(m["primary_eer_scaled_manhattan"] * 100, color="#b8862d", lw=1.4)
+    ax.text(m["baseline_eer_published_scaled_manhattan"] * 100 + 0.3, 0.35,
+            "2009 benchmark 9.6%", fontsize=8, color="#8a6a30")
+    ax.text(m["primary_eer_scaled_manhattan"] * 100 + 0.3, 1.35,
+            "this model, mean 14.2%", fontsize=8, color="#b8862d")
+    ax.set_xlabel("equal error rate, %", fontsize=9)
+    for s in ["top", "right"]:
+        ax.spines[s].set_visible(False)
+    ax.tick_params(axis="x", labelsize=8)
+
+    fig.savefig(OUT / "per_subject_eer.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     pipeline()
     verification_logic()
-    print("wrote", OUT / "method_pipeline.png")
-    print("wrote", OUT / "verification_logic.png")
+    architecture()
+    keystroke_anatomy()
+    per_subject_chart()
+    for f in ["method_pipeline", "verification_logic", "system_architecture",
+              "keystroke_anatomy", "per_subject_eer"]:
+        print("wrote", OUT / (f + ".png"))
