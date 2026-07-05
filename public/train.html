@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Train &amp; Test — Typing Sanctuary</title>
+  <meta name="description" content="Train a statistical keystroke profile in your browser and test how closely new typing matches it.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design.css">
+</head>
+<body>
+
+  <header class="nav">
+    <div class="shell nav__inner">
+      <a class="nav__mark" href="/">Typing Sanctuary</a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="research.html">Research</a>
+        <a href="train.html" aria-current="page">Train</a>
+        <a href="game.html">Game</a>
+        <a class="nav__cta" data-keep id="navAuth" href="login.html">Sign in</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="shell">
+        <h1 class="display reveal">Train the instrument.</h1>
+        <p class="lede reveal" style="margin-top:1.4rem;">
+          Build a profile of your typing rhythm, then test how closely new typing matches it.
+          Everything runs in your browser; the profile never leaves this device.
+        </p>
+
+        <div class="reveal" style="margin-top:2.4rem;">
+          <div class="seg" role="tablist" aria-label="Training mode">
+            <button id="modeFixed" role="tab" aria-pressed="true">Specific password</button>
+            <button id="modePhrase" role="tab" aria-pressed="false">Free phrases</button>
+          </div>
+        </div>
+
+        <!-- ================= password mode ================= -->
+        <div class="instrument reveal" id="panelFixed" style="margin-top:1.6rem;">
+          <div class="instrument__bar">
+            <span>PROFILE&nbsp;&middot;&nbsp;SPECIFIC PASSWORD</span>
+            <span id="fixedState">NO PROFILE</span>
+          </div>
+          <div class="instrument__body">
+
+            <!-- step: choose -->
+            <div id="fixedSetup">
+              <p class="specimen-label">Choose a practice password &mdash; six or more characters,
+                lowercase works best. It is hashed, never stored as text.</p>
+              <input class="specimen" id="fixedPassword" type="text" autocomplete="off"
+                     autocapitalize="none" spellcheck="false" placeholder="choose a password to practise">
+              <div class="notice" id="fixedSetupNotice"></div>
+              <button class="btn btn--brass" id="fixedBegin" style="margin-top:0.9rem;">Begin training</button>
+            </div>
+
+            <!-- step: repeat -->
+            <div id="fixedTrain" hidden>
+              <p class="specimen-label">Type <span class="phrase" id="fixedEcho"></span> naturally,
+                then press Enter. Ten clean repetitions build the profile.</p>
+              <input class="specimen" id="fixedInput" type="text" autocomplete="off"
+                     autocapitalize="none" spellcheck="false" placeholder="type it and press enter">
+              <div class="trainer-status">
+                <div class="dots" id="fixedDots" aria-label="Training progress"></div>
+                <span class="data" id="fixedCount">0 / 10</span>
+              </div>
+              <div class="notice" id="fixedNotice"></div>
+            </div>
+
+            <!-- step: test -->
+            <div id="fixedTest" hidden>
+              <p class="specimen-label">Profile built from <span class="data" id="fixedReps">10</span>
+                repetitions. Type the password once and press Enter to test.</p>
+              <input class="specimen" id="fixedTestInput" type="text" autocomplete="off"
+                     autocapitalize="none" spellcheck="false" placeholder="type the password and press enter">
+              <div class="notice" id="fixedTestNotice"></div>
+              <div class="result" id="fixedResult" hidden>
+                <p class="result__pct" id="fixedPct">&mdash;</p>
+                <p class="result__verdict" id="fixedVerdict"></p>
+              </div>
+            </div>
+          </div>
+          <div class="instrument__foot">
+            <span>Scaled-Manhattan distance over per-key hold and gap times.</span>
+            <button class="instrument__reset" id="fixedReset" type="button">Start over</button>
+          </div>
+        </div>
+
+        <!-- ================= phrase mode ================= -->
+        <div class="instrument reveal" id="panelPhrase" style="margin-top:1.6rem;" hidden>
+          <div class="instrument__bar">
+            <span>PROFILE&nbsp;&middot;&nbsp;FREE PHRASES</span>
+            <span id="phraseState">NO PROFILE</span>
+          </div>
+          <div class="instrument__body">
+
+            <!-- step: collect -->
+            <div id="phraseTrain">
+              <p class="specimen-label">Type the phrase below and press Enter. Five phrases is the
+                minimum &mdash; the more you give it, the steadier the profile.</p>
+              <div class="phrase-card" id="phraseTarget"></div>
+              <input class="specimen" id="phraseInput" type="text" autocomplete="off"
+                     autocapitalize="none" spellcheck="false" placeholder="type the phrase and press enter">
+              <div class="trainer-status">
+                <span id="phraseCount">0 phrases captured</span>
+                <button class="btn btn--brass" id="phraseBuild" disabled>Build profile</button>
+              </div>
+              <div class="notice" id="phraseNotice"></div>
+            </div>
+
+            <!-- step: test -->
+            <div id="phraseTest" hidden>
+              <p class="specimen-label">Profile built from <span class="data" id="phraseReps"></span>
+                phrases. Type this fresh phrase and press Enter to test.</p>
+              <div class="phrase-card" id="phraseTestTarget"></div>
+              <input class="specimen" id="phraseTestInput" type="text" autocomplete="off"
+                     autocapitalize="none" spellcheck="false" placeholder="type the phrase and press enter">
+              <div class="notice" id="phraseTestNotice"></div>
+              <div class="result" id="phraseResult" hidden>
+                <p class="result__pct" id="phrasePct">&mdash;</p>
+                <p class="result__verdict" id="phraseVerdict"></p>
+              </div>
+              <button class="btn btn--ghost" id="phraseMore" style="margin-top:1.2rem;">Add more training phrases</button>
+            </div>
+          </div>
+          <div class="instrument__foot">
+            <span>Distribution, per-letter hold and digraph-gap features.</span>
+            <button class="instrument__reset" id="phraseReset" type="button">Start over</button>
+          </div>
+        </div>
+
+        <p class="prose" style="margin-top:2.2rem; font-size:0.9375rem; color:var(--ink-3);">
+          This is the statistical family of verifier from the research, running in your browser as a
+          demonstration. The similarity score is a measurement, not a security product; the deep
+          model&rsquo;s honest error rates are on the <a href="research.html">research page</a>.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" style="margin-top:0;">
+    <div class="shell footer__inner">
+      <span>Typing Sanctuary &middot; built and measured by Devadit Jain</span>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="research.html">Research</a>
+        <a href="game.html">Game</a>
+      </nav>
+      <span>Profiles stay in this browser. Nothing is uploaded.</span>
+    </div>
+  </footer>
+
+  <script src="biometric.js"></script>
+  <script>
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d && d.success && d.user) {
+        const a = document.getElementById('navAuth');
+        a.textContent = d.user.username;
+        a.href = 'profile.html';
+      }
+    }).catch(() => {});
+
+    const B = window.TSBio;
+    const $ = id => document.getElementById(id);
+    const REQUIRED_REPS = 10, MIN_PHRASES = 5;
+
+    /* ---------- mode toggle ---------- */
+    function setMode(fixed) {
+      $('modeFixed').setAttribute('aria-pressed', String(fixed));
+      $('modePhrase').setAttribute('aria-pressed', String(!fixed));
+      $('panelFixed').hidden = !fixed;
+      $('panelPhrase').hidden = fixed;
+    }
+    $('modeFixed').addEventListener('click', () => setMode(true));
+    $('modePhrase').addEventListener('click', () => setMode(false));
+
+    function verdictText(sim) {
+      if (sim === null) return ['—', 'Not enough clean typing to score. Try again.', ''];
+      if (sim >= 70) return [sim + '%', 'This reads like the person who trained the profile.', 'high'];
+      if (sim <= 40) return [sim + '%', 'This does not read like the trained profile.', 'low'];
+      return [sim + '%', 'Inconclusive — somewhere between the trained rhythm and a stranger’s.', ''];
+    }
+
+    function showResult(pctEl, verdictEl, wrapEl, sim) {
+      const [pct, text, cls] = verdictText(sim);
+      pctEl.textContent = pct;
+      pctEl.className = 'result__pct ' + cls;
+      verdictEl.textContent = text;
+      wrapEl.hidden = false;
+    }
+
+    /* ================= password mode ================= */
+    let fixedProfile = B.store.load(B.KEY_FIXED);
+    let fixedRows = [], fixedTarget = null;
+    const capTrain = B.createCapture($('fixedInput'));
+    const capTest = B.createCapture($('fixedTestInput'));
+
+    function fixedDots(n) {
+      $('fixedDots').replaceChildren(...Array.from({ length: REQUIRED_REPS }, (_, i) => {
+        const d = document.createElement('span');
+        d.className = 'dot' + (i < n ? ' done' : '');
+        return d;
+      }));
+      $('fixedCount').textContent = n + ' / ' + REQUIRED_REPS;
+    }
+
+    function fixedShow(step) {
+      $('fixedSetup').hidden = step !== 'setup';
+      $('fixedTrain').hidden = step !== 'train';
+      $('fixedTest').hidden = step !== 'test';
+      $('fixedState').textContent =
+        step === 'setup' ? 'NO PROFILE' : step === 'train' ? 'TRAINING' : 'PROFILE READY';
+      $('fixedState').className = step === 'setup' ? '' : 'live';
+    }
+
+    if (fixedProfile) { fixedShow('test'); $('fixedReps').textContent = fixedProfile.profile.reps; }
+    else fixedShow('setup');
+
+    $('fixedBegin').addEventListener('click', () => {
+      const pw = $('fixedPassword').value.trim();
+      if (pw.length < 6 || /\s/.test(pw)) {
+        $('fixedSetupNotice').textContent = 'Six or more characters, no spaces.';
+        return;
+      }
+      fixedTarget = pw;
+      fixedRows = [];
+      $('fixedEcho').textContent = '“' + pw + '”';
+      $('fixedSetupNotice').textContent = '';
+      fixedDots(0);
+      fixedShow('train');
+      capTrain.reset();
+      $('fixedInput').focus();
+    });
+
+    $('fixedInput').addEventListener('keydown', async e => {
+      if (e.key !== 'Enter') return;
+      const rep = capTrain.collect();
+      const typed = $('fixedInput').value;
+      $('fixedInput').value = '';
+      capTrain.reset();
+      if (typed !== fixedTarget || !rep.clean) {
+        $('fixedNotice').textContent = !rep.clean
+          ? 'Backspace used — that one did not count.'
+          : 'That did not match the password — not counted.';
+        return;
+      }
+      const feats = B.passwordFeatures(rep, fixedTarget.length);
+      if (!feats) { $('fixedNotice').textContent = 'Timing came through incomplete — try again.'; return; }
+      fixedRows.push(feats);
+      $('fixedNotice').textContent = '';
+      fixedDots(fixedRows.length);
+      if (fixedRows.length >= REQUIRED_REPS) {
+        const profile = B.buildFixedProfile(fixedRows);
+        fixedProfile = { len: fixedTarget.length, hash: await B.digest(fixedTarget), profile };
+        B.store.save(B.KEY_FIXED, fixedProfile);
+        $('fixedReps').textContent = profile.reps;
+        fixedShow('test');
+        $('fixedTestInput').focus();
+      }
+    });
+
+    $('fixedTestInput').addEventListener('keydown', async e => {
+      if (e.key !== 'Enter') return;
+      const rep = capTest.collect();
+      const typed = $('fixedTestInput').value;
+      $('fixedTestInput').value = '';
+      capTest.reset();
+      if (await B.digest(typed) !== fixedProfile.hash) {
+        $('fixedTestNotice').textContent = 'That is not the trained password, so rhythm cannot be compared.';
+        $('fixedResult').hidden = true;
+        return;
+      }
+      $('fixedTestNotice').textContent = '';
+      const feats = B.passwordFeatures(rep, fixedProfile.len);
+      const sim = feats && rep.clean
+        ? B.similarityFixed(B.scaledManhattan(fixedProfile.profile, feats)) : null;
+      showResult($('fixedPct'), $('fixedVerdict'), $('fixedResult'), sim);
+    });
+
+    $('fixedReset').addEventListener('click', () => {
+      B.store.clear(B.KEY_FIXED);
+      fixedProfile = null; fixedRows = []; fixedTarget = null;
+      $('fixedPassword').value = ''; $('fixedResult').hidden = true;
+      $('fixedNotice').textContent = ''; $('fixedTestNotice').textContent = '';
+      fixedShow('setup');
+    });
+
+    /* ================= phrase mode ================= */
+    let phraseStore = B.store.load(B.KEY_PHRASE);
+    let phraseFeats = (phraseStore && phraseStore.feats) ? phraseStore.feats : [];
+    let bank = [...B.PHRASES].sort(() => Math.random() - 0.5);
+    let bankIdx = 0;
+    const nextPhrase = () => bank[bankIdx++ % bank.length];
+
+    const capPhrase = B.createCapture($('phraseInput'));
+    const capPhraseTest = B.createCapture($('phraseTestInput'));
+    let currentTarget = nextPhrase(), currentTestTarget = null;
+
+    function phraseShow(step) {
+      $('phraseTrain').hidden = step !== 'train';
+      $('phraseTest').hidden = step !== 'test';
+      $('phraseState').textContent = step === 'train'
+        ? (phraseFeats.length ? 'TRAINING' : 'NO PROFILE') : 'PROFILE READY';
+      $('phraseState').className = step === 'train' && !phraseFeats.length ? '' : 'live';
+    }
+
+    function phraseCounter() {
+      const n = phraseFeats.length;
+      $('phraseCount').textContent = n + (n === 1 ? ' phrase captured' : ' phrases captured')
+        + (n < MIN_PHRASES ? ' — at least ' + MIN_PHRASES : ', more is better');
+      $('phraseBuild').disabled = n < MIN_PHRASES;
+    }
+
+    function startPhraseTest() {
+      currentTestTarget = nextPhrase();
+      $('phraseTestTarget').textContent = currentTestTarget;
+      $('phraseReps').textContent = phraseStore.count;
+      phraseShow('test');
+    }
+
+    $('phraseTarget').textContent = currentTarget;
+    if (phraseStore) startPhraseTest(); else { phraseShow('train'); phraseCounter(); }
+
+    $('phraseInput').addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      const rep = capPhrase.collect();
+      const typed = $('phraseInput').value.trim().replace(/\s+/g, ' ');
+      $('phraseInput').value = '';
+      capPhrase.reset();
+      if (typed !== currentTarget) {
+        $('phraseNotice').textContent = 'That did not match the phrase — not counted.';
+        return;
+      }
+      const feats = B.phraseFeatures(rep);
+      if (!feats || !rep.clean) {
+        $('phraseNotice').textContent = rep.clean
+          ? 'Timing came through incomplete — try the next one.'
+          : 'Backspace used — that one did not count.';
+        currentTarget = nextPhrase();
+        $('phraseTarget').textContent = currentTarget;
+        return;
+      }
+      phraseFeats.push(feats);
+      $('phraseNotice').textContent = '';
+      currentTarget = nextPhrase();
+      $('phraseTarget').textContent = currentTarget;
+      phraseCounter();
+      phraseShow('train');
+    });
+
+    $('phraseBuild').addEventListener('click', () => {
+      const profile = B.buildPhraseProfile(phraseFeats);
+      phraseStore = { profile, count: phraseFeats.length, feats: phraseFeats };
+      B.store.save(B.KEY_PHRASE, phraseStore);
+      startPhraseTest();
+      $('phraseTestInput').focus();
+    });
+
+    $('phraseTestInput').addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      const rep = capPhraseTest.collect();
+      const typed = $('phraseTestInput').value.trim().replace(/\s+/g, ' ');
+      $('phraseTestInput').value = '';
+      capPhraseTest.reset();
+      if (typed !== currentTestTarget) {
+        $('phraseTestNotice').textContent = 'That did not match the phrase shown — try again.';
+        $('phraseResult').hidden = true;
+        return;
+      }
+      $('phraseTestNotice').textContent = '';
+      const feats = B.phraseFeatures(rep);
+      const sim = feats && rep.clean
+        ? B.similarityPhrase(B.phraseDistance(phraseStore.profile, feats)) : null;
+      showResult($('phrasePct'), $('phraseVerdict'), $('phraseResult'), sim);
+      currentTestTarget = nextPhrase();
+      $('phraseTestTarget').textContent = currentTestTarget;
+    });
+
+    $('phraseMore').addEventListener('click', () => {
+      // keep everything captured so far; new phrases extend the profile
+      currentTarget = nextPhrase();
+      $('phraseTarget').textContent = currentTarget;
+      $('phraseBuild').textContent = 'Rebuild profile';
+      phraseCounter();
+      phraseShow('train');
+      $('phraseInput').focus();
+    });
+
+    $('phraseReset').addEventListener('click', () => {
+      phraseFeats = [];
+      phraseStore = null;
+      B.store.clear(B.KEY_PHRASE);
+      $('phraseResult').hidden = true;
+      $('phraseNotice').textContent = ''; $('phraseTestNotice').textContent = '';
+      currentTarget = nextPhrase();
+      $('phraseTarget').textContent = currentTarget;
+      phraseCounter();
+      phraseShow('train');
+    });
+  </script>
+</body>
+</html>
