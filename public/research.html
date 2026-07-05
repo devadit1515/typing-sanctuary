@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Research — Typing Sanctuary</title>
+  <meta name="description" content="Open-set keystroke-dynamics verification, honestly measured: 14.2% EER against the 2009 benchmark's 9.6%, reproducible from one command.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design.css">
+</head>
+<body>
+
+  <header class="nav">
+    <div class="shell nav__inner">
+      <a class="nav__mark" href="/">Typing Sanctuary</a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="research.html" aria-current="page">Research</a>
+        <a href="model-unavailable.html">Train</a>
+        <a href="game.html">Game</a>
+        <a class="nav__cta" data-keep id="navAuth" href="login.html">Sign in</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="shell">
+        <h1 class="display reveal">Can a computer verify<br>who is typing?</h1>
+        <p class="lede reveal" data-delay="1" style="margin-top:1.4rem;">
+          In part, and honestly. The model was built and measured on an ordinary laptop, judged
+          only on people it never saw in training, and everything below re-runs from one command.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section__head">
+          <h2 class="h2">The result</h2>
+          <p class="prose">Tested on the public CMU benchmark &mdash; 51 people typing the same
+            password 400 times &mdash; against the strongest of the 14 hand-built methods from the
+            2009 study that created it.</p>
+        </div>
+        <div class="ledger">
+          <div class="ledger__row">
+            <p class="ledger__label"><strong>Simple distance</strong> &mdash; the like-for-like
+              comparison. The 2009 benchmark&rsquo;s best method scored 9.6%.</p>
+            <p class="ledger__value">14.2<small>% EER</small></p>
+          </div>
+          <div class="ledger__row">
+            <p class="ledger__label"><strong>Blended verifier</strong> &mdash; three classical
+              distances run inside the learned fingerprint. Won on all 14 test splits
+              <span class="data">(p &asymp; 0.0001)</span>.</p>
+            <p class="ledger__value">10.2<small>% EER</small></p>
+          </div>
+          <div class="ledger__row">
+            <p class="ledger__label"><strong>Uncertainty, stated</strong> &mdash; bootstrap 95%
+              confidence interval on the headline, and the wider 14-split averages
+              <span class="data">(18.7% / 13.3%)</span> disclosed beside it.</p>
+            <p class="ledger__value">[9.5, 19.2]<small>%</small></p>
+          </div>
+          <div class="ledger__row">
+            <p class="ledger__label"><strong>The fairness finding</strong> &mdash; the easiest person
+              to recognise erred under 1%; the hardest, over 33%. The same model can serve two
+              people 37&times; differently, which is why this must never be the only lock.</p>
+            <p class="ledger__value">37&times;<small>spread</small></p>
+          </div>
+        </div>
+        <p class="prose" style="margin-top:1.75rem;">
+          The model came close to the 2009 baseline and fell short. That shortfall is the finding.
+          What did not exist before is the measurement itself: a learned fingerprint brought down to
+          the small fixed-text benchmark, under an open-set protocol, with the stabilising component
+          identified by ablation.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section__head">
+          <h2 class="h2">The method, briefly</h2>
+        </div>
+        <div class="shell--narrow" style="margin-left:0;">
+          <p class="prose">Each keystroke contributes four timings: how long the key is held, and
+            the gaps around it. A small encoder network &mdash; 83,505 parameters, trained in about
+            23 minutes on a laptop CPU &mdash; reduces one burst of typing to 128 numbers, its
+            fingerprint. Training pulls the same person&rsquo;s samples together and pushes
+            different people apart, the same recipe face recognition uses.</p>
+          <p class="prose">Verification is classical statistics run inside that learned space:
+            distance to your enrolled centre, to your nearest enrolled samples, and a
+            variance-aware distance that knows how much your own typing naturally wobbles.
+            Enrolment takes about a dozen samples and no retraining. On any failure the service
+            asks for another factor; it never admits by default.</p>
+          <p class="prose">The evaluation is open-set: 35 people train the model, 16 are held out,
+            and a runtime guard makes it impossible for a test subject to leak into training. The
+            first version of the evaluation had exactly that leak, produced a flattering and
+            worthless number, and was rebuilt &mdash; the report tells that story in full.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section__head">
+          <h2 class="h2">Check everything</h2>
+          <p class="prose">Reproducibility is the contribution. The dataset is pinned by hash, the
+            seeds are fixed, and the whole benchmark re-runs, asserts its own numbers and redraws
+            every figure from one command.</p>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <span class="row__key data">repo</span>
+            <div class="row__body">
+              <h3>Source, data pipeline and the full fix log</h3>
+              <p><a class="data" href="https://github.com/devadit1515/typing-sanctuary">github.com/devadit1515/typing-sanctuary</a></p>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row__key data">rerun</span>
+            <div class="row__body">
+              <h3>One command, about 25 minutes, CPU only</h3>
+              <p><span class="data">pwsh -File scripts/reproduce.ps1</span> &mdash; verifies the
+                dataset hash, trains all three seeds, asserts the error rates, regenerates the figures.</p>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row__key data">ethics</span>
+            <div class="row__body">
+              <h3>Opt-in, minimal, fail-safe</h3>
+              <p>Consent is revocable and opting out deletes the profile. The service stores the
+                derived fingerprint, never what was typed. The reported model was trained only on
+                the public, anonymised research dataset.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer__inner">
+      <span>Typing Sanctuary &middot; built and measured by Devadit Jain</span>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="https://github.com/devadit1515/typing-sanctuary">Source &amp; data</a>
+        <a href="game.html">Game</a>
+      </nav>
+      <span>Biometrics are opt-in. We store the fingerprint, never the typing.</span>
+    </div>
+  </footer>
+
+  <script>
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d && d.success && d.user) {
+        const a = document.getElementById('navAuth');
+        a.textContent = d.user.username;
+        a.href = 'profile.html';
+      }
+    }).catch(() => {});
+  </script>
+</body>
+</html>

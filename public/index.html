@@ -1,283 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6751845441296587" crossorigin="anonymous"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typing Sanctuary</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .landing-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 60px 40px;
-        }
-
-        .landing-hero {
-            text-align: center;
-            margin-bottom: 88px;
-        }
-
-        .landing-hero h1 {
-            font-size: 58px;
-            font-weight: 800;
-            margin-bottom: 16px;
-            padding-bottom: 6px;
-            background: linear-gradient(135deg, #b74dff, #ff3264);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -2px;
-        }
-
-        .landing-hero p {
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 0;
-        }
-
-        .landing-cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 40px;
-            max-width: 1300px;
-            width: 100%;
-        }
-
-        .landing-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 28px;
-            padding: 40px 36px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .landing-card:hover {
-            transform: translateY(-8px);
-        }
-
-        .landing-card.game-card {
-            border-color: rgba(0, 212, 255, 0.25);
-        }
-
-        .landing-card.game-card:hover {
-            border-color: rgba(0, 212, 255, 0.55);
-            box-shadow: 0 16px 48px rgba(0, 212, 255, 0.12);
-        }
-
-        .landing-card.train-card {
-            border-color: rgba(183, 77, 255, 0.25);
-        }
-
-        .landing-card.train-card:hover {
-            border-color: rgba(183, 77, 255, 0.55);
-            box-shadow: 0 16px 48px rgba(183, 77, 255, 0.12);
-        }
-
-        .card-icon {
-            font-size: 2rem;
-            display: block;
-            margin-bottom: 16px;
-        }
-
-        .card-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            margin-bottom: 24px;
-        }
-
-        .badge-free {
-            background: rgba(0, 255, 136, 0.12);
-            border: 1px solid rgba(0, 255, 136, 0.35);
-            color: #00ff88;
-        }
-
-        .badge-signin {
-            background: rgba(183, 77, 255, 0.12);
-            border: 1px solid rgba(183, 77, 255, 0.35);
-            color: #b74dff;
-        }
-
-        .landing-card h2 {
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: #e2e8f0;
-        }
-
-        .landing-card p {
-            color: rgba(255, 255, 255, 0.58);
-            margin-bottom: 28px;
-            font-size: 0.95rem;
-            line-height: 1.65;
-        }
-
-        .btn-game {
-            background: linear-gradient(135deg, #00b4d8, #0077b6);
-            color: white;
-            border: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .btn-game:hover {
-            box-shadow: 0 8px 24px rgba(0, 180, 216, 0.45);
-            transform: scale(1.04);
-        }
-
-        .btn-train {
-            background: linear-gradient(135deg, #b74dff, #ff3264);
-            color: white;
-            border: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .btn-train:hover {
-            box-shadow: 0 8px 24px rgba(183, 77, 255, 0.45);
-            transform: scale(1.04);
-        }
-
-        /* Colorful Auth Buttons */
-        .btn-auth-login {
-            display: inline-block;
-            padding: 13px 26px;
-            border: 2px solid rgba(0, 217, 255, 0.7);
-            border-radius: 12px;
-            color: #00d9ff;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 700;
-            background: rgba(0, 217, 255, 0.1);
-            transition: all 0.2s ease;
-        }
-        .btn-auth-login:hover {
-            background: rgba(0, 217, 255, 0.2);
-            border-color: #00d9ff;
-            box-shadow: 0 0 20px rgba(0, 217, 255, 0.35);
-        }
-        .btn-auth-signup {
-            display: inline-block;
-            padding: 13px 26px;
-            border: none;
-            border-radius: 12px;
-            color: white;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #b74dff, #ff3264);
-            transition: all 0.2s ease;
-        }
-        .btn-auth-signup:hover {
-            box-shadow: 0 4px 22px rgba(183, 77, 255, 0.55);
-            transform: translateY(-1px);
-        }
-
-        @media (max-width: 900px) {
-            .landing-cards { grid-template-columns: 1fr; max-width: 560px; }
-        }
-        @media (max-width: 640px) {
-            .landing-hero h1 { font-size: 2.2rem; letter-spacing: -1px; }
-            .landing-hero p { font-size: 1rem; }
-            .landing-cards { gap: 20px; }
-            .landing-card { padding: 28px 20px; }
-            .landing-card h2 { font-size: 1.3rem; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Sanctuary — identity from typing rhythm</title>
+  <meta name="description" content="Typing Sanctuary measures the rhythm of your keystrokes and turns it into a verifiable fingerprint. Honest, measured, reproducible.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design.css">
 </head>
 <body>
-    <!-- Floating Particles Background -->
-    <div class="particles" id="particlesContainer"></div>
 
-    <!-- Grid Overlay -->
-    <div class="grid-overlay"></div>
-
-    <!-- Brand Logo Top Left -->
-    <div class="brand-logo">
-        <span class="brand-text">Typing Sanctuary</span>
+  <header class="nav">
+    <div class="shell nav__inner">
+      <a class="nav__mark" href="/">Typing Sanctuary</a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="research.html">Research</a>
+        <a href="model-unavailable.html">Train</a>
+        <a href="game.html">Game</a>
+        <a class="nav__cta" data-keep id="navAuth" href="login.html">Sign in</a>
+      </nav>
     </div>
+  </header>
 
-    <!-- Credit Footer -->
-    <div class="credit-footer">Made by Devadit</div>
+  <main>
+    <!-- ============ hero: the instrument ============ -->
+    <section class="section">
+      <div class="shell">
+        <h1 class="display reveal">You type like<br>no one else.</h1>
+        <p class="lede reveal" data-delay="1" style="margin-top:1.4rem;">
+          Typing Sanctuary reads the rhythm of your keystrokes, the holds and the
+          hesitations, and turns it into a fingerprint a stolen password cannot fake.
+        </p>
 
-    <!-- User Profile Display (shown when logged in) -->
-    <div id="userProfile" class="user-profile hidden">
-        <div class="profile-info">
-            <span class="profile-username" id="profileUsername"></span>
-        </div>
-        <a href="/social.html" class="btn-logout" style="text-decoration:none;margin-right:4px;">Friends</a>
-        <button id="logoutBtn" class="btn-logout">Logout</button>
-    </div>
-
-    <!-- Login/Register Buttons (shown when not logged in) -->
-    <div id="authButtons" class="auth-buttons-corner hidden">
-        <a href="/login.html" class="btn-auth-login">Login</a>
-        <a href="/register.html" class="btn-auth-signup">Sign Up</a>
-    </div>
-
-    <div class="landing-container">
-        <div class="landing-hero">
-            <h1>⚡ Typing Sanctuary</h1>
-            <p>Where speed meets biometric security</p>
-        </div>
-
-        <div class="landing-cards">
-            <!-- Train Model Card -->
-            <div class="landing-card train-card">
-                <span class="card-icon">🧠</span>
-                <span class="card-badge badge-signin">Temporarily offline</span>
-                <h2>Train My Model</h2>
-                <p>Build your unique keystroke biometric profile. Your typing rhythm becomes your digital fingerprint.</p>
-                <button class="btn btn-large btn-train" id="trainModelBtn" style="width: 100%;">Start Training →</button>
+        <div class="instrument reveal" data-delay="2" aria-label="Live typing rhythm demonstration">
+          <div class="instrument__bar">
+            <span>SPECIMEN&nbsp;·&nbsp;KEYSTROKE RHYTHM</span>
+            <span id="instState">READY</span>
+          </div>
+          <div class="instrument__body">
+            <p class="specimen-label">Type the phrase
+              <span class="phrase">&ldquo;<span id="phraseText">the quiet machine</span>&rdquo;</span>
+              &mdash; exactly as it feels natural.</p>
+            <input class="specimen" id="specimenInput" type="text" autocomplete="off"
+                   autocapitalize="none" spellcheck="false" placeholder="begin here"
+                   aria-label="Type the phrase to see your rhythm">
+            <div class="strip" id="strip" aria-hidden="true"></div>
+            <div class="readouts">
+              <dl class="readout">
+                <dt>Median hold</dt>
+                <dd><span id="roHold">&mdash;</span><span class="unit">ms</span></dd>
+              </dl>
+              <dl class="readout">
+                <dt>Median gap</dt>
+                <dd><span id="roGap">&mdash;</span><span class="unit">ms</span></dd>
+              </dl>
+              <dl class="readout">
+                <dt>Spread</dt>
+                <dd><span id="roSpread">&mdash;</span><span class="unit">%</span></dd>
+              </dl>
+              <div class="dial" aria-hidden="true">
+                <svg width="120" height="64" viewBox="0 0 120 64">
+                  <path d="M 12 56 A 48 48 0 0 1 108 56" fill="none"
+                        stroke="oklch(100% 0 0 / 0.14)" stroke-width="2"/>
+                  <g stroke="oklch(68% 0.018 80)" stroke-width="1.5">
+                    <line x1="12" y1="56" x2="17" y2="56"/>
+                    <line x1="26.1" y1="22.1" x2="29.6" y2="25.6"/>
+                    <line x1="60" y1="8" x2="60" y2="13"/>
+                    <line x1="93.9" y1="22.1" x2="90.4" y2="25.6"/>
+                    <line x1="108" y1="56" x2="103" y2="56"/>
+                  </g>
+                  <line id="dialNeedle" class="dial__needle" x1="60" y1="56" x2="60" y2="16"
+                        stroke="oklch(80% 0.115 78)" stroke-width="2.5" stroke-linecap="round"
+                        style="transform: rotate(-90deg);"/>
+                  <circle cx="60" cy="56" r="3.5" fill="oklch(80% 0.115 78)"/>
+                </svg>
+                <p class="dial__caption">Consistency <span class="data" id="roConsistency">&mdash;</span><br>
+                  how steadily this run was typed.</p>
+              </div>
             </div>
-
-            <!-- Play Game Card -->
-            <div class="landing-card game-card">
-                <span class="card-icon">🎮</span>
-                <span class="card-badge badge-free">Free · No sign-in needed</span>
-                <h2>Play Typing Game</h2>
-                <p>Race against friends or an AI opponent in real-time typing battles. Solo and multiplayer modes available.</p>
-                <a href="/game.html" style="display: block;">
-                    <button class="btn btn-large btn-game" style="width: 100%;">Play Now →</button>
-                </a>
-            </div>
+          </div>
+          <div class="instrument__foot">
+            <span>Measured locally in your browser. Nothing leaves this page.</span>
+            <button class="instrument__reset" id="instReset" type="button">Run it again</button>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ============ the honest number ============ -->
+    <section class="section">
+      <div class="shell">
+        <div class="section__head">
+          <h2 class="h2">Measured, not promised.</h2>
+          <p class="prose">Every number below comes from an open-set benchmark: the model is scored
+            only on people it never saw in training, and the full pipeline re-runs from one command.</p>
+        </div>
+        <div class="ledger">
+          <div class="ledger__row">
+            <p class="ledger__label"><strong>Simple distance verifier</strong> &mdash; the fair,
+              like-for-like comparison against the 2009 benchmark&rsquo;s best hand-built method at 9.6%.</p>
+            <p class="ledger__value">14.2<small>% EER</small></p>
+          </div>
+          <div class="ledger__row">
+            <p class="ledger__label"><strong>Blended verifier</strong> &mdash; classical statistics run
+              inside the learned fingerprint. Steadier on every one of 14 test splits.</p>
+            <p class="ledger__value">10.2<small>% EER</small></p>
+          </div>
+          <div class="ledger__row">
+            <p class="ledger__label"><strong>The honest caveat</strong> &mdash; across all 14 splits the
+              averages sit higher. The headline is the favourable side, and we say so.</p>
+            <p class="ledger__value">18.7<small>% / 13.3%</small></p>
+          </div>
+        </div>
+        <p class="prose" style="margin-top:1.75rem;">
+          It did not beat the 2009 baseline. That shortfall is reported as the finding, not hidden
+          behind a flattering protocol. <a href="research.html">Read the research&nbsp;&rarr;</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ how it works ============ -->
+    <section class="section">
+      <div class="shell">
+        <div class="section__head">
+          <h2 class="h2">Three moves, end to end.</h2>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <span class="row__key">01</span>
+            <div class="row__body">
+              <h3>A burst of typing becomes a fingerprint</h3>
+              <p>Each keystroke carries four timings &mdash; how long it is held, and the gaps around
+                it. A small neural network reduces one burst to 128 numbers.</p>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row__key">02</span>
+            <div class="row__body">
+              <h3>Your fingerprints cluster; strangers&rsquo; sit apart</h3>
+              <p>Trained the way face recognition is trained, the same person&rsquo;s samples land close
+                together. About a dozen samples enrol you, with no retraining.</p>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row__key">03</span>
+            <div class="row__body">
+              <h3>Distance decides, and failure asks for another factor</h3>
+              <p>Three classical distance measures judge each new sample against your cluster. When
+                anything breaks, the answer is never &ldquo;let them in&rdquo;.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ the game, quietly ============ -->
+    <section class="section">
+      <div class="shell aside-strip">
+        <p>There is also a typing game &mdash; races, friends, leaderboards. It is where the
+          consented keystroke data comes from, and it is genuinely fun.</p>
+        <a class="quiet" href="game.html">Play the game&nbsp;&rarr;</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer__inner">
+      <span>Typing Sanctuary &middot; built and measured by Devadit Jain</span>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="research.html">Research</a>
+        <a href="https://github.com/devadit1515/typing-sanctuary">Source &amp; data</a>
+        <a href="game.html">Game</a>
+      </nav>
+      <span>Biometrics are opt-in. We store the fingerprint, never the typing.</span>
     </div>
+  </footer>
 
-    <script src="session-check.js"></script>
-    <script>
-        // Floating particles
-        function createParticles() {
-            const container = document.getElementById('particlesContainer');
-            const count = 60;
-            for (let i = 0; i < count; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = Math.random() * 100 + '%';
-                const size = 2 + Math.random() * 2;
-                p.style.width = size + 'px';
-                p.style.height = size + 'px';
-                p.style.setProperty('--particle-opacity', 0.1 + Math.random() * 0.2);
-                p.style.animationDuration = (10 + Math.random() * 15) + 's';
-                p.style.animationDelay = (Math.random() * 5) + 's';
-                container.appendChild(p);
-            }
-        }
-        window.addEventListener('DOMContentLoaded', createParticles);
+  <script>
+    // ---------- session-aware nav ----------
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d && d.success && d.user) {
+        const a = document.getElementById('navAuth');
+        a.textContent = d.user.username;
+        a.href = 'profile.html';
+      }
+    }).catch(() => {});
 
-        // Train My Model — training flow is temporarily offline; route to the notice page.
-        // (Restore the auth check + /keystroke-auth.html redirect when it comes back.)
-        document.getElementById('trainModelBtn').addEventListener('click', () => {
-            window.location.href = '/model-unavailable.html';
-        });
-    </script>
+    // ---------- the instrument ----------
+    const PHRASE = 'the quiet machine';
+    const input = document.getElementById('specimenInput');
+    const strip = document.getElementById('strip');
+    const state = document.getElementById('instState');
+    const needle = document.getElementById('dialNeedle');
+    const ro = {
+      hold: document.getElementById('roHold'),
+      gap: document.getElementById('roGap'),
+      spread: document.getElementById('roSpread'),
+      cons: document.getElementById('roConsistency'),
+    };
+
+    let downs = {}, holds = [], gaps = [], lastDown = 0, done = false;
+
+    const median = a => {
+      if (!a.length) return 0;
+      const s = [...a].sort((x, y) => x - y);
+      return s[Math.floor(s.length / 2)];
+    };
+
+    function bar(hold) {
+      const el = document.createElement('div');
+      const h = Math.max(10, Math.min(90, hold * 0.55));
+      el.className = 'stroke';
+      el.style.height = h + 'px';
+      // gap before this stroke sets its left margin: the silence made visible
+      const gap = gaps.length ? gaps[gaps.length - 1] : 0;
+      el.style.marginLeft = Math.max(2, Math.min(46, gap * 0.16)) + 'px';
+      strip.appendChild(el);
+    }
+
+    function readout() {
+      ro.hold.textContent = holds.length ? Math.round(median(holds)) : '—';
+      ro.gap.textContent = gaps.length ? Math.round(median(gaps)) : '—';
+      if (gaps.length > 1) {
+        const m = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+        const sd = Math.sqrt(gaps.reduce((a, b) => a + (b - m) ** 2, 0) / gaps.length);
+        ro.spread.textContent = Math.round((sd / m) * 100);
+      } else {
+        ro.spread.textContent = '—';
+      }
+    }
+
+    function settle() {
+      done = true;
+      state.textContent = 'SETTLED';
+      state.className = 'live';
+      strip.classList.add('settled');
+      const m = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+      const sd = Math.sqrt(gaps.reduce((a, b) => a + (b - m) ** 2, 0) / gaps.length);
+      const consistency = Math.max(0, Math.min(100, Math.round(100 - (sd / m) * 100)));
+      ro.cons.textContent = consistency + '/100';
+      needle.style.transform = 'rotate(' + (-90 + consistency * 1.8) + 'deg)';
+      input.blur();
+    }
+
+    function reset() {
+      downs = {}; holds = []; gaps = []; lastDown = 0; done = false;
+      strip.replaceChildren();
+      strip.classList.remove('settled');
+      input.value = '';
+      state.textContent = 'READY';
+      state.className = '';
+      needle.style.transform = 'rotate(-90deg)';
+      ro.hold.textContent = ro.gap.textContent = ro.spread.textContent = ro.cons.textContent = '—';
+      input.focus();
+    }
+
+    input.addEventListener('keydown', e => {
+      if (done || e.key.length !== 1) return;
+      const t = performance.now();
+      downs[e.code] = t;
+      if (lastDown) gaps.push(t - lastDown);
+      lastDown = t;
+      if (state.textContent === 'READY') { state.textContent = 'MEASURING'; state.className = 'live'; }
+    });
+
+    input.addEventListener('keyup', e => {
+      if (done || !(e.code in downs)) return;
+      const hold = performance.now() - downs[e.code];
+      delete downs[e.code];
+      holds.push(hold);
+      bar(hold);
+      readout();
+      if (input.value.trim().toLowerCase() === PHRASE && gaps.length > 3) settle();
+    });
+
+    document.getElementById('instReset').addEventListener('click', reset);
+  </script>
 </body>
 </html>

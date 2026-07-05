@@ -1,90 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Model Unavailable · Typing Sanctuary</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .unavailable-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 60px 40px;
-        }
-
-        .unavailable-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 28px;
-            padding: 56px 48px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            max-width: 560px;
-            width: 100%;
-        }
-
-        .unavailable-card .card-icon {
-            font-size: 44px;
-            display: block;
-            margin-bottom: 20px;
-        }
-
-        .unavailable-card h1 {
-            font-size: 34px;
-            font-weight: 800;
-            margin-bottom: 14px;
-            background: linear-gradient(135deg, #b74dff, #ff3264);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -1px;
-        }
-
-        .unavailable-card p {
-            font-size: 17px;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 32px;
-        }
-
-        .unavailable-actions {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .unavailable-actions .btn {
-            min-width: 180px;
-        }
-
-        .btn-game {
-            background: linear-gradient(135deg, #00b4d8, #0077b6);
-            color: white;
-            border: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .btn-game:hover {
-            box-shadow: 0 8px 24px rgba(0, 180, 216, 0.45);
-            transform: scale(1.04);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training is offline — Typing Sanctuary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design.css">
 </head>
 <body>
-    <div class="unavailable-container">
-        <div class="unavailable-card">
-            <span class="card-icon">🧠</span>
-            <h1>Model training is offline right now</h1>
-            <p>Biometric profile training is temporarily unavailable while it gets some work done behind the scenes. The typing game is fully open in the meantime — check back soon.</p>
-            <div class="unavailable-actions">
-                <a href="/game.html"><button class="btn btn-large btn-game">Play the Game →</button></a>
-                <a href="/"><button class="btn btn-large">← Back Home</button></a>
-            </div>
-        </div>
+
+  <header class="nav">
+    <div class="shell nav__inner">
+      <a class="nav__mark" href="/">Typing Sanctuary</a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="research.html">Research</a>
+        <a href="model-unavailable.html" aria-current="page">Train</a>
+        <a href="game.html">Game</a>
+        <a class="nav__cta" data-keep id="navAuth" href="login.html">Sign in</a>
+      </nav>
     </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="shell shell--narrow">
+        <p class="data reveal" style="color:var(--ink-3); font-size:0.8125rem; margin-bottom:1.2rem;">
+          STATUS&nbsp;&middot;&nbsp;TRAINING OFFLINE</p>
+        <h1 class="display reveal" data-delay="1">The instrument is<br>on the bench.</h1>
+        <p class="lede reveal" data-delay="2" style="margin-top:1.4rem;">
+          Biometric profile training is offline while it gets some work done. The research is fully
+          readable in the meantime, and the game is open.</p>
+        <div class="reveal" data-delay="3" style="display:flex; gap:0.9rem; flex-wrap:wrap; margin-top:2.4rem;">
+          <a class="btn btn--brass" href="research.html">Read the research</a>
+          <a class="btn btn--ghost" href="/">Back home</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer__inner">
+      <span>Typing Sanctuary &middot; built and measured by Devadit Jain</span>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="https://github.com/devadit1515/typing-sanctuary">Source &amp; data</a>
+        <a href="game.html">Game</a>
+      </nav>
+      <span>Biometrics are opt-in. We store the fingerprint, never the typing.</span>
+    </div>
+  </footer>
+
+  <script>
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d && d.success && d.user) {
+        const a = document.getElementById('navAuth');
+        a.textContent = d.user.username;
+        a.href = 'profile.html';
+      }
+    }).catch(() => {});
+  </script>
 </body>
 </html>

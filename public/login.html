@@ -1,377 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6751845441296587" crossorigin="anonymous"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Speed Typing Battle</title>
-  <link rel="stylesheet" href="auth-styles.css">
-  <style>
-    .google-signin-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      padding: 14px;
-      background: #fff;
-      color: #3c4043;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      text-decoration: none;
-      margin-bottom: 20px;
-      transition: box-shadow 0.2s ease, transform 0.2s ease;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    .google-signin-btn:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-      transform: translateY(-1px);
-    }
-    .or-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-      color: rgba(255,255,255,0.35);
-      font-size: 0.82rem;
-    }
-    .or-divider::before,
-    .or-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(255,255,255,0.15);
-    }
-  </style>
+  <title>Sign in — Typing Sanctuary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design.css">
 </head>
 <body>
-  <!-- Full-Page Animated Background -->
-  <div class="premium-background">
-    <div class="gradient-orb orb-1"></div>
-    <div class="gradient-orb orb-2"></div>
-    <div class="gradient-orb orb-3"></div>
-    <canvas id="particleCanvas" class="particle-canvas"></canvas>
-  </div>
 
-  <!-- Home Button -->
-  <a href="index.html" class="home-button">
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Home
-  </a>
-
-  <!-- Split-Screen Container -->
-  <div class="auth-container">
-
-    <!-- LEFT SECTION - FORM AREA -->
-    <div class="form-section">
-      <div class="form-content">
-
-        <!-- Header -->
-        <div class="auth-header">
-          <div class="sanctuary-brand">Typing Sanctuary</div>
-          <h1 class="title-gradient">Welcome Back</h1>
-          <p class="subtitle">Login to continue your typing journey</p>
-        </div>
-
-        <!-- Google Sign-In -->
-        <a href="/api/auth/google" class="google-signin-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
-        </a>
-
-        <div class="or-divider"><span>or sign in with username</span></div>
-
-        <!-- Login Form -->
-        <form id="loginForm" class="auth-form">
-
-          <!-- Username Field -->
-          <div class="form-group">
-            <div class="input-wrapper">
-              <input
-                type="text"
-                id="username"
-                name="username"
-                required
-                autocomplete="username"
-                minlength="3"
-                maxlength="20"
-                class="premium-input"
-                placeholder=" "
-              >
-              <label for="username" class="floating-label">Username</label>
-              <div class="input-border"></div>
-              <div class="input-glow"></div>
-            </div>
-          </div>
-
-          <!-- Password Field -->
-          <div class="form-group">
-            <div class="input-wrapper">
-              <input
-                type="password"
-                id="password"
-                name="password"
-                required
-                autocomplete="current-password"
-                minlength="6"
-                class="premium-input"
-                placeholder=" "
-              >
-              <label for="password" class="floating-label">Password</label>
-              <button type="button" class="password-toggle" id="passwordToggle">
-                <svg class="eye-icon show-password" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                <svg class="eye-icon hide-password" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-              <div class="input-border"></div>
-              <div class="input-glow"></div>
-            </div>
-          </div>
-
-          <!-- Forgot Password -->
-          <div class="form-options">
-            <a href="forgot-password.html" class="forgot-password">Forgot password?</a>
-          </div>
-
-          <!-- Error Message -->
-          <div id="errorMessage" class="error-message"></div>
-
-          <!-- Submit Button -->
-          <button type="submit" class="premium-button" id="loginBtn">
-            <span class="button-text">Login</span>
-            <span class="button-glow"></span>
-            <span class="button-shimmer"></span>
-          </button>
-
-        </form>
-
-        <!-- Footer -->
-        <div class="auth-footer">
-          <p class="footer-text">
-            Don't have an account?
-            <a href="register.html" class="link-gradient">Register here</a>
-          </p>
-        </div>
-
-      </div>
+  <header class="nav">
+    <div class="shell nav__inner">
+      <a class="nav__mark" href="/">Typing Sanctuary</a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="research.html">Research</a>
+        <a href="model-unavailable.html">Train</a>
+        <a href="game.html">Game</a>
+        <a class="nav__cta" data-keep href="register.html">Create account</a>
+      </nav>
     </div>
+  </header>
 
-    <!-- RIGHT SECTION - HERO SHOWCASE -->
-    <div class="hero-section">
-      <div class="hero-content">
-        <h2 class="hero-title">Master Your Speed</h2>
-        <p class="hero-subtitle">
-          Join thousands of typists improving their speed and accuracy every day.
-          Challenge yourself, compete with others, and track your progress.
-        </p>
+  <main>
+    <section class="section">
+      <div class="shell" style="max-width:26.5rem;">
+        <div class="panel reveal">
+          <h1 class="panel__title">Sign in</h1>
+          <p class="panel__sub">Your rhythm is waiting.</p>
 
-        <!-- Typing Demo -->
-        <div class="typing-demo" id="typingDemo">
-          The quick brown fox...
-        </div>
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="username">Username</label>
+              <input type="text" id="username" name="username" autocomplete="username"
+                     placeholder="your username" required>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" autocomplete="current-password"
+                     placeholder="your password" required>
+              <p class="hint"><a href="forgot-password.html" style="color:inherit;">Forgot password?</a></p>
+            </div>
 
-        <!-- Features -->
-        <div class="hero-stats">
-          <div class="stat-item">
-            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" stroke="url(#feature-gradient-1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <defs>
-                <linearGradient id="feature-gradient-1" x1="3" y1="2" x2="21" y2="22">
-                  <stop offset="0%" stop-color="#00d9ff"/>
-                  <stop offset="100%" stop-color="#a855f7"/>
-                </linearGradient>
-              </defs>
+            <div id="errorMessage" class="error-message" role="alert"></div>
+
+            <button type="submit" class="btn btn--brass btn--block" id="loginBtn"
+                    style="margin-top:1.4rem;">Sign in</button>
+          </form>
+
+          <div class="divider">or</div>
+
+          <a class="btn btn--ghost btn--block" href="/api/auth/google">
+            <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#EA4335" d="M12 5.04c1.62 0 3.06.56 4.2 1.64l3.12-3.12C17.46 1.8 14.97.75 12 .75 7.7.75 3.99 3.22 2.18 6.82l3.66 2.84C6.71 7.02 9.14 5.04 12 5.04z"/>
+              <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.55-.2-2.28H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.81z"/>
+              <path fill="#FBBC05" d="M5.84 14.09A6.9 6.9 0 0 1 5.47 12c0-.73.13-1.43.36-2.09L2.18 7.07a11.2 11.2 0 0 0 0 9.86l3.66-2.84z"/>
+              <path fill="#34A853" d="M12 23.25c3.04 0 5.6-1 7.47-2.72l-3.86-3c-1.04.7-2.36 1.1-3.61 1.1-2.86 0-5.29-1.93-6.16-4.54l-3.66 2.84c1.81 3.6 5.52 6.32 9.82 6.32z"/>
             </svg>
-            <span class="stat-label">Real-time Battles</span>
-          </div>
-          <div class="stat-item">
-            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" stroke="url(#feature-gradient-2)" stroke-width="2"/>
-              <path d="M12 6v6l4 2" stroke="url(#feature-gradient-2)" stroke-width="2" stroke-linecap="round"/>
-              <defs>
-                <linearGradient id="feature-gradient-2" x1="2" y1="2" x2="22" y2="22">
-                  <stop offset="0%" stop-color="#00d9ff"/>
-                  <stop offset="100%" stop-color="#a855f7"/>
-                </linearGradient>
-              </defs>
-            </svg>
-            <span class="stat-label">Track Progress</span>
-          </div>
-          <div class="stat-item">
-            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="url(#feature-gradient-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <defs>
-                <linearGradient id="feature-gradient-3" x1="2" y1="2" x2="22" y2="22">
-                  <stop offset="0%" stop-color="#00d9ff"/>
-                  <stop offset="100%" stop-color="#a855f7"/>
-                </linearGradient>
-              </defs>
-            </svg>
-            <span class="stat-label">Level Up Skills</span>
-          </div>
+            Continue with Google
+          </a>
+
+          <p class="auth-alt">New here? <a href="register.html">Create an account</a></p>
         </div>
       </div>
-    </div>
+    </section>
+  </main>
 
-  </div>
+  <footer class="footer" style="margin-top:0;">
+    <div class="shell footer__inner">
+      <span>Typing Sanctuary &middot; built and measured by Devadit Jain</span>
+      <span>Biometrics are opt-in. We store the fingerprint, never the typing.</span>
+    </div>
+  </footer>
 
   <script src="auth.js"></script>
-  <script>
-    // Enhanced Particle Animation
-    const canvas = document.getElementById('particleCanvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const particles = [];
-    const particleCount = 80;
-    const connectionDistance = 120;
-
-    class Particle {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2.5 + 0.5;
-        this.speedX = Math.random() * 0.8 - 0.4;
-        this.speedY = Math.random() * 0.8 - 0.4;
-        this.opacity = Math.random() * 0.5 + 0.3;
-      }
-
-      update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-
-        if (this.x > canvas.width) this.x = 0;
-        if (this.x < 0) this.x = canvas.width;
-        if (this.y > canvas.height) this.y = 0;
-        if (this.y < 0) this.y = canvas.height;
-      }
-
-      draw() {
-        ctx.fillStyle = `rgba(0, 217, 255, ${this.opacity})`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Create particles
-    for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle());
-    }
-
-    // Draw connections between nearby particles
-    function drawConnections() {
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < connectionDistance) {
-            const opacity = (1 - distance / connectionDistance) * 0.15;
-            ctx.strokeStyle = `rgba(0, 217, 255, ${opacity})`;
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-    }
-
-    function animateParticles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      drawConnections();
-
-      particles.forEach(particle => {
-        particle.update();
-        particle.draw();
-      });
-
-      requestAnimationFrame(animateParticles);
-    }
-
-    animateParticles();
-
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
-
-    // Animated Typing Demo
-    const typingDemo = document.getElementById('typingDemo');
-    const phrases = [
-      'The quick brown fox...',
-      'jumps over the lazy dog',
-      'Type faster, type better',
-      'Challenge yourself today',
-      'Master your keyboard'
-    ];
-    let phraseIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-
-    function typeEffect() {
-      const currentPhrase = phrases[phraseIndex];
-
-      if (isDeleting) {
-        typingDemo.textContent = currentPhrase.substring(0, charIndex - 1);
-        charIndex--;
-      } else {
-        typingDemo.textContent = currentPhrase.substring(0, charIndex + 1);
-        charIndex++;
-      }
-
-      let typeSpeed = isDeleting ? 50 : 100;
-
-      if (!isDeleting && charIndex === currentPhrase.length) {
-        typeSpeed = 2000;
-        isDeleting = true;
-      } else if (isDeleting && charIndex === 0) {
-        isDeleting = false;
-        phraseIndex = (phraseIndex + 1) % phrases.length;
-        typeSpeed = 500;
-      }
-
-      setTimeout(typeEffect, typeSpeed);
-    }
-
-    // Start typing effect after page load
-    setTimeout(typeEffect, 1000);
-
-    // Password Toggle
-    const passwordToggle = document.getElementById('passwordToggle');
-    const passwordInput = document.getElementById('password');
-
-    passwordToggle.addEventListener('click', () => {
-      const type = passwordInput.type === 'password' ? 'text' : 'password';
-      passwordInput.type = type;
-      passwordToggle.classList.toggle('active');
-    });
-
-    // Auto-focus first input
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('username').focus();
-      document.body.classList.add('loaded');
-    });
-  </script>
 </body>
 </html>
